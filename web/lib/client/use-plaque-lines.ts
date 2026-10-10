@@ -4,7 +4,7 @@
 // fonts and the customer's own fonts, loading every font a line uses and measuring each line
 // in its own font (lib/plaques/measure-line.ts).
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { listCustomFonts } from "./custom-fonts";
 import { measurePlaqueLine, type MeasuredPlaqueLine } from "../plaques/measure-line";
 import { loadFont, loadFontManifest, registerLoadedFont } from "../text/font-loader";
@@ -27,6 +27,8 @@ export interface PlaqueLinesState {
   measured: (MeasuredPlaqueLine | null)[];
   /** Every line with text has its font loaded. */
   fontsReady: boolean;
+  /** A loaded font by id (to measure other texts in a line's font). */
+  fontFor: (id: string) => LoadedFont | undefined;
 }
 
 export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): PlaqueLinesState {
@@ -60,6 +62,8 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
     [lines, loaded],
   );
 
+  const fontFor = useCallback((id: string) => loaded[id], [loaded]);
+
   return {
     lines,
     setLine: (index, patch) => setLines((list) => list.map((l, k) => (k === index ? { ...l, ...patch } : l))),
@@ -76,5 +80,6 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
     },
     measured,
     fontsReady: lines.every((l) => !l.text.trim() || !!loaded[l.fontId]),
+    fontFor,
   };
 }

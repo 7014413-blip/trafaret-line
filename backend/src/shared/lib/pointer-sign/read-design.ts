@@ -55,6 +55,8 @@ export function readPointerSignDesign(raw: unknown, quantity: number, cfg: Point
   const size = resolvePointerSize({ sizeCode, widthMm: num(d.widthMm, "width"), heightMm: num(d.heightMm, "height") }, cfg);
   const direction = num(d.direction, "direction");
   if (direction !== 1 && direction !== -1) throw new Error("pointer sign: bad direction");
+  const shape = d.shape === undefined || d.shape === "pointer" ? "pointer" : d.shape === "arrow" ? "arrow" : null;
+  if (!shape) throw new Error("pointer sign: bad shape");
   const baseMaterialId = findPointerMaterial(String(d.baseMaterialId ?? "")).id;
   const overlayMaterialId = findPointerMaterial(String(d.overlayMaterialId ?? "")).id;
   if (!Array.isArray(d.lines) || d.lines.length > cfg.maxLines) throw new Error("pointer sign: bad lines");
@@ -68,7 +70,7 @@ export function readPointerSignDesign(raw: unknown, quantity: number, cfg: Point
   if (!lines.some((line) => line.text) && !logo && placement === "none") throw new Error("pointer sign: empty design");
   return {
     sizeCode: size.preset && sizeCode !== "custom" ? size.preset.code : "custom",
-    widthMm: size.widthMm, heightMm: size.heightMm, direction, baseMaterialId, overlayMaterialId,
+    widthMm: size.widthMm, heightMm: size.heightMm, direction, shape, baseMaterialId, overlayMaterialId,
     lines, arrow: { placement, lineIndex }, logo,
     quantity: Math.max(1, Math.min(9999, Math.round(quantity))),
   };

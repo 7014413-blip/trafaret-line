@@ -10,7 +10,7 @@ const SIZE_STEPS: [number, string][] = [[0.8, "Малий"], [1, "Середні
 const input = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none";
 const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
-export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine, onRemove }: {
+export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine, onRemove, renderExtra }: {
   state: PlaqueLinesState;
   legend: string;
   idPrefix: string;
@@ -18,6 +18,8 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
   /** Cap height of every placed line, mm, by line index. */
   capByLine: Map<number, number>;
   onRemove?: (index: number) => void;
+  /** More fields of a line under its font and size (the price piece of «Написи на планці»). */
+  renderExtra?: (index: number) => React.ReactNode;
 }) {
   const { lines, setLine, addLine, removeLine, maxLines, allFonts, customFonts, onFontAdded, onFontRemoved } = state;
   const fontOptions = (value: string) => allFonts.length
@@ -49,6 +51,7 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
                 </select>
               </label>
             </div>
+            {renderExtra?.(i)}
             {cap != null && <span className="text-[13px] text-[var(--muted)] tabular-nums">Висота великих літер ≈ {cm(cap)} см</span>}
           </div>
         );

@@ -13,6 +13,8 @@ import { cutRequestFor, useCustomizer } from "@/store/customizer-store";
 import { useCart } from "@/store/cart-store";
 import { MATERIALS, WELD_MATERIALS } from "@/lib/materials";
 import { DEFAULT_PRICING, priceStencil, priceWelded } from "@/lib/calculators/pricing";
+import { designPlacement } from "@/lib/calculators/design-fit";
+import { SQUARE_STENCIL_MATERIAL, SQUARE_STENCIL_PRESETS } from "@/lib/calculators/square-stencil";
 import { formatUAH } from "@/lib/format";
 import { loadFont, loadFontManifest, registerLoadedFont, type FontEntry, type LoadedFont } from "@/lib/text/font-loader";
 import { listCustomFonts } from "@/lib/client/custom-fonts";
@@ -109,7 +111,7 @@ export function Konstruktor() {
     if (!font) return;
     const r = textToDesign(font, text, { align, upper, lineFonts: perLine ? lineFonts : undefined });
     setResult(r);
-    const scale = (s.widthMm - 2 * s.marginMm) / Math.max(1, r.design.bboxMm.w);
+    const { scale } = designPlacement(r.design, s.widthMm, s.marginMm, s.shape === "square");
     s.setDesign(r.design, r.capUnits * scale);
   }, [font, text, align, upper, perLine, lineFonts]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -124,14 +126,14 @@ export function Konstruktor() {
   // Width changed: the cap height changes with it (bridge width follows the letters).
   useEffect(() => {
     if (!result) return;
-    const scale = (s.widthMm - 2 * s.marginMm) / Math.max(1, result.design.bboxMm.w);
+    const { scale } = designPlacement(result.design, s.widthMm, s.marginMm, s.shape === "square");
     const cap = result.capUnits * scale;
     if (Math.abs((s.capHeightMm ?? 0) - cap) > 0.01) s.setDesign(result.design, cap);
-  }, [s.widthMm, s.marginMm, result]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.widthMm, s.marginMm, s.shape, result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // "By letter height": choose the sheet width that gives the requested cap height.
   useEffect(() => {
-    if (!byLetter || !result) return;
+    if (!byLetter || !result || s.shape === "square") return;
     const width = Math.round((letterMm / result.capUnits) * result.design.bboxMm.w + 2 * s.marginMm);
     if (width !== s.widthMm) s.set({ widthMm: Math.max(100, Math.min(4000, width)) });
   }, [byLetter, letterMm, result]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -214,7 +216,7 @@ export function Konstruktor() {
       return;
     }
     cart.add({
-      key: `k|${text}|${font.id}|${usedLineFontIds.join(",")}|${sheet.widthMm}|${s.materialId}|${align}|${upper}`,
+      key: `k|${text}|${font.id}|${usedLineFontIds.join(",")}|${s.shape === "square" ? "sq" : ""}${sheet.widthMm}|${s.materialId}|${align}|${upper}`,
       kind: "stencil",
       title: `Свій напис «${oneLine}», ${font.name}`,
       materialId: s.materialId,
@@ -223,7 +225,7 @@ export function Konstruktor() {
       quantity: s.quantity,
       section: "sweet",
       vectorSvg: s.cut ? stencilThumbnailSvg(sheet.widthMm, sheet.heightMm, s.cut.cutPaths, material.look.face) : undefined,
-      spec: { text, fontId: font.id, lineFontIds: usedLineFontIds, align, upper, widthMm: sheet.widthMm, heightMm: sheet.heightMm, marginMm: s.marginMm, bridges: s.cut?.bridges.length ?? 0, bridgeStrength: s.bridgeStrength },
+      spec: { text, fontId: font.id, lineFontIds: usedLineFontIds, align, upper, widthMm: sheet.widthMm, heightMm: sheet.heightMm, marginMm: s.marginMm, square: s.shape === "square", bridges: s.cut?.bridges.length ?? 0, bridgeStrength: s.bridgeStrength },
     });
   };
 
@@ -340,11 +342,27 @@ export function Konstruktor() {
           <>
             <fieldset className="grid gap-2">
               <legend className={legend}>Розмір</legend>
-              <div className="flex gap-2 text-sm">
-                <button type="button" aria-pressed={!byLetter} onClick={() => setByLetter(false)} className={chip(!byLetter)}>За шириною трафарету</button>
-                <button type="button" aria-pressed={byLetter} onClick={() => setByLetter(true)} className={chip(byLetter)}>За висотою літер</button>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <button id="k-size-width" type="button" aria-pressed={s.shape !== "square" && !byLetter} onClick={() => { setByLetter(false); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && !byLetter)}>За шириною трафарету</button>
+                <button id="k-size-letter" type="button" aria-pressed={s.shape !== "square" && byLetter} onClick={() => { setByLetter(true); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && byLetter)}>За висотою літер</button>
+                <button id="k-size-square" type="button" aria-pressed={s.shape === "square"} onClick={() => { setByLetter(false); s.set({ shape: "square", widthMm: SQUARE_STENCIL_PRESETS.some((p) => p.sideMm === s.widthMm) ? s.widthMm : 300 }); }} className={chip(s.shape === "square")}>Квадратний</button>
               </div>
-              {!byLetter ? (
+              {s.shape === "square" ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {SQUARE_STENCIL_PRESETS.map((p) => (
+                      <button key={p.sideMm} id={`k-square-${p.sideMm / 10}`} type="button" aria-pressed={s.widthMm === p.sideMm} onClick={() => s.set({ widthMm: p.sideMm })}
+                        className={`grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${s.widthMm === p.sideMm ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
+                        <b className="text-[15px]">{p.sideMm / 10}×{p.sideMm / 10} см</b>
+                        <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceStencil({ shape: "square", widthMm: p.sideMm, heightMm: p.sideMm }, material, 1).unitPrice)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-[13px] text-[var(--muted)]">
+                    Напис вписуємо в квадрат і ставимо по центру.{s.materialId !== SQUARE_STENCIL_MATERIAL ? " Ціни квадратних розмірів для ПЕТ 0,5 мм, для цього матеріалу рахуємо за площею." : ""} Свій логотип: <Link href="/na-zamovlennia" className="underline">за вашим макетом</Link>.
+                  </span>
+                </>
+              ) : !byLetter ? (
                 <>
                   <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
                     <input id="k-width" type="number" min={10} max={400} value={Math.round(s.widthMm / 10)} onChange={(e) => s.set({ widthMm: Math.max(100, Math.min(4000, Number(e.target.value) * 10)) })}

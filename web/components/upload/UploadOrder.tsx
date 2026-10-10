@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { MATERIALS } from "@/lib/materials";
 import { priceStencil } from "@/lib/calculators/pricing";
+import { SQUARE_STENCIL_PRESETS } from "@/lib/calculators/square-stencil";
 import { formatUAH } from "@/lib/format";
 import { useCart } from "@/store/cart-store";
 import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
@@ -39,13 +40,15 @@ export function UploadOrder() {
   const [aspect, setAspect] = useState<number | null>(null);
   const [w, setW] = useState(50);
   const [h, setH] = useState(30);
+  // Square stencil (Денис 2026-10-10): the layout is fitted into the square, fixed prices for PET.
+  const [square, setSquare] = useState(false);
   const [mat, setMat] = useState<MaterialType>("pet_thin");
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<"idle" | "uploading" | "added" | "error">("idle");
   const [msg, setMsg] = useState("");
   const cart = useCart();
 
-  const height = aspect ? Math.max(5, Math.round(w * aspect)) : h;
+  const height = square ? w : aspect ? Math.max(5, Math.round(w * aspect)) : h;
   const m = MATERIALS[mat];
   const unit = priceStencil({ shape: "rect", widthMm: w * 10, heightMm: height * 10 }, m, qty).unitPrice;
 
@@ -61,7 +64,7 @@ export function UploadOrder() {
     setState("uploading");
     try {
       const key = await uploadLayoutFile(file);
-      cart.add({ key: `upload|${key}|${w}x${height}|${mat}`, title: `За вашим макетом «${file.name}», ${w}×${height} см`, materialId: mat, widthCm: w, heightCm: height, quantity: qty, kind: "stencil", uploadKey: key });
+      cart.add({ key: `upload|${key}|${w}x${height}|${mat}`, title: `${square ? "Квадратний трафарет за вашим макетом" : "За вашим макетом"} «${file.name}», ${w}×${height} см`, materialId: mat, widthCm: w, heightCm: height, quantity: qty, kind: "stencil", uploadKey: key });
       setState("added");
     } catch (e) {
       setState("error"); setMsg((e as Error).message || "Не вдалося завантажити файл. Спробуйте ще раз.");
@@ -78,12 +81,29 @@ export function UploadOrder() {
       </label>
       {raster && <p className="m-0 rounded-xl bg-[var(--surface)] p-3 text-sm">Картинку переведемо у вектор, менеджер перевірить контури і надішле превʼю до порізки.</p>}
 
+      <div className="grid gap-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input id="u-square" type="checkbox" checked={square} onChange={(e) => { setSquare(e.target.checked); if (e.target.checked && !SQUARE_STENCIL_PRESETS.some((p) => p.sideMm === w * 10)) setW(30); }} className="h-5 w-5 accent-[var(--ink)]" />
+          Квадратний трафарет (макет впишемо в квадрат по центру)
+        </label>
+        {square && (
+          <div className="flex flex-wrap gap-2">
+            {SQUARE_STENCIL_PRESETS.map((p) => (
+              <button key={p.sideMm} id={`u-square-${p.sideMm / 10}`} type="button" aria-pressed={w * 10 === p.sideMm} onClick={() => setW(p.sideMm / 10)}
+                className={`h-10 rounded-full border-[1.5px] px-3.5 text-sm tabular-nums ${w * 10 === p.sideMm ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>
+                {p.sideMm / 10}×{p.sideMm / 10} см · {formatUAH(priceStencil({ shape: "square", widthMm: p.sideMm, heightMm: p.sideMm }, m, 1).unitPrice)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
           <input id="u-w" type="number" min={5} max={400} value={w} onChange={(e) => setW(Math.max(5, Number(e.target.value) || 5))} className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)]" />
         </label>
-        <label className="grid gap-1 text-sm text-[var(--muted)]">Висота, см{aspect ? " (за пропорцією файлу)" : ""}
-          <input id="u-h" type="number" min={5} max={400} value={height} disabled={!!aspect} onChange={(e) => setH(Math.max(5, Number(e.target.value) || 5))} className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] disabled:opacity-70" />
+        <label className="grid gap-1 text-sm text-[var(--muted)]">Висота, см{square ? " (квадрат)" : aspect ? " (за пропорцією файлу)" : ""}
+          <input id="u-h" type="number" min={5} max={400} value={height} disabled={!!aspect || square} onChange={(e) => setH(Math.max(5, Number(e.target.value) || 5))} className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] disabled:opacity-70" />
         </label>
       </div>
 

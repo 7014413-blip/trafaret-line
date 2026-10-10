@@ -13,6 +13,10 @@ import type { CartLine, MaterialType, SectionTheme } from "../types/customizer";
 import type { OrderLineKind } from "../types/order";
 import type { PointerSignDesign } from "../types/pointer-sign";
 import type { OfficePlaqueDesign } from "../types/office-plaque";
+import type { JoinedWordsDesign } from "../types/joined-words";
+import type { LayeredPlaqueDesign } from "../types/layered-plaque";
+import { LAYERED_PLAQUE_CONFIGS } from "../lib/layered-plaque/configs";
+import { priceLayeredPlaque } from "../lib/layered-plaque/price";
 
 export type NewLine = {
   key: string;            // same key = same item, quantities add up
@@ -33,6 +37,13 @@ export type NewLine = {
   pointer?: PointerSignDesign;
   /** Office plaque design (kind "plaque"), priced like pointer signs. */
   plaque?: OfficePlaqueDesign;
+  /**
+   * «Написи на планці» design (kind "words"). Its price needs the fonts to measure the pieces,
+   * so the cart keeps the 1-set price it was added with (basePrice) and applies the quantity scale.
+   */
+  words?: JoinedWordsDesign;
+  /** Two-layer plaque (kind "layered": floor, door, number); unit = one set of the series. */
+  layered?: LayeredPlaqueDesign;
   /** Customer layout file key (tl-upload). */
   uploadKey?: string;
   /** Catalogue product: Medusa variant id and its 1-piece price (the server re-reads it from the database). */
@@ -44,7 +55,7 @@ export type NewLine = {
 
 type Stored = NewLine & { id: string };
 
-const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer" | "plaque">) => {
+const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer" | "plaque" | "layered">) => {
   if (l.fixedPrice != null) return l.fixedPrice;
   if (l.kind === "pointer" && l.pointer) {
     try {
@@ -63,6 +74,15 @@ const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity
       return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
     }
   }
+  if (l.kind === "layered" && l.layered) {
+    try {
+      return priceLayeredPlaque({ ...l.layered, quantity: l.quantity }, LAYERED_PLAQUE_CONFIGS[l.layered.kind]).unitPrice;
+    } catch {
+      // Saved before the size list changed: keep the price it was added with (see above).
+      return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
+    }
+  }
+  if (l.kind === "words" && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
   if (l.kind === "catalog" && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
   if (l.kind === "welded") return priceWelded(l.widthCm * 10, l.heightCm * 10, MATERIALS[l.materialId], l.quantity).unitPrice;
   return priceStencil({ shape: "rect", widthMm: l.widthCm * 10, heightMm: l.heightCm * 10 }, MATERIALS[l.materialId], l.quantity).unitPrice;

@@ -9,6 +9,12 @@ import type { PlaqueLineMeasure, PlaqueTextLine } from "./plaques";
 /** -1 = the tip points left, 1 = the tip points right. */
 export type PointerDirection = -1 | 1;
 
+/**
+ * pointer: a plate with a pointed end (Денис's photos of 2026-10-10);
+ * arrow: a classic arrow, a narrower body with a full-height head (his renders «Стрілка з обʼємними літерами»).
+ */
+export type PointerShape = "pointer" | "arrow";
+
 export type PointerMaterialGroup = "acrylic" | "mirror" | "polystyrene";
 
 /** One sheet a pointer sign layer can be cut from. */
@@ -63,6 +69,8 @@ export interface PointerSignDesign {
   widthMm: number;
   heightMm: number;
   direction: PointerDirection;
+  /** Older designs without it are «pointer». */
+  shape: PointerShape;
   baseMaterialId: string;
   overlayMaterialId: string;
   lines: PointerTextLine[];

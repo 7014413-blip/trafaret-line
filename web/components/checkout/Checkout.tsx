@@ -107,7 +107,7 @@ export function Checkout() {
         method: "POST",
         headers: { "content-type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PK ?? "" },
         body: JSON.stringify({
-          lines: items.map((i) => ({ key: i.key, kind: i.kind ?? "stencil", title: i.title, quantity: i.quantity, variantId: i.variantId, materialId: i.materialId, widthCm: i.widthCm, heightCm: i.heightCm, sign: i.sign, pointer: i.pointer, plaque: i.plaque, uploadKey: i.uploadKey, spec: i.spec })),
+          lines: items.map((i) => ({ key: i.key, kind: i.kind ?? "stencil", title: i.title, quantity: i.quantity, variantId: i.variantId, materialId: i.materialId, widthCm: i.widthCm, heightCm: i.heightCm, sign: i.sign, pointer: i.pointer, plaque: i.plaque, words: i.words, layered: i.layered, uploadKey: i.uploadKey, spec: i.spec })),
           contact: { phone: form.phone, name: form.name, email: form.payment === "invoice" ? company.email : undefined },
           delivery: {
             method: form.delivery, city: form.city, cityRef: form.cityRef || undefined,

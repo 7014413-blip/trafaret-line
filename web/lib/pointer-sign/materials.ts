@@ -18,6 +18,12 @@ const fromSignPalette: PointerMaterial[] = ACRYLIC_PALETTE.map((sheet) => ({
   inStock: sheet.inStock,
 }));
 
+// Matte silver acrylic for the «Стрілка з обʼємними літерами» look (Денис's renders 2026-10-10) [default].
+const silverMatte: PointerMaterial = {
+  id: "silver-matte", group: "acrylic", name: { uk: "Сріблястий матовий", ru: "Серебристый матовый", en: "Matte silver" },
+  hex: "#b9bdc2", mirror: false, baseThicknessMm: 3, overlayThicknessMm: 2, minLetterMm: 15, inStock: true,
+};
+
 const polystyrene: PointerMaterial[] = [
   {
     id: "ps-white", group: "polystyrene", name: { uk: "Полістирол білий", ru: "Полистирол белый", en: "White polystyrene" },
@@ -37,7 +43,7 @@ const polystyrene: PointerMaterial[] = [
   },
 ];
 
-export const POINTER_MATERIALS: PointerMaterial[] = [...fromSignPalette, ...polystyrene];
+export const POINTER_MATERIALS: PointerMaterial[] = [...fromSignPalette, silverMatte, ...polystyrene];
 
 export const POINTER_MATERIAL_GROUPS: { id: PointerMaterial["group"]; name: string }[] = [
   { id: "acrylic", name: "Акрил" },

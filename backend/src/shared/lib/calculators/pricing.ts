@@ -16,6 +16,7 @@ import type {
 } from "../../types/customizer";
 import { MACHINE_SHEET_MM, MATERIALS } from "../materials";
 import { billingAreaM2, piecesFor } from "./geometry";
+import { squareStencilPrice } from "./square-stencil";
 
 export const DEFAULT_PRICING: PricingConfig = {
   roundStencilTo: 10,
@@ -134,9 +135,11 @@ export function priceStencil(
   }
 
   const wholesale = wholesaleRate(material, buyer, cfg);
-  let unit = Math.max(material.minPrice, roundUp(areaM2 * (wholesale ?? material.baseSquareMeterPrice) * complexity, cfg.roundStencilTo));
-  if (pieces > 1) unit = roundUp(unit * (1 + cfg.compositeSurcharge), cfg.roundStencilTo);
-  if (wholesale != null) {
+  // Square PET stencils of the listed sizes have Денис's fixed prices (lib/calculators/square-stencil.ts).
+  const square = squareStencilPrice(sheet, material.id);
+  let unit = square ?? Math.max(material.minPrice, roundUp(areaM2 * (wholesale ?? material.baseSquareMeterPrice) * complexity, cfg.roundStencilTo));
+  if (square == null && pieces > 1) unit = roundUp(unit * (1 + cfg.compositeSurcharge), cfg.roundStencilTo);
+  if (wholesale != null && square == null) {
     return { ...common, discounts: [{ label: "Оптова ціна", percent: 0 }], unitPrice: unit, total: unit * quantity, priceOnRequest: false };
   }
 

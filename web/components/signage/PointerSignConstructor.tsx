@@ -14,6 +14,7 @@ import { PointerMaterialPicker } from "@/components/signage/PointerMaterialPicke
 import { PointerSignPreview } from "@/components/signage/PointerSignPreview";
 import { nextTierHint } from "@/lib/calculators/pricing";
 import { readPlaqueSizeParam } from "@/lib/client/plaque-size-param";
+import { readPointerShapeParam } from "@/lib/client/pointer-shape-param";
 import { LOGO_ACCEPT, readLogoFile } from "@/lib/client/read-logo-file";
 import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
@@ -28,7 +29,7 @@ import { pricePointerSign } from "@/lib/pointer-sign/price";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { useCart } from "@/store/cart-store";
 import type {
-  PointerArrowPlacement, PointerDirection, PointerLogo, PointerSignDesign, PointerTextLine,
+  PointerArrowPlacement, PointerDirection, PointerLogo, PointerShape, PointerSignDesign, PointerTextLine,
 } from "@/types/pointer-sign";
 
 const CFG = DEFAULT_POINTER_SIGN_CONFIG;
@@ -49,6 +50,7 @@ export function PointerSignConstructor() {
   const [sizeCode, setSizeCode] = useState(CFG.presets[0].code);
   const [customCm, setCustomCm] = useState({ w: 40, h: 15 });
   const [direction, setDirection] = useState<PointerDirection>(-1);
+  const [shape, setShape] = useState<PointerShape>("pointer");
   const [baseId, setBaseId] = useState("black");
   const [overlayId, setOverlayId] = useState("white");
   const text = usePlaqueLines(FIRST_LINES, CFG.maxLines);
@@ -69,6 +71,8 @@ export function PointerSignConstructor() {
     setDispatch(formatDispatch(estimateDispatchDate(new Date())));
     const fromLink = readPlaqueSizeParam(CFG.presets.map((p) => p.code));
     if (fromLink) setSizeCode(fromLink);
+    const shapeFromLink = readPointerShapeParam();
+    if (shapeFromLink === "arrow") { setShape("arrow"); setArrowPlacement("none"); }
   }, []);
 
   // Revoke the preview URL of a replaced or removed logo.
@@ -84,7 +88,7 @@ export function PointerSignConstructor() {
   const measured = text.measured;
 
   const design: PointerSignDesign = {
-    sizeCode, widthMm: size.widthMm, heightMm: size.heightMm, direction,
+    sizeCode, widthMm: size.widthMm, heightMm: size.heightMm, direction, shape,
     baseMaterialId: baseId, overlayMaterialId: overlayId,
     lines: lines.map((l) => ({ text: l.text.replace(/\s+/g, " ").trim(), fontId: l.fontId, size: l.size })),
     arrow: { placement: arrowPlacement, lineIndex: Math.min(arrowLine, Math.max(0, lines.length - 1)) },
@@ -198,6 +202,14 @@ export function PointerSignConstructor() {
               </span>
             </div>
           )}
+        </fieldset>
+
+        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Форма</legend>
+          <div className="flex flex-wrap gap-2">
+            <PlaqueChip id="ps-shape-pointer" on={shape === "pointer"} onClick={() => setShape("pointer")}>Табличка з вістрям</PlaqueChip>
+            <PlaqueChip id="ps-shape-arrow" on={shape === "arrow"} onClick={() => { setShape("arrow"); setArrowPlacement("none"); }}>Стрілка</PlaqueChip>
+          </div>
+          <span className="text-[13px] text-[var(--muted)]">{shape === "arrow" ? "Класична стрілка: напис на корпусі, логотип у голові стрілки." : "Прямокутна табличка з гострим краєм, як на наших фото."} Ціна однакова.</span>
         </fieldset>
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Куди показує стрілка</legend>

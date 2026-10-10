@@ -10,17 +10,19 @@ import type { PointerMaterial } from "@/types/pointer-sign";
 const swatchBackground = (sheet: PointerMaterial) =>
   sheet.mirror ? `linear-gradient(135deg, #f8fafc, ${sheet.hex} 45%, #f8fafc 60%, ${sheet.hex})` : sheet.hex;
 
-export function PointerMaterialPicker({ legend, value, onChange, idPrefix }: {
+export function PointerMaterialPicker({ legend, value, onChange, idPrefix, materials = POINTER_MATERIALS }: {
   legend: string;
   value: string;
   onChange: (id: string) => void;
   idPrefix: string;
+  /** Sheets to choose from (the two-layer plaques add light bases). */
+  materials?: PointerMaterial[];
 }) {
-  const current = findPointerMaterial(value);
-  const sheets = POINTER_MATERIALS.filter((m) => m.group === current.group);
+  const current = findPointerMaterial(value, materials);
+  const sheets = materials.filter((m) => m.group === current.group);
   const pickGroup = (group: PointerMaterial["group"]) => {
     if (group === current.group) return;
-    const first = POINTER_MATERIALS.find((m) => m.group === group && m.inStock) ?? POINTER_MATERIALS.find((m) => m.group === group);
+    const first = materials.find((m) => m.group === group && m.inStock) ?? materials.find((m) => m.group === group);
     if (first) onChange(first.id);
   };
 
@@ -28,7 +30,7 @@ export function PointerMaterialPicker({ legend, value, onChange, idPrefix }: {
     <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
       <legend className="mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]">{legend}</legend>
       <div role="radiogroup" aria-label={`${legend}: матеріал`} className="flex flex-wrap gap-2">
-        {POINTER_MATERIAL_GROUPS.map((g) => (
+        {POINTER_MATERIAL_GROUPS.filter((g) => materials.some((m) => m.group === g.id)).map((g) => (
           <button key={g.id} id={`${idPrefix}-g-${g.id}`} type="button" role="radio" aria-checked={current.group === g.id} onClick={() => pickGroup(g.id)}
             className={`h-10 rounded-full border-[1.5px] px-3.5 text-sm ${current.group === g.id ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>
             {g.name}

@@ -6,15 +6,19 @@ import type { MaterialType, SectionTheme } from "./customizer";
 import type { SignDesign } from "./signage";
 import type { PointerSignDesign } from "./pointer-sign";
 import type { OfficePlaqueDesign } from "./office-plaque";
+import type { JoinedWordsDesign } from "./joined-words";
+import type { LayeredPlaqueDesign } from "./layered-plaque";
 import type { B2BCompany } from "./invoice";
 import type { PackKind } from "./packaging";
 
 /**
  * stencil: sheet with cut-outs priced by size; welded: one solid piece (topper, acrylic word);
  * catalog: a ready product variant from Medusa, priced by the variant price in the database;
- * sign; pointer: two-layer pointer sign and plaque: office plaque, both priced by their design; accessory.
+ * sign; pointer: two-layer pointer sign and plaque: office plaque, both priced by their design;
+ * words: «Написи на планці», priced by its pieces measured with the server's fonts;
+ * layered: two-layer floor, door and number plaques, priced by size and series; accessory.
  */
-export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "pointer" | "plaque" | "accessory";
+export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "pointer" | "plaque" | "words" | "layered" | "accessory";
 
 export interface OrderLineInput {
   key: string;
@@ -31,6 +35,10 @@ export interface OrderLineInput {
   pointer?: PointerSignDesign;
   /** kind "plaque": the design, re-read and re-priced on the server. */
   plaque?: OfficePlaqueDesign;
+  /** kind "words": the design, re-read, re-measured and re-priced on the server. */
+  words?: JoinedWordsDesign;
+  /** kind "layered": the design, re-read and re-priced on the server. */
+  layered?: LayeredPlaqueDesign;
   /** Customer layout file (POST /store/tl-upload). */
   uploadKey?: string;
   section?: SectionTheme;

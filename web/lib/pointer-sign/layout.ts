@@ -2,17 +2,16 @@
 // the sign centre, Y down). Pure function: the constructor preview, the checks and the
 // production file use the same numbers. Layout follows Денис's signs: the logo in a ring
 // sits in the tip, the text block fills the rest, every line keeps its relative size.
-// The base outline is the «pointer» shape of the sign constructor (lib/calculators/signage.ts);
-// the text block is fitted by the common plaque module (lib/plaques/fit-lines.ts).
+// The base outline is the pointed plate or the classic arrow (lib/pointer-sign/outline.ts);
+// on the arrow the text fills the body and the logo sits in the head. The text block is fitted by the common plaque module (lib/plaques/fit-lines.ts).
 
 import type {
   PointerLineMeasure, PointerLinePlacement, PointerLogoPlacement, PointerSignDesign, PointerSignLayout,
 } from "../../types/pointer-sign";
-import type { SignBase } from "../../types/signage";
-import { headLength, signOutline } from "../calculators/signage";
 import type { PlaqueLineInput, PlaqueZone } from "../../types/plaques";
 import { fitPlaqueLines } from "../plaques/fit-lines";
 import { arrowGlyphOutline } from "./arrow-glyph";
+import { ARROW_BODY_HALF, pointerHeadLength, pointerOutline } from "./outline";
 
 /** Arrow box per cap height of its line: length, height and the gap to the text. */
 const ARROW_LENGTH = 1.9;
@@ -25,22 +24,40 @@ function tipAllowance(blockHeight: number, h: number, head: number, margin: numb
 }
 
 export function computePointerLayout(
-  design: Pick<PointerSignDesign, "widthMm" | "heightMm" | "direction" | "lines" | "arrow" | "logo">,
+  design: Pick<PointerSignDesign, "widthMm" | "heightMm" | "direction" | "lines" | "arrow" | "logo"> & { shape?: PointerSignDesign["shape"] },
   measures: (PointerLineMeasure | null)[],
 ): PointerSignLayout {
   const w = design.widthMm;
   const h = design.heightMm;
   const dir = design.direction;
-  const base: SignBase = { shape: "pointer", widthMm: w, heightMm: h, direction: dir, materialId: "", thicknessMm: 3 };
-  const head = headLength(base);
+  const shape = design.shape ?? "pointer";
+  const isArrow = shape === "arrow";
+  const head = pointerHeadLength(shape, w, h);
   const margin = Math.max(6, h * 0.1);
-  const outline = signOutline(base).map(([x, y]) => [x - w / 2, y - h / 2] as [number, number]);
+  const outline = pointerOutline(shape, w, h, dir);
+  // Height the text may use: the whole plate, or the arrow's body.
+  const bodyHalf = isArrow ? h * ARROW_BODY_HALF : h / 2;
+  const textMargin = isArrow ? Math.max(4, h * 0.07) : margin;
   // Work with the tip on the right (+x); mirror the boxes at the end for a left pointer.
   const flipX = (x: number, width: number) => (dir === 1 ? x : -(x + width));
 
   let logo: PointerLogoPlacement | null = null;
-  let textRight = w / 2 - head - margin * 0.3;
-  if (design.logo) {
+  // On the arrow the text may reach into the head as far as the head is taller than the body.
+  let textRight = isArrow ? w / 2 - head + head * (1 - bodyHalf / (h / 2)) - textMargin : w / 2 - head - margin * 0.3;
+  if (design.logo && isArrow) {
+    // In the head: the circle inscribed in the head triangle, a little smaller.
+    const slant = Math.hypot(head, h / 2);
+    const inscribed = (head * h / 2) / ((h + 2 * slant) / 2);
+    const radius = Math.max(1, inscribed - margin * 0.35);
+    const cx = w / 2 - head + inscribed;
+    const ringWidth = design.logo.ring ? Math.max(2.5, radius * 0.06) : 0;
+    const inner = design.logo.ring ? radius - ringWidth - radius * 0.14 : radius * 0.95;
+    const a = Math.max(0.05, design.logo.aspect);
+    const boxWidth = (2 * inner * a) / Math.hypot(1, a);
+    const boxHeight = (2 * inner) / Math.hypot(1, a);
+    logo = { cx: dir === 1 ? cx : -cx, cy: 0, boxWidth, boxHeight, ringRadius: design.logo.ring ? radius - ringWidth / 2 : 0, ringWidth };
+    textRight = w / 2 - head - textMargin * 0.5;
+  } else if (design.logo) {
     const radius = h / 2 - margin;
     const slant = Math.hypot(head, h / 2);
     const cx = Math.max(-w / 2 + margin + radius, w / 2 - ((radius + margin * 0.6) * slant) / (h / 2));
@@ -54,7 +71,7 @@ export function computePointerLayout(
     textRight = cx - radius - margin * 0.8;
   }
 
-  const zone: PlaqueZone = { left: -w / 2 + margin, right: textRight, top: -h / 2 + margin, bottom: h / 2 - margin };
+  const zone: PlaqueZone = { left: -w / 2 + textMargin, right: textRight, top: -bodyHalf + textMargin, bottom: bodyHalf - textMargin };
   const arrowLine = design.arrow.placement === "none" ? -1 : design.arrow.lineIndex;
   const active: PlaqueLineInput[] = [];
   design.lines.forEach((line, index) => {
@@ -83,7 +100,7 @@ export function computePointerLayout(
   }
 
   let fitted = fitPlaqueLines(active, zone);
-  if (!design.logo) {
+  if (!design.logo && !isArrow) {
     // Use part of the tip when the text block is low enough to fit there.
     const first = tipAllowance(fitted.blockHeight, h, head, margin);
     if (first > 0.5) {
