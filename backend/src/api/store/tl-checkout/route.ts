@@ -95,7 +95,7 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
   if (line.kind === "sign") {
     if (!line.sign) throw new Error("sign design missing");
     const label = cleanText(line.title);
-    return { title: label ? `Вивіска: ${label}` : "Вивіска з акрилу", unitPrice: priceSign({ ...line.sign, quantity: line.quantity }).unitPrice };
+    return { title: label ? (label.startsWith("Вивіска") ? label : `Вивіска: ${label}`) : "Вивіска з акрилу", unitPrice: priceSign({ ...line.sign, quantity: line.quantity }).unitPrice };
   }
   if (line.kind === "pointer") {
     // Pointer sign: the design is re-read field by field and priced here (fixed sizes at

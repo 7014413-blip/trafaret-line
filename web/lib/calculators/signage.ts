@@ -2,7 +2,8 @@
 // the constructor uses them for the live price and the server repeats them before the
 // order is accepted (same rule as calculators/pricing.ts). Spec: research/konstruktor-vyvesok.md.
 //
-// Approved by Денис 2026-10-08: 18 000 UAH/m² of the overall bounding box, base 3 mm and
+// Approved by Денис 2026-10-08: sign rate per m² of the overall bounding box (17 000 UAH since
+// Денис 2026-10-10, was 18 000), base 3 mm and
 // overlay 1–3 mm included, thicker base adds the blank-sheet difference to 3 mm, the
 // positioning stencil is 600 UAH/m². The customer never sees m², only sizes and UAH.
 // Values marked [default] were chosen by Claude and approved in bulk by Денис 2026-10-08 23:45;
@@ -20,8 +21,8 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
 /* ------------------------------------------------------------------ */
 
 export const DEFAULT_SIGN_PRICING: SignPricingConfig = {
-  signRatePerM2: 18_000,
-  minSignPrice: 1_500,              // [default]
+  signRatePerM2: 17_000,            // Денис 2026-10-10 (was 18 000)
+  minSignPrice: 450,                // [default] Claude 2026-10-10, as the smallest pointer sign (was 1 500)
   minLettersPrice: 250,             // [default]
   lettersFactor: 1.5,               // [default]
   separateLettersFactor: 2,         // [default]
@@ -187,7 +188,7 @@ const sizeLabel = (b: SignBase) => {
 };
 
 /**
- * Price of one design line. Sign: area of the overall box × 18 000 + thicker base +
+ * Price of one design line. Sign: area of the overall box × 17 000 + thicker base +
  * options, minimum, then ONE best discount (pricing.ts rules, never stacked).
  * Letters: per layer box × sheet rate × factor (1.5 word / 2.0 loose letters), minimum 250.
  */
