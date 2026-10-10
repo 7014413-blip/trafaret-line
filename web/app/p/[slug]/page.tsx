@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { Gallery, ProductBuyBox } from "@/components/catalog/ProductBuyBox";
+import { HoleProductView } from "@/components/catalog/HoleProductView";
 import { listCategories, productByHandle, productsByHandles } from "@/services/medusa-store";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
@@ -58,10 +59,14 @@ export default async function ProductPage({ params }: Props) {
           {category && <><Link href={category.path} className="hover:text-[var(--ink)]">{category.name}</Link>›</>}
           <span>{p.title}</span>
         </nav>
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-          <Gallery images={p.images} title={p.title} />
-          <ProductBuyBox p={p} />
-        </div>
+        {p.hole ? (
+          <HoleProductView p={p} rules={p.hole} />
+        ) : (
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+            <Gallery images={p.images} title={p.title} />
+            <ProductBuyBox p={p} />
+          </div>
+        )}
         <section className="mt-10 grid max-w-[860px] gap-0">
           {sections.map((s, i) => (
             <details key={s.title + i} open={i < 2} className="border-t border-[var(--line)] py-3">

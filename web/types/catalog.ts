@@ -2,6 +2,8 @@
 // what /store/product-categories and /store/products return with our metadata
 // (backend/src/scripts/import-catalog.ts); the normalised shapes are what pages use.
 
+import type { HoleRules, RawHoleRules } from "./hole";
+
 export interface FaqEntry {
   q: string;
   a: string;
@@ -75,6 +77,8 @@ export interface RawProduct {
     fields?: { key: string; uk: string; ru: string; def: string }[] | null;
     /** Set in «Простий кабінет»; missing means in stock. */
     availability?: ProductAvailability;
+    /** Blanks with a hanging hole the buyer places and sizes (types/hole.ts). */
+    hole?: RawHoleRules | null;
   } | null;
 }
 
@@ -171,4 +175,6 @@ export interface CatalogProduct extends CatalogProductCard {
   /** Fields the customer fills in for named products (word, date …). */
   fields: { key: string; label: string; placeholder: string }[];
   availability: ProductAvailability;
+  /** Hole choice of a blank with a hanging hole; null for every other product. */
+  hole: HoleRules | null;
 }

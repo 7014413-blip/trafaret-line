@@ -5,6 +5,7 @@ import type {
   CatalogCategory, CatalogImage, CatalogProduct, CatalogProductCard, CatalogVariant, RawCategory, RawProduct, RawVariant,
 } from "../../types/catalog";
 import { fixCountAgreement } from "../text/count-agreement";
+import { readHoleRules } from "./hole-rules";
 
 const SIZE_OPTION = "Розмір";
 const MATERIAL_OPTION = "Матеріал";
@@ -103,5 +104,6 @@ export function mapProduct(raw: RawProduct): CatalogProduct {
     relatedHandles: raw.metadata?.related_handles ?? [],
     fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: f.uk, placeholder: f.def })),
     availability: raw.metadata?.availability === "on_order" || raw.metadata?.availability === "out_of_stock" ? raw.metadata.availability : "in_stock",
+    hole: readHoleRules(raw.metadata?.hole),
   };
 }

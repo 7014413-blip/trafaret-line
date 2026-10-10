@@ -21,6 +21,9 @@ import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
 } from "../../../shared/lib/validation/constructor-size";
 import { invoiceLinkToken } from "../../../lib/order-link";
+import { checkHole } from "../../../shared/lib/catalog/check-hole";
+import { readHoleRules } from "../../../shared/lib/catalog/hole-rules";
+import type { HolePosition, HoleSpec } from "../../../shared/types/hole";
 
 // Accessories with fixed prices (admin setting).
 const ACCESSORIES: Record<string, { title: string; price: number }> = {
@@ -35,8 +38,9 @@ const phoneOk = (v: string) => /^(\+?380|0)\d{9}$/.test(v.replace(/[\s()-]/g, ""
 const MAX_SPEC_CHARS = 20_000;
 const MAX_TITLE_CHARS = 200;
 
-type VariantPrice = { title: string; sku: string | null; price: number };
-type PricedLine = { title: string; unitPrice: number };
+type VariantPrice = { title: string; sku: string | null; price: number; sheetMm: [number, number] | null; hole: unknown };
+/** `spec` is set when the server rewrote the production data (a checked hole). */
+type PricedLine = { title: string; unitPrice: number; spec?: Record<string, unknown> };
 
 /**
  * Price of catalogue variants from the database (never from the browser); only published
@@ -47,14 +51,16 @@ async function variantPrices(query: { graph: (args: Record<string, unknown>) => 
   if (!ids.length) return out;
   const { data } = await query.graph({
     entity: "variant",
-    fields: ["id", "title", "sku", "prices.amount", "prices.currency_code", "product.title", "product.status", "product.metadata"],
+    fields: ["id", "title", "sku", "metadata", "prices.amount", "prices.currency_code", "product.title", "product.status", "product.metadata"],
     filters: { id: ids },
   });
-  for (const raw of data as { id: string; title: string; sku: string | null; prices?: { amount: number; currency_code: string }[]; product?: { title: string; status: string; metadata?: Record<string, unknown> | null } }[]) {
+  for (const raw of data as { id: string; title: string; sku: string | null; metadata?: Record<string, unknown> | null; prices?: { amount: number; currency_code: string }[]; product?: { title: string; status: string; metadata?: Record<string, unknown> | null } }[]) {
     const price = raw.prices?.find((p) => p.currency_code === "uah");
     if (!price || raw.product?.status !== "published") continue;
     if (raw.product.metadata?.availability === "out_of_stock") continue;
-    out.set(raw.id, { title: `${raw.product.title}, ${raw.title}`, sku: raw.sku, price: Number(price.amount) });
+    const sheet = raw.metadata?.sheet_mm;
+    const sheetMm = Array.isArray(sheet) && sheet.length === 2 && sheet.every((v) => typeof v === "number" && v > 0) ? (sheet as [number, number]) : null;
+    out.set(raw.id, { title: `${raw.product.title}, ${raw.title}`, sku: raw.sku, price: Number(price.amount), sheetMm, hole: raw.product.metadata?.hole ?? null });
   }
   return out;
 }
@@ -67,10 +73,36 @@ function cleanText(value: unknown, max = 80): string {
 
 const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
+const HOLE_PLACE: Record<HolePosition, string> = { top: "зверху", bottom: "знизу", left: "зліва", right: "справа", center: "по центру" };
+
+/**
+ * Blanks with a hole choice: the hole from the browser is checked again for the circle of the
+ * paid variant and replaced by the server's own result, so production gets checked sizes only.
+ */
+function checkedHole(variant: VariantPrice, spec: Record<string, unknown> | null | undefined): HoleSpec | null {
+  const rules = readHoleRules(variant.hole as Parameters<typeof readHoleRules>[0]);
+  if (!rules) return null;
+  if (!variant.sheetMm) throw new Error("hole product variant without a size");
+  const sent = spec?.hole as { position?: unknown; diameterMm?: unknown } | null | undefined;
+  if (!sent || typeof sent.position !== "string" || typeof sent.diameterMm !== "number") throw new SpecError("hole missing");
+  const check = checkHole({ position: sent.position as HolePosition, diameterMm: String(sent.diameterMm) }, variant.sheetMm[0], rules);
+  if (!check.spec) throw new SpecError(`hole rejected: ${check.error}`);
+  return check.spec;
+}
+
 function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): PricedLine {
   if (line.kind === "catalog") {
     const variant = line.variantId ? variants.get(line.variantId) : undefined;
     if (!variant) throw new Error(`variant ${line.variantId} is not on sale`);
+    const hole = checkedHole(variant, line.spec);
+    if (hole) {
+      const diameter = String(hole.diameterMm).replace(".", ",");
+      return {
+        title: `${variant.title}, отвір Ø${diameter} мм ${HOLE_PLACE[hole.position]}`,
+        unitPrice: priceCatalogVariant(variant.price, line.quantity),
+        spec: { ...line.spec, hole },
+      };
+    }
     return { title: variant.title, unitPrice: priceCatalogVariant(variant.price, line.quantity) };
   }
   if (line.kind === "accessory") {
@@ -188,7 +220,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           kind: line.kind, key: String(line.key ?? "").slice(0, 300), variantId: line.variantId ?? null,
           sku: line.variantId ? variants.get(line.variantId)?.sku ?? null : null, materialId: line.materialId ?? null,
           widthCm: line.widthCm ?? null, heightCm: line.heightCm ?? null,
-          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas"), spec: safeSpec(line.spec),
+          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas"), spec: safeSpec(priced.spec ?? line.spec),
         },
       };
     });
