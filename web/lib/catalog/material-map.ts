@@ -28,6 +28,21 @@ const MAP: Record<string, MaterialType> = {
   "bl-ps-1-silver": "polystyrene_mirror_1",
   "bl-pet-05": "pet_food_board",
   "bl-ps-1-white": "polystyrene",
+  // confectionery tools, signs and thick acrylic (catalog section w3-konditer, 2026-10-10)
+  "bl-mir-3-rose": "acrylic_mirror_3",
+  "bl-acr-15mm-clear": "acrylic_15",
+  "acr-2-white": "acrylic_white_2",
+  "acr-8-clear": "acrylic_8",
+  "skr-acr-3-clear": "acrylic_3",
+  "skr-acr-3-white": "acrylic_white_3",
+  "skr-acr-3-black": "acrylic_black_3",
+  "skr-acr-6-clear": "acrylic_6",
+  "skr-acr-6-white": "acrylic_6",
+  "skr-acr-6-black": "acrylic_6",
+  // two-layer polystyrene 2 mm: the 1 mm mirror polystyrene weight is the closest; the signs are 8–12 cm
+  "tab-ps2-gold": "polystyrene_mirror_1",
+  "tab-ps2-silver": "polystyrene_mirror_1",
+  "tab-ps2-black": "polystyrene_mirror_1",
 };
 
 /** Calculator material for a catalogue code; PET 0.5 mm when the code is unknown. */
