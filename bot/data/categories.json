@@ -1,0 +1,450 @@
+[
+ {
+  "handle": "food",
+  "parent": null,
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети для тортів і кави"
+  }
+ },
+ {
+  "handle": "food-tort",
+  "parent": "food",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети для тортів"
+  }
+ },
+ {
+  "handle": "food-tiramisu",
+  "parent": "food",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети для тірамісу"
+  }
+ },
+ {
+  "handle": "food-pryaniky",
+  "parent": "food",
+  "rank": 2,
+  "uk": {
+   "name": "Трафарети для пряників і печива"
+  }
+ },
+ {
+  "handle": "food-kava",
+  "parent": "food",
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети для кави і капучино"
+  }
+ },
+ {
+  "handle": "food-khlib",
+  "parent": "food",
+  "rank": 4,
+  "uk": {
+   "name": "Трафарети для хліба і піци"
+  }
+ },
+ {
+  "handle": "food-napysy",
+  "parent": "food",
+  "rank": 5,
+  "uk": {
+   "name": "Трафарети з написами та іменами на торт"
+  }
+ },
+ {
+  "handle": "food-cyfry",
+  "parent": "food",
+  "rank": 6,
+  "uk": {
+   "name": "Трафарети цифр на торт"
+  }
+ },
+ {
+  "handle": "food-horeca",
+  "parent": "food",
+  "rank": 7,
+  "uk": {
+   "name": "Трафарети з логотипом для кавʼярень і кондитерських"
+  }
+ },
+ {
+  "handle": "holidays",
+  "parent": null,
+  "rank": 1,
+  "uk": {
+   "name": "Святкові трафарети"
+  }
+ },
+ {
+  "handle": "holidays-novyi-rik",
+  "parent": "holidays",
+  "rank": 0,
+  "uk": {
+   "name": "Новорічні та різдвяні трафарети"
+  }
+ },
+ {
+  "handle": "holidays-mykolai",
+  "parent": "holidays",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети на День святого Миколая"
+  }
+ },
+ {
+  "handle": "holidays-vesillia",
+  "parent": "holidays",
+  "rank": 2,
+  "uk": {
+   "name": "Весільні трафарети"
+  }
+ },
+ {
+  "handle": "walls",
+  "parent": null,
+  "rank": 2,
+  "uk": {
+   "name": "Трафарети для стін і інтерʼєру"
+  }
+ },
+ {
+  "handle": "plaster",
+  "parent": null,
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети для декоративної штукатурки"
+  }
+ },
+ {
+  "handle": "plaster-obiemni",
+  "parent": "plaster",
+  "rank": 0,
+  "uk": {
+   "name": "Обʼємні трафарети під штукатурку"
+  }
+ },
+ {
+  "handle": "plaster-kamin",
+  "parent": "plaster",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети під цеглу і камінь"
+  }
+ },
+ {
+  "handle": "plaster-roslyny",
+  "parent": "plaster",
+  "rank": 2,
+  "uk": {
+   "name": "Рослинні трафарети під штукатурку"
+  }
+ },
+ {
+  "handle": "letters",
+  "parent": null,
+  "rank": 4,
+  "uk": {
+   "name": "Трафарети літер, цифр і написів"
+  }
+ },
+ {
+  "handle": "letters-alfavity",
+  "parent": "letters",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети алфавіту"
+  }
+ },
+ {
+  "handle": "letters-cyfry",
+  "parent": "letters",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети цифр"
+  }
+ },
+ {
+  "handle": "letters-napys",
+  "parent": "letters",
+  "rank": 2,
+  "uk": {
+   "name": "Трафарет з написом на замовлення"
+  }
+ },
+ {
+  "handle": "blanks",
+  "parent": null,
+  "rank": 5,
+  "uk": {
+   "name": "Заготовки з акрилу і PET"
+  }
+ },
+ {
+  "handle": "blanks-akryl-prozoryi",
+  "parent": "blanks",
+  "rank": 0,
+  "uk": {
+   "name": "Заготовки з прозорого акрилу"
+  }
+ },
+ {
+  "handle": "blanks-kolorovyi",
+  "parent": "blanks",
+  "rank": 1,
+  "uk": {
+   "name": "Заготовки з кольорового акрилу"
+  }
+ },
+ {
+  "handle": "blanks-dzerkalni",
+  "parent": "blanks",
+  "rank": 2,
+  "uk": {
+   "name": "Дзеркальні заготовки"
+  }
+ },
+ {
+  "handle": "blanks-pet-pidlozhky",
+  "parent": "blanks",
+  "rank": 3,
+  "uk": {
+   "name": "Підложки під торт з PET і полістиролу"
+  }
+ },
+ {
+  "handle": "blanks-breloky",
+  "parent": "blanks",
+  "rank": 4,
+  "uk": {
+   "name": "Заготовки для брелоків"
+  }
+ },
+ {
+  "handle": "camo",
+  "parent": null,
+  "rank": 6,
+  "uk": {
+   "name": "Камуфляжні, піксельні та патріотичні трафарети"
+  }
+ },
+ {
+  "handle": "camo-pixel",
+  "parent": "camo",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети піксель"
+  }
+ },
+ {
+  "handle": "camo-nabory",
+  "parent": "camo",
+  "rank": 1,
+  "uk": {
+   "name": "Набори камуфляжних трафаретів"
+  }
+ },
+ {
+  "handle": "camo-tryzub",
+  "parent": "camo",
+  "rank": 2,
+  "uk": {
+   "name": "Патріотичні трафарети: тризуб, герб"
+  }
+ },
+ {
+  "handle": "holidays-den-narodzhennia",
+  "parent": "holidays",
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети на день народження"
+  }
+ },
+ {
+  "handle": "holidays-velykden",
+  "parent": "holidays",
+  "rank": 4,
+  "uk": {
+   "name": "Великодні трафарети"
+  }
+ },
+ {
+  "handle": "business",
+  "parent": null,
+  "rank": 7,
+  "uk": {
+   "name": "Трафарети для бізнесу і ОСББ"
+  }
+ },
+ {
+  "handle": "business-osbb",
+  "parent": "business",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети для ОСББ і під'їздів"
+  }
+ },
+ {
+  "handle": "business-znaky",
+  "parent": "business",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети знаків і маркування"
+  }
+ },
+ {
+  "handle": "custom",
+  "parent": null,
+  "rank": 8,
+  "uk": {
+   "name": "Трафарет на замовлення"
+  }
+ },
+ {
+  "handle": "custom-po-kartyntsi",
+  "parent": "custom",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарет за вашою картинкою або логотипом"
+  }
+ },
+ {
+  "handle": "business-parkovka",
+  "parent": "business",
+  "rank": 2,
+  "uk": {
+   "name": "Трафарети для паркування і розмітки"
+  }
+ },
+ {
+  "handle": "camo-markuvannia",
+  "parent": "camo",
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети для маркування техніки"
+  }
+ },
+ {
+  "handle": "plaster-mandaly",
+  "parent": "plaster",
+  "rank": 3,
+  "uk": {
+   "name": "Мандали під штукатурку"
+  }
+ },
+ {
+  "handle": "walls-tvaryny",
+  "parent": "walls",
+  "rank": 0,
+  "uk": {
+   "name": "Трафарети тварин і птахів"
+  }
+ },
+ {
+  "handle": "walls-napysy",
+  "parent": "walls",
+  "rank": 1,
+  "uk": {
+   "name": "Трафарети написів на стіну"
+  }
+ },
+ {
+  "handle": "business-fasad",
+  "parent": "business",
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети для фасадів і адрес"
+  }
+ },
+ {
+  "handle": "business-sklad",
+  "parent": "business",
+  "rank": 4,
+  "uk": {
+   "name": "Трафарети для складу і виробництва"
+  }
+ },
+ {
+  "handle": "camo-patriotychni-napysy",
+  "parent": "camo",
+  "rank": 4,
+  "uk": {
+   "name": "Патріотичні написи"
+  }
+ },
+ {
+  "handle": "walls-petrykivka",
+  "parent": "walls",
+  "rank": 2,
+  "uk": {
+   "name": "Трафарети петриківський розпис"
+  }
+ },
+ {
+  "handle": "plaster-panno",
+  "parent": "plaster",
+  "rank": 4,
+  "uk": {
+   "name": "Великі панно під штукатурку"
+  }
+ },
+ {
+  "handle": "walls-mandaly",
+  "parent": "walls",
+  "rank": 3,
+  "uk": {
+   "name": "Трафарети мандали"
+  }
+ },
+ {
+  "handle": "walls-damask",
+  "parent": "walls",
+  "rank": 4,
+  "uk": {
+   "name": "Трафарети дамаск"
+  }
+ },
+ {
+  "handle": "walls-vyshyvanka",
+  "parent": "walls",
+  "rank": 5,
+  "uk": {
+   "name": "Трафарети вишиванка і український орнамент"
+  }
+ },
+ {
+  "handle": "walls-velyki",
+  "parent": "walls",
+  "rank": 6,
+  "uk": {
+   "name": "Великі трафарети на стіну"
+  }
+ },
+ {
+  "handle": "walls-roslyny",
+  "parent": "walls",
+  "rank": 7,
+  "uk": {
+   "name": "Трафарети листя, гілки і дерева"
+  }
+ },
+ {
+  "handle": "walls-heometriia",
+  "parent": "walls",
+  "rank": 8,
+  "uk": {
+   "name": "Геометричні трафарети"
+  }
+ },
+ {
+  "handle": "walls-bordiury",
+  "parent": "walls",
+  "rank": 9,
+  "uk": {
+   "name": "Трафарети бордюри для стін"
+  }
+ }
+]

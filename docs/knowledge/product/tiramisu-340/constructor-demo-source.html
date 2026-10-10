@@ -1,0 +1,350 @@
+<title>Трафарет «Обіцяю тебе»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Manrope:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#f4f1ec; --panel:#fffdf9; --fg:#2b2420; --muted:#76695f; --line:#e3dbd1;
+  --accent:#7a4527; --accent-fg:#fff; --chip:#efe8df; --focus:#b5774d;
+  --mat:#2f5a4e; --mat-grid:rgba(255,255,255,.10); --mat-grid-b:rgba(255,255,255,.22);
+  --table:#3a2c24;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1b1715; --panel:#24201d; --fg:#efe7de; --muted:#a8998c; --line:#3a332e;
+  --accent:#d39a6f; --accent-fg:#1b1715; --chip:#2f2925; --focus:#e0ad86;
+  --mat:#244a40; --mat-grid:rgba(255,255,255,.08); --mat-grid-b:rgba(255,255,255,.18);
+  --table:#2a201b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b1715; --panel:#24201d; --fg:#efe7de; --muted:#a8998c; --line:#3a332e;
+  --accent:#d39a6f; --accent-fg:#1b1715; --chip:#2f2925; --focus:#e0ad86;
+  --mat:#244a40; --mat-grid:rgba(255,255,255,.08); --mat-grid-b:rgba(255,255,255,.18);
+  --table:#2a201b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:4px}
+.crumbs{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(22px,3.2vw,32px)/1.15 "PT Serif",Georgia,serif;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:65ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:860px){.stage{position:static}}
+.tabs{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:600 14px Manrope,system-ui,sans-serif;padding:9px 10px;border-radius:8px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--chip);color:var(--fg)}
+.view{aspect-ratio:1/1;width:100%;max-width:100%;display:block}
+.cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+form{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:18px}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:10px;min-width:0}
+legend{font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+input[type=text]{font:500 16px Manrope,system-ui,sans-serif;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);width:100%}
+input[type=text]:focus{outline:2px solid var(--focus);outline-offset:1px}
+.f .hint{font-size:12px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opts.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt>span{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-weight:600;height:100%}
+.opt small{font-weight:400;color:var(--muted);font-size:12px}
+.opt input:checked+span{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--chip)}
+.opt input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.25);vertical-align:-1px;margin-right:6px}
+.buy{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+.price{font:700 24px "PT Serif",Georgia,serif;font-variant-numeric:tabular-nums}
+.price small{display:block;font:400 12px Manrope,system-ui,sans-serif;color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:12px 18px;font:700 15px Manrope,system-ui,sans-serif;background:var(--accent);color:var(--accent-fg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:600;font-size:13px;padding:9px 12px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0;padding:0;list-style:none;font-size:13px}
+.facts li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.facts b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.note{font-size:12px;color:var(--muted);margin:0}
+#toast{font-size:12px;color:var(--accent)}
+.loading{display:grid;place-items:center;aspect-ratio:1/1;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="crumbs">Трафарети для їжі · Тирамісу та торти</div>
+    <h1>Трафарет «Обіцяю тебе…» з вашим текстом</h1>
+    <p class="sub">Введіть свої слова, і вони одразу з’являться на трафареті тим самим шрифтом і з тими самими відступами. Перемички в літерах ставляться автоматично.</p>
+  </header>
+
+  <div class="grid">
+    <section class="stage" aria-label="Попередній перегляд">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-v="stencil">Трафарет</button>
+        <button type="button" role="tab" aria-selected="false" data-v="mock">На тирамісу</button>
+      </div>
+      <div id="out"><div class="loading">Завантаження шрифтів…</div></div>
+      <div class="cap"><span id="capL">Ø 340 мм</span><span id="capR">PET 0,5 мм</span></div>
+    </section>
+
+    <form id="f" autocomplete="off">
+      <fieldset>
+        <legend>Текст</legend>
+        <label class="f">Рядок 1<input type="text" name="l1" value="ОБІЦЯЮ" maxlength="14"></label>
+        <label class="f">Рядок 2<input type="text" name="l2" value="ТЕБЕ" maxlength="14"></label>
+        <label class="f">Закреслене слово<input type="text" name="l3" value="бісити" maxlength="12"><span class="hint">Залиште порожнім, щоб прибрати закреслення</span></label>
+        <label class="f">Головне слово<input type="text" name="l4" value="любити" maxlength="12"></label>
+        <label class="f">Дата або підпис<input type="text" name="l5" value="10.10.2026" maxlength="16"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Матеріал</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="mat" value="pet" checked><span><span><i class="sw" style="background:#dfeef0"></i>PET прозорий</span><small>0,5 мм · гнучкий, для їжі</small></span></label>
+          <label class="opt"><input type="radio" name="mat" value="psw"><span><span><i class="sw" style="background:#f6f5f1"></i>Полістирол білий</span><small>1 мм · жорсткий</small></span></label>
+          <label class="opt"><input type="radio" name="mat" value="psb"><span><span><i class="sw" style="background:#1d1c1c"></i>Полістирол чорний</span><small>1 мм · жорсткий</small></span></label>
+          <label class="opt"><input type="radio" name="mat" value="acr"><span><span><i class="sw" style="background:#cfe3e6"></i>Акрил прозорий</span><small>3 мм · багаторазовий</small></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Діаметр трафарету</legend>
+        <div class="opts three">
+          <label class="opt"><input type="radio" name="d" value="260"><span>Ø 26 см<small>форма Ø 31 см</small></span></label>
+          <label class="opt"><input type="radio" name="d" value="300"><span>Ø 30 см<small>форма Ø 35 см</small></span></label>
+          <label class="opt"><input type="radio" name="d" value="340" checked><span>Ø 34 см<small>форма Ø 39 см</small></span></label>
+        </div>
+      </fieldset>
+
+      <div class="buy">
+        <div class="price">— грн<small>Демо: ціни ще не задані</small></div>
+        <button type="button" class="btn" id="cart">У кошик</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn ghost" id="copy">Скопіювати SVG для різки</button>
+        <span id="toast" role="status"></span>
+      </div>
+    </form>
+  </div>
+
+  <ul class="facts">
+    <li><b>Перемички</b>2,5 мм у О, Б, Я, Ю, 0, 6 і під закресленням</li>
+    <li><b>Запас по краю</b>2,5 см до стінки форми</li>
+    <li><b>Як користуватись</b>Покласти на крем, просіяти какао, зняти рівно вгору</li>
+    <li><b>Догляд</b>Мити теплою водою без абразивів</li>
+  </ul>
+  <p class="note">Демо для обговорення. Шрифти близькі до макета, але не точні: PT Serif Bold і Marck Script. Після того як Денис надішле свої файли шрифтів, превʼю повторюватиме макет один в один.</p>
+</div>
+
+<script>/*OPENTYPE*/</script>
+<script>
+const FONTS = {/*FONTS*/};
+const BRIDGE = 2.5;       // мм
+const MATS = {
+  pet:{name:'PET 0,5 мм', sheet:'rgba(214,236,240,.55)', edge:'rgba(120,160,170,.9)', shadow:.6, cutEdge:'rgba(90,130,140,.75)'},
+  psw:{name:'Полістирол білий 1 мм', sheet:'#f6f5f1', edge:'#d8d5cc', shadow:1.2, cutEdge:'rgba(0,0,0,.25)'},
+  psb:{name:'Полістирол чорний 1 мм', sheet:'#1d1c1c', edge:'#000', shadow:1.2, cutEdge:'rgba(255,255,255,.12)'},
+  acr:{name:'Акрил прозорий 3 мм', sheet:'rgba(200,228,232,.5)', edge:'rgba(110,160,170,1)', shadow:2.6, cutEdge:'rgba(70,120,130,.9)'}
+};
+
+function b64ToBuf(b){const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer}
+const F = {};
+for (const k in FONTS) F[k] = FONTS[k].map(b=>opentype.parse(b64ToBuf(b)));
+
+// glyph from the subset that has it
+function glyphFor(fonts, ch){
+  for (const f of fonts){const i=f.charToGlyphIndex(ch); if(i>0) return {font:f, g:f.glyphs.get(i)};}
+  return {font:fonts[0], g:fonts[0].charToGlyph(ch)};
+}
+function metric(fonts, ch){ const {font,g}=glyphFor(fonts,ch); const bb=g.getBoundingBox(); return bb.y2/font.unitsPerEm; }
+
+// split commands into contours, polygon-ize, signed area
+function contours(cmds){
+  const out=[];let cur=null,x=0,y=0;
+  for(const c of cmds){
+    if(c.type==='M'){cur={cmds:[c],pts:[[c.x,c.y]]};out.push(cur);x=c.x;y=c.y;continue}
+    if(!cur) continue;
+    cur.cmds.push(c);
+    if(c.type==='L'){cur.pts.push([c.x,c.y])}
+    else if(c.type==='Q'){for(let t=.25;t<=1;t+=.25){const a=1-t;cur.pts.push([a*a*x+2*a*t*c.x1+t*t*c.x,a*a*y+2*a*t*c.y1+t*t*c.y])}}
+    else if(c.type==='C'){for(let t=.25;t<=1;t+=.25){const a=1-t;cur.pts.push([a*a*a*x+3*a*a*t*c.x1+3*a*t*t*c.x2+t*t*t*c.x,a*a*a*y+3*a*a*t*c.y1+3*a*t*t*c.y2+t*t*t*c.y])}}
+    if(c.x!==undefined){x=c.x;y=c.y}
+  }
+  for(const k of out){let a=0;const p=k.pts;for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length];a+=p[i][0]*q[1]-q[0]*p[i][1]}k.area=a/2;
+    let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;for(const[px,py]of p){x1=Math.min(x1,px);y1=Math.min(y1,py);x2=Math.max(x2,px);y2=Math.max(y2,py)}k.bb={x1,y1,x2,y2}}
+  return out;
+}
+function inside(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[a,b]=poly[i],[d,e]=poly[j];if((b>pt[1])!==(e>pt[1])&&pt[0]<(d-a)*(pt[1]-b)/(e-b)+a)c=!c}return c}
+
+// lay out a line: returns {d, bridges:[rects], bb}
+function layLine(fonts, text, size, track, cx, baseline){
+  let w=0; const items=[];
+  const chars=[...text];
+  chars.forEach((ch,i)=>{const {font,g}=glyphFor(fonts,ch);const s=size/font.unitsPerEm;items.push({font,g,x:w,s});w+=g.advanceWidth*s+(i<chars.length-1?track*size:0)});
+  const x0=cx-w/2; let d=''; const bridges=[]; const boxes=[]; let bb={x1:1e9,y1:1e9,x2:-1e9,y2:-1e9};
+  for(const it of items){
+    const p=it.g.getPath(x0+it.x, baseline, it.font.unitsPerEm*it.s);
+    if(!p.commands.length) continue;
+    d+=p.toPathData(2);
+    const cs=contours(p.commands); if(!cs.length) continue;
+    const gb={x1:Math.min(...cs.map(c=>c.bb.x1)),y1:Math.min(...cs.map(c=>c.bb.y1)),x2:Math.max(...cs.map(c=>c.bb.x2)),y2:Math.max(...cs.map(c=>c.bb.y2))};
+    boxes.push(gb);
+    bb={x1:Math.min(bb.x1,gb.x1),y1:Math.min(bb.y1,gb.y1),x2:Math.max(bb.x2,gb.x2),y2:Math.max(bb.y2,gb.y2)};
+    const big=cs.reduce((a,b)=>Math.abs(b.area)>Math.abs(a.area)?b:a);
+    for(const c of cs){
+      if(c===big||Math.sign(c.area)===Math.sign(big.area)) continue;
+      if(Math.abs(c.area)<4) continue;                       // tiny artefacts
+      if(!cs.some(o=>o!==c&&Math.sign(o.area)!==Math.sign(c.area)&&inside(c.pts[0],o.pts))) continue;
+      const hx=(c.bb.x1+c.bb.x2)/2, ext=Math.max(size*.22,4);
+      bridges.push({x:hx-BRIDGE/2,y:Math.max(gb.y1-1,c.bb.y1-ext),w:BRIDGE,h:Math.min(gb.y2+1,c.bb.y2+ext)-Math.max(gb.y1-1,c.bb.y1-ext)});
+    }
+  }
+  return {d,bridges,bb,w,boxes};
+}
+
+// half chord of circle radius R centred at (R,R) at height y
+function halfChord(R,y){const dy=y-R;return dy*dy>=R*R?0:Math.sqrt(R*R-dy*dy)}
+
+function fitLine(fonts,text,size,track,R,baseline,margin,maxW){
+  let s=size;
+  for(let k=0;k<12;k++){
+    const L=layLine(fonts,text,s,track,R,baseline);
+    if(!text.trim()) return L;
+    const hw=Math.min(halfChord(R,L.bb.y1),halfChord(R,L.bb.y2))-margin;
+    const lim=Math.min(2*hw, maxW||1e9);
+    if(L.bb.x2-L.bb.x1<=lim) return L;
+    s*= Math.max(.6, lim/(L.bb.x2-L.bb.x1)*.99);
+  }
+  return layLine(fonts,text,s,track,R,baseline);
+}
+
+function heart(cx,cy,w){
+  const h=w*.86, t=cy-h*.42, b=cy+h*.5, l=cx-w/2, r=cx+w/2;
+  // open at the top centre, so the inside stays attached
+  const g=BRIDGE*.9;
+  return `M${cx-g},${t+h*.17} C${cx-w*.12},${t-h*.06} ${l},${t-h*.05} ${l},${t+h*.3} C${l},${t+h*.6} ${cx-w*.25},${b-h*.18} ${cx},${b} C${cx+w*.25},${b-h*.18} ${r},${t+h*.6} ${r},${t+h*.3} C${r},${t-h*.05} ${cx+w*.12},${t-h*.06} ${cx+g},${t+h*.17}`;
+}
+
+function build(v){
+  const D=v.d, k=D/340, R=D/2, m=12*k;
+  const serif=F.serif, script=F.script;
+  const capS=metric(serif,'Н'), xS=metric(script,'и');
+  const L1=fitLine(serif,v.l1.toUpperCase(),24*k/capS,.13,R,64*k,m);
+  const L2=fitLine(serif,v.l2.toUpperCase(),22*k/capS,.13,R,99*k,m);
+  const L3=fitLine(script,v.l3,24*k/xS,0,R,152*k,m,200*k);
+  const L4=fitLine(script,v.l4,33*k/xS,0,R,233*k,m);
+  const L5=fitLine(serif,v.l5.toUpperCase(),16*k/capS,.24,R,300*k,m);
+  const cuts=[L1,L2,L3,L4,L5].map(l=>l.d).join('');
+  const bridges=[L1,L2,L3,L4,L5].flatMap(l=>l.bridges);
+  let strike=null;
+  if(v.l3.trim()){
+    const b=L3.bb, ang=-7*Math.PI/180, cy=152*k - 24*k*.5, cx=(b.x1+b.x2)/2;
+    const len1=(cx-b.x1)+ (b.x2-b.x1)*.55, len2=(b.x2-cx)+(b.x2-b.x1)*.1;
+    let x1=cx-len1*Math.cos(ang), y1=cy-len1*Math.sin(ang), x2=cx+len2*Math.cos(ang), y2=cy+len2*Math.sin(ang);
+    const lim1=halfChord(R,y1)-m*.6; if(R-x1>lim1){const t=(R-lim1-x1)/(x2-x1); x1+= (x2-x1)*t; y1+=(y2-y1)*t;}
+    strike={x1,y1,x2,y2,w:2.5*k};
+  }
+  // heart: keep clear of descenders of the main word
+  const hw=30*k, hy=258*k, top=hy-.37*hw-2.5*k, gap=4*k;
+  let hx=R;
+  for(const dx of [0,1,-1,2,-2,3,-3].map(i=>i*hw*.75)){
+    const x=R+dx; if(!L4.boxes||!L4.boxes.some(b=>b.y2>top&&b.x2>x-hw/2-gap&&b.x1<x+hw/2+gap)){hx=x;break}
+  }
+  return {D,R,cuts,bridges,strike,heart:heart(hx,hy,hw),heartW:2.6*k};
+}
+
+// ---------- render ----------
+let view='stencil';
+const out=document.getElementById('out'), f=document.getElementById('f');
+function vals(){const fd=new FormData(f);return{l1:fd.get('l1')||'',l2:fd.get('l2')||'',l3:fd.get('l3')||'',l4:fd.get('l4')||'',l5:fd.get('l5')||'',mat:fd.get('mat'),d:+fd.get('d')}}
+
+function maskDefs(G,id){
+  const s=G.strike;
+  return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-50" y="-50" width="${G.D+100}" height="${G.D+100}">
+    <rect x="-50" y="-50" width="${G.D+100}" height="${G.D+100}" fill="#fff"/>
+    ${G.bridges.map(b=>`<rect x="${b.x.toFixed(2)}" y="${b.y.toFixed(2)}" width="${b.w}" height="${b.h.toFixed(2)}" fill="#000"/>`).join('')}
+    ${s?`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="#000" stroke-width="${s.w+2*BRIDGE}"/>`:''}
+  </mask>`;
+}
+function cutShapes(G,fill,stroke,sw){
+  const s=G.strike;
+  return `<g mask="url(#mk)"><path d="${G.cuts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></g>
+    ${s?`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${fill}" stroke-width="${s.w}" stroke-linecap="round"/>`:''}
+    <path d="${G.heart}" fill="none" stroke="${fill}" stroke-width="${G.heartW}" stroke-linecap="round"/>`;
+}
+
+function renderStencil(G,M){
+  const pad=G.D*.07, vb=G.D+pad*2, step=10;
+  let grid='';
+  for(let x=-pad;x<=G.D+pad;x+=step){const big=Math.round(x)%50===0;grid+=`<line x1="${x}" y1="${-pad}" x2="${x}" y2="${G.D+pad}" stroke="var(--mat-grid${big?'-b':''})" stroke-width="${big?.5:.3}"/>`}
+  for(let y=-pad;y<=G.D+pad;y+=step){const big=Math.round(y)%50===0;grid+=`<line x1="${-pad}" y1="${y}" x2="${G.D+pad}" y2="${y}" stroke="var(--mat-grid${big?'-b':''})" stroke-width="${big?.5:.3}"/>`}
+  return `<svg class="view" viewBox="${-pad} ${-pad} ${vb} ${vb}" role="img" aria-label="Трафарет ${G.D} мм">
+  <defs>${maskDefs(G,'mk')}
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="${M.shadow*.6}" dy="${M.shadow}" stdDeviation="${M.shadow*1.2}" flood-opacity=".35"/></filter>
+    <mask id="sheet" maskUnits="userSpaceOnUse" x="-50" y="-50" width="${G.D+100}" height="${G.D+100}">
+      <circle cx="${G.R}" cy="${G.R}" r="${G.R}" fill="#fff"/>${cutShapes(G,'#000','none',0)}
+    </mask>
+  </defs>
+  <rect x="${-pad}" y="${-pad}" width="${vb}" height="${vb}" fill="var(--mat)"/>${grid}
+  <g filter="url(#sh)"><rect x="-1" y="-1" width="${G.D+2}" height="${G.D+2}" fill="${M.sheet}" mask="url(#sheet)"/></g>
+  <circle cx="${G.R}" cy="${G.R}" r="${G.R-.3}" fill="none" stroke="${M.edge}" stroke-width=".7"/>
+  <g style="mix-blend-mode:normal" fill="none">${cutShapes(G,'none',M.cutEdge,.35)}</g>
+  </svg>`;
+}
+
+function renderMock(G){
+  const bowl=G.D+50, pad=bowl*.12, vb=bowl+pad*2, c=G.R;
+  const o=-(bowl-G.D)/2;
+  return `<svg class="view" viewBox="${o-pad} ${o-pad} ${vb} ${vb}" role="img" aria-label="Тирамісу з малюнком какао">
+  <defs>${maskDefs(G,'mk')}
+    <radialGradient id="tb" cx="35%" cy="25%" r="90%"><stop offset="0" stop-color="#5a4438"/><stop offset="1" stop-color="var(--table)"/></radialGradient>
+    <radialGradient id="cr" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#f6ecdc"/><stop offset=".8" stop-color="#ead9bf"/><stop offset="1" stop-color="#dcc6a6"/></radialGradient>
+    <radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset=".9" stop-color="rgba(255,255,255,0)"/><stop offset=".965" stop-color="rgba(255,255,255,.45)"/><stop offset="1" stop-color="rgba(255,255,255,.15)"/></radialGradient>
+    <filter id="cocoa" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="${(1.6*340/G.D).toFixed(2)}" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 .22  0 0 0 0 .12  0 0 0 0 .06  0 0 0 -1.4 1.25" result="sp"/>
+      <feComposite in="sp" in2="d" operator="in" result="spk"/>
+      <feMerge><feMergeNode in="d"/><feMergeNode in="spk"/></feMerge>
+    </filter>
+    <mask id="ring" maskUnits="userSpaceOnUse" x="${o-10}" y="${o-10}" width="${bowl+20}" height="${bowl+20}">
+      <circle cx="${c}" cy="${c}" r="${bowl/2}" fill="#fff"/><circle cx="${c}" cy="${c}" r="${G.R+.8}" fill="#000"/>
+    </mask>
+  </defs>
+  <rect x="${o-pad}" y="${o-pad}" width="${vb}" height="${vb}" fill="url(#tb)"/>
+  <circle cx="${c+6}" cy="${c+12}" r="${bowl/2+12}" fill="rgba(0,0,0,.35)" style="filter:blur(6px)"/>
+  <circle cx="${c}" cy="${c}" r="${bowl/2+8}" fill="rgba(235,240,240,.18)" stroke="rgba(255,255,255,.35)" stroke-width="1.2"/>
+  <circle cx="${c}" cy="${c}" r="${bowl/2}" fill="url(#cr)"/>
+  <g filter="url(#cocoa)">
+    <circle cx="${c}" cy="${c}" r="${bowl/2}" fill="#5b331e" mask="url(#ring)"/>
+    ${cutShapes(G,'#5b331e','none',0)}
+  </g>
+  <circle cx="${c}" cy="${c}" r="${bowl/2+8}" fill="url(#gl)"/>
+  </svg>`;
+}
+
+function cutSVG(G){
+  const s=G.strike;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${G.D}mm" height="${G.D}mm" viewBox="0 0 ${G.D} ${G.D}">
+<!-- Демо. Шар bridges: перемички ${BRIDGE} мм, віднімаються від прорізів -->
+<g id="outline" fill="none" stroke="#0000ff" stroke-width="0.1"><circle cx="${G.R}" cy="${G.R}" r="${G.R}"/></g>
+<g id="cuts" fill="none" stroke="#ff0000" stroke-width="0.1"><path d="${G.cuts}"/>${s?`<line x1="${s.x1.toFixed(2)}" y1="${s.y1.toFixed(2)}" x2="${s.x2.toFixed(2)}" y2="${s.y2.toFixed(2)}" stroke-width="${s.w}"/>`:''}<path d="${G.heart}" stroke-width="${G.heartW}"/></g>
+<g id="bridges" fill="#00aa00">${G.bridges.map(b=>`<rect x="${b.x.toFixed(2)}" y="${b.y.toFixed(2)}" width="${b.w}" height="${b.h.toFixed(2)}"/>`).join('')}</g>
+</svg>`;
+}
+
+let G=null;
+function render(){
+  const v=vals(); G=build(v); const M=MATS[v.mat];
+  out.innerHTML = view==='stencil'? renderStencil(G,M) : renderMock(G);
+  document.getElementById('capL').textContent = view==='stencil' ? `Ø ${v.d} мм · перемички ${G.bridges.length + (G.strike?2:0) + 1}` : `Форма Ø ${v.d+50} мм · трафарет Ø ${v.d} мм`;
+  document.getElementById('capR').textContent = M.name;
+}
+f.addEventListener('input',render);
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  view=b.dataset.v; document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b)); render();
+}));
+f.addEventListener('submit',e=>e.preventDefault());
+const toast=document.getElementById('toast');
+document.getElementById('cart').addEventListener('click',()=>{toast.textContent='Демо: кошик зʼявиться в магазині.'});
+document.getElementById('copy').addEventListener('click',()=>{
+  const txt=cutSVG(G);
+  navigator.clipboard.writeText(txt).then(()=>{toast.textContent='SVG скопійовано (мм, червоне — різ, зелене — перемички).'})
+    .catch(()=>{toast.textContent='Не вдалося скопіювати в цьому вікні.'});
+});
+render();
+</script>

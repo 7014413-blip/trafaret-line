@@ -1,0 +1,961 @@
+<title>Конструктор вивісок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Unbounded:wght@500;700&family=Montserrat:wght@700&family=Oswald:wght@600&family=Comfortaa:wght@700&family=Lobster&family=Marck+Script&family=Playfair+Display:wght@700&display=swap">
+<style>
+/* Layout: workshop bench. Large live stage on the left, one compact control column on the right; stacks on phones. */
+:root{
+  --bg:#FAFAFA; --surface:#FFFFFF; --ink:#0F172A; --muted:#55627A; --line:#E2E8F0;
+  --buy:#1557D6; --buy-ink:#FFFFFF; --warn-bg:#FFF7E0; --warn:#8A5A00; --err-bg:#FDECEC; --err:#A3241C; --ok:#1E7A46;
+  --chip:#F3F5F8;
+  --f-display:"Unbounded", "Inter", system-ui, sans-serif;
+  --f-body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1120; --surface:#111a2e; --ink:#E6EAF2; --muted:#9AA6BC; --line:#22304A;
+  --buy:#4C8DFF; --buy-ink:#06122B; --warn-bg:#3A2E0F; --warn:#F3C766; --err-bg:#3B1614; --err:#FF9C92; --ok:#6FD39A;
+  --chip:#18233A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1120; --surface:#111a2e; --ink:#E6EAF2; --muted:#9AA6BC; --line:#22304A;
+  --buy:#4C8DFF; --buy-ink:#06122B; --warn-bg:#3A2E0F; --warn:#F3C766; --err-bg:#3B1614; --err:#FF9C92; --ok:#6FD39A;
+  --chip:#18233A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font:700 clamp(20px,3vw,28px)/1.15 var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 13px var(--f-body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+@media (max-width:920px){.main{grid-template-columns:minmax(0,1fr)}}
+.stagebox{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:10px;min-width:0}
+@media (max-width:920px){.stagebox{position:static}}
+.stage{border-radius:14px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1/1;max-height:min(72vh,720px);width:100%;max-width:100%;touch-action:none;position:relative}
+.stage[data-bg="wall"]{background:radial-gradient(120% 90% at 30% 20%,#f4efe6,#e4dccd 60%,#d6ccba)}
+.stage[data-bg="light"]{background:radial-gradient(120% 90% at 30% 15%,#ffffff,#eef1f5 55%,#dfe4ea)}
+.stage[data-bg="dark"]{background:radial-gradient(120% 90% at 30% 15%,#2a3140,#161b25 70%)}
+.stage[data-bg="prod"]{background:#ffffff}
+.stage svg{width:100%;height:100%;display:block}
+.stagebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.hint{color:var(--muted);font-size:13px}
+.panel{display:grid;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;min-width:0}
+.card h2{font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:500 13px var(--f-body);padding:6px 10px;border-radius:8px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--surface)}
+.chip:focus-visible,.seg button:focus-visible,.sw:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,.layer:focus-visible{outline:2px solid var(--buy);outline-offset:2px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+input[type=text],input[type=number],select{font:15px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sws{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);cursor:pointer;position:relative;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.sw[data-stock="0"]::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(15,23,42,.35) 4px 5px)}
+.swname{font-size:13px;color:var(--muted)}
+.layers{display:grid;gap:6px}
+.layer{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;background:var(--surface);color:var(--ink);font:14px var(--f-body);text-align:left;width:100%}
+.layer[aria-current="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.layer .n{font:600 12px var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}
+.layer .dot{width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
+.layer .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.layer .k{font-size:12px;color:var(--muted)}
+.x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
+.x:hover{color:var(--err)}
+.btn{border:1px solid var(--ink);background:transparent;color:var(--ink);font:500 13px var(--f-body);padding:7px 11px;border-radius:8px;cursor:pointer}
+.btn.buy{background:var(--buy);border-color:var(--buy);color:var(--buy-ink);font:600 15px var(--f-body);padding:12px 16px;width:100%}
+.warns{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.warns li{font-size:13px;padding:7px 10px;border-radius:8px;background:var(--warn-bg);color:var(--warn)}
+.warns li.err{background:var(--err-bg);color:var(--err)}
+.warns li.ok{background:transparent;color:var(--ok);padding-inline:0}
+.price{font:700 30px/1.1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.calc{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;display:grid;gap:2px}
+.calc b{color:var(--ink);font-weight:600}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:middle;background:var(--c)}
+.adm{border-top:1px dashed var(--line);padding-top:8px;font-size:13px;color:var(--muted)}
+.adm summary{cursor:pointer}
+.adm[open] summary{margin-bottom:6px}
+.kp-wrap{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:start center;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px 24px;z-index:10}
+.kp{background:#ffffff;color:#0F172A;width:min(760px,100%);border-radius:12px;padding:20px;display:grid;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.kp-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.kp .btn{color:#0F172A;border-color:#0F172A}
+.kp .hint{color:#55627A}
+.kp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;border-bottom:1px solid #E2E8F0;padding-bottom:12px}
+.kp-brand{font:700 18px var(--f-display)}
+.kp-logo{border:1px dashed #94A3B8;border-radius:8px;padding:10px 14px;color:#55627A;font-size:13px}
+.kp h3{font:700 22px/1.2 var(--f-display);margin:0}
+.kp-meta{color:#55627A;font-size:13px}
+.kp-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:640px){.kp-grid{grid-template-columns:minmax(0,1fr)}}
+.kp-mock{border-radius:10px;overflow:hidden;background:radial-gradient(120% 90% at 30% 20%,#f4efe6,#e4dccd 60%,#d6ccba);perspective:900px;aspect-ratio:1/1;max-width:100%}
+.kp-mock svg{width:100%;height:100%;display:block;transform:rotateY(-14deg) rotateX(6deg);transform-origin:50% 50%}
+.kp table{width:100%;border-collapse:collapse;font-size:14px}
+.kp td{padding:6px 0;border-bottom:1px solid #E2E8F0;vertical-align:top}
+.kp td:first-child{color:#55627A;padding-right:10px;width:40%}
+.kp-price{font:700 26px var(--f-display);font-variant-numeric:tabular-nums}
+.toast{font-size:13px;color:var(--ok);min-height:1.2em}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.sheen{transition:transform 1.1s ease}.stage:hover .sheen{transform:translateX(480%)}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Конструктор вивісок з акрилу</h1>
+      <p class="sub">Прототип для погодження. Основа, текст або логотип, кожен шар зі свого акрилу. Ціна рахується одразу.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Що робимо">
+      <button id="mode-sign" aria-pressed="true">Вивіска на основі</button>
+      <button id="mode-letters" aria-pressed="false">Літери без основи</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="stagebox">
+      <div class="stage" id="stage" data-bg="wall">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg" aria-label="Попередній перегляд вивіски"></svg>
+      </div>
+      <div class="stagebar">
+        <div class="seg" role="group" aria-label="Фон">
+          <button data-bg="wall" aria-pressed="true">Стіна</button>
+          <button data-bg="light" aria-pressed="false">Світлий</button>
+          <button data-bg="dark" aria-pressed="false">Темний</button>
+          <button data-bg="prod" aria-pressed="false">Для виробництва</button>
+        </div>
+        <span class="hint" id="hint">Шар можна перетягнути на макеті</span>
+      </div>
+      <div class="legend" id="legend" hidden>
+        <span style="--c:#FF0000">1 Основа</span><span style="--c:#0000FF">2 Накладні шари</span><span style="--c:#00B000">3 Отвори</span><span style="--c:#000000">4 Монтажний трафарет</span>
+        <span>Файл SVG/DXF за шарами RDWorks видається тільки після оплати</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <section class="card" id="base-card">
+        <h2>1. Основа</h2>
+        <div class="row" role="group" aria-label="Форма">
+          <button class="chip" data-shape="circle" aria-pressed="true">Коло</button>
+          <button class="chip" data-shape="square" aria-pressed="false">Квадрат</button>
+          <button class="chip" data-shape="rect" aria-pressed="false">Прямокутник</button>
+          <button class="chip" data-shape="rounded" aria-pressed="false">Заокруглений</button>
+          <button class="chip" data-shape="arrow" aria-pressed="false">Стрілка</button>
+          <button class="chip" data-shape="pointer" aria-pressed="false">Вказівник</button>
+        </div>
+        <div class="row" id="dir-row" role="group" aria-label="Напрямок" hidden>
+          <button class="chip" data-dir="-1" aria-pressed="false">← Ліворуч</button>
+          <button class="chip" data-dir="1" aria-pressed="true">Праворуч →</button>
+        </div>
+        <div class="row" id="size-presets" role="group" aria-label="Розмір"></div>
+        <div class="grid2">
+          <label class="f">Ширина, мм<input type="number" id="w" min="150" max="1200" step="10"></label>
+          <label class="f" id="h-wrap">Висота, мм<input type="number" id="h" min="150" max="1200" step="10"></label>
+        </div>
+        <div>
+          <div class="swname">Матеріал основи: <b id="base-mat-name"></b></div>
+          <div class="sws" id="base-sws" role="group" aria-label="Матеріал основи"></div>
+        </div>
+        <div class="row" id="thick" role="group" aria-label="Товщина основи"></div>
+      </section>
+
+      <section class="card">
+        <h2>2. Шари <span class="tag" id="layer-count"></span></h2>
+        <div class="layers" id="layers"></div>
+        <div class="row">
+          <button class="btn" id="add-text">+ Текст</button>
+          <button class="btn" id="add-arc">+ Текст по колу</button>
+          <button class="btn" id="add-frame">+ Рамка</button>
+        </div>
+        <div class="row">
+          <span class="btn file">Завантажити свою вивіску або логотип<input type="file" id="logo-file" accept=".svg,.png,.jpg,.jpeg,.webp,.pdf,.ai,.dxf,.eps,.cdr" aria-label="Завантажити свою вивіску або логотип"></span>
+          <button class="btn" id="add-sample-logo">Приклад: логотип у 3 кольори</button>
+          <button class="btn" id="add-sample-sign">Приклад: файл вивіски 50 × 50 см</button>
+        </div>
+        <div class="toast" id="toast" role="status"></div>
+      </section>
+
+      <section class="card" id="edit-card">
+        <h2 id="edit-title">Шар</h2>
+        <div id="edit"></div>
+      </section>
+
+      <section class="card" id="mount-card">
+        <h2>3. Кріплення</h2>
+        <div class="row" role="group" aria-label="Кріплення">
+          <button class="chip" data-mount="0" aria-pressed="false">Без отворів</button>
+          <button class="chip" data-mount="2" aria-pressed="false">2 отвори</button>
+          <button class="chip" data-mount="4" aria-pressed="true">4 отвори</button>
+        </div>
+        <div class="hint">Отвір Ø6 мм, центр за 20 мм від краю, під дистанційні тримачі.</div>
+      </section>
+
+      <section class="card">
+        <h2>4. Перевірка і ціна</h2>
+        <ul class="warns" id="warns"></ul>
+        <div class="row" role="group" aria-label="Самоклейка">
+          <button class="chip" id="tape" aria-pressed="false">Самоклейка на звороті</button>
+          <span class="hint">двосторонній скотч, без свердління</span>
+        </div>
+        <div class="row" role="group" aria-label="Монтажний трафарет">
+          <button class="chip" id="tpl" aria-pressed="false">Монтажний трафарет (картон / HDF)</button>
+          <span class="hint">шаблон, щоб рівно наклеїти літери</span>
+        </div>
+        <div class="price" id="price"></div>
+        <div class="calc" id="calc"></div>
+        <button class="btn buy" id="buy">Додати в кошик</button>
+        <div class="toast" id="buy-toast" role="status"></div>
+        <details class="adm">
+          <summary>Як рахується (тільки для адміністратора, клієнт не бачить)</summary>
+          <div class="calc" id="adm"></div>
+          <div class="hint">Ставки за м² задаються в адмінці. Вивіска 18 000 грн/м² за габаритом, усе включено. Мінімум і самоклейка поки пропозиції.</div>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>5. Для агентств</h2>
+        <div class="row" role="group" aria-label="White-label">
+          <button class="chip" id="wl" aria-pressed="false">Без нашого бренду (white-label)</button>
+        </div>
+        <div class="hint">Коробка і накладна без нашого логотипу та цін, відправка одразу вашому клієнту.</div>
+        <label class="f">Ваша націнка для клієнта, %<input type="number" id="markup" min="0" max="300" step="5" value="30"></label>
+        <button class="btn" id="kp-open">Комерційна пропозиція для клієнта (PDF)</button>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="kp-wrap" id="kp" hidden>
+  <div class="kp" role="dialog" aria-modal="true" aria-labelledby="kp-title">
+    <div class="kp-top">
+      <span class="hint">Попередній перегляд. На сайті ця кнопка скачує PDF.</span>
+      <button class="btn" id="kp-close">Закрити</button>
+    </div>
+    <div id="kp-body"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+const RATE_SIGN = 18000, MIN_SIGN = 1500, MIN_LETTERS = 250, K_WORD = 1.5, K_LETTERS = 2.0;
+const TPL_RATE = 600; // грн/м² по габариту вивіски (Денис 08.10)
+const TAPE_RATE = 600; // грн/м², proposal until Денис names the price
+const HOLE_D = 6, HOLE_OFF = 20, EDGE_MIN = 10;
+// Palette: names, thickness and rates from the ТЗ; stock is a placeholder until Денис confirms.
+const MATS = [
+  {id:'mirror-silver',name:'Дзеркальний срібло',finish:'mirror',hex:'#C9CED6',stops:['#f7f9fb','#c7ccd4','#8e959f','#eef1f5','#a9b0ba'],t:3,rate:8200,stock:1,minH:25,minS:3},
+  {id:'mirror-gold',name:'Дзеркальний золото',finish:'mirror',hex:'#D2AE55',stops:['#fff4c8','#d8b25a','#9a782a','#f2da8e','#b48e3a'],t:3,rate:8200,stock:1,minH:25,minS:3},
+  {id:'mirror-rose',name:'Дзеркальний рожеве золото',finish:'mirror',hex:'#D9A196',stops:['#ffe3de','#dea69a','#a66a5f','#f5cbc2','#c2887c'],t:3,rate:8200,stock:0,minH:25,minS:3},
+  {id:'black',name:'Чорний глянець',finish:'gloss',hex:'#15171C',t:3,rate:2900,stock:1,minH:15,minS:2},
+  {id:'white',name:'Білий',finish:'gloss',hex:'#F4F4F2',t:3,rate:2900,stock:1,minH:15,minS:2},
+  {id:'clear',name:'Прозорий',finish:'clear',hex:'#DDEBF3',t:3,rate:2900,stock:1,minH:15,minS:2},
+  {id:'red',name:'Червоний',finish:'gloss',hex:'#C62828',t:3,rate:5200,stock:1,minH:15,minS:2},
+  {id:'orange',name:'Помаранчевий',finish:'gloss',hex:'#EF7D1A',t:3,rate:5200,stock:1,minH:15,minS:2},
+  {id:'yellow',name:'Жовтий',finish:'gloss',hex:'#F2C230',t:3,rate:5200,stock:1,minH:15,minS:2},
+  {id:'green',name:'Зелений',finish:'gloss',hex:'#2E7D4F',t:3,rate:5200,stock:1,minH:15,minS:2},
+  {id:'blue',name:'Синій',finish:'gloss',hex:'#1F4FA3',t:3,rate:5200,stock:1,minH:15,minS:2},
+  {id:'brown',name:'Коричневий',finish:'gloss',hex:'#5B3A25',t:3,rate:5200,stock:0,minH:15,minS:2},
+];
+// Blank-sheet prices per m² by thickness (ТЗ). The sign rate already includes a 3 mm base;
+// a thicker base adds the sheet price difference to 3 mm. Thinner never lowers the price.
+const SHEET = {acrylic:{1.5:1900, 3:2900, 6:6500, 8:8000}, mirror:{2:5600, 3:8200}};
+const thickExtra = (m, t) => { const tb = SHEET[m.finish==='mirror' ? 'mirror' : 'acrylic']; return Math.max(0, (tb[t]||0) - tb[3]); };
+const THICK = m => m.finish==='mirror' ? [2,3] : [1.5,3,6,8]; // what the blanks catalogue sells
+const M = Object.fromEntries(MATS.map(m=>[m.id,m]));
+// stroke ≈ ratio × cap height; used for the thin-line check.
+const FONTS = [
+  {id:'Unbounded',name:'Unbounded',w:700,ratio:.2},
+  {id:'Montserrat',name:'Montserrat',w:700,ratio:.17},
+  {id:'Oswald',name:'Oswald',w:600,ratio:.15},
+  {id:'Comfortaa',name:'Comfortaa',w:700,ratio:.13},
+  {id:'Playfair Display',name:'Playfair Display',w:700,ratio:.06},
+  {id:'Lobster',name:'Lobster',w:400,ratio:.12},
+  {id:'Marck Script',name:'Marck Script',w:400,ratio:.06},
+];
+const F = Object.fromEntries(FONTS.map(f=>[f.id,f]));
+const CAP = 0.72;
+const PRESETS = [300,400,500,600,800];
+const NS = 'http://www.w3.org/2000/svg';
+
+let uid = 0; const nid = () => 'L' + (++uid);
+const S = {
+  mode:'sign', bg:'wall', area:'bbox',
+  base:{shape:'circle', w:400, h:400, mat:'mirror-silver', dir:1, t:3},
+  tape:false, tpl:false, wl:false, markup:30,
+  mount:4,
+  layers:[
+    {id:nid(), kind:'frame', mat:'black', width:6, inset:32, x:0, y:0},
+    {id:nid(), kind:'text', mat:'black', text:'КАВА', font:'Unbounded', h:62, x:0, y:-6},
+    {id:nid(), kind:'arc', mat:'red', text:'кав’ярня · з 2019', font:'Montserrat', h:20, pos:'bottom', x:0, y:0},
+  ],
+  sel:null,
+};
+S.sel = S.layers[1].id;
+
+const $ = s => document.querySelector(s);
+const svg = $('#svg');
+const el = (tag, attrs={}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => Math.round(n).toLocaleString('uk-UA').replace(/ /g,' ');
+const shade = (hex, k) => { const n = parseInt(hex.slice(1),16); let r=n>>16,g=n>>8&255,b=n&255; const f = v => Math.max(0,Math.min(255,Math.round(k>0? v+(255-v)*k : v*(1+k)))); return '#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join(''); };
+const hexRgb = h => { const n=parseInt(h.slice(1),16); return [n>>16,n>>8&255,n&255]; };
+
+const HAS_H = s => ['rect','rounded','arrow','pointer'].includes(s);
+const H_RATIO = {rect:.6, rounded:.6, arrow:.32, pointer:.3};
+const headLen = (shape, w, h) => shape==='arrow' ? Math.min(h*0.75, w*0.45) : Math.min(h*0.5, w*0.3);
+function shapePath(shape, w, h, corner=0){
+  const x=-w/2, y=-h/2;
+  if (shape==='arrow' || shape==='pointer'){
+    const k = S.base.dir||1, X = v => (v*k).toFixed(2), hl = headLen(shape, w, h);
+    if (shape==='arrow'){ const sh = h*0.22;
+      return `M ${X(-w/2)} ${-sh} H ${X(w/2-hl)} V ${-h/2} L ${X(w/2)} 0 L ${X(w/2-hl)} ${h/2} V ${sh} H ${X(-w/2)} Z`; }
+    return `M ${X(-w/2)} ${-h/2} H ${X(w/2-hl)} L ${X(w/2)} 0 L ${X(w/2-hl)} ${h/2} H ${X(-w/2)} Z`;
+  }
+  if (shape==='circle'){ const r=w/2; return `M ${-r} 0 A ${r} ${r} 0 1 0 ${r} 0 A ${r} ${r} 0 1 0 ${-r} 0 Z`; }
+  const c = shape==='rounded' ? Math.min(corner || Math.min(w,h)*0.12, w/2, h/2) : 0;
+  if (!c) return `M ${x} ${y} H ${x+w} V ${y+h} H ${x} Z`;
+  return `M ${x+c} ${y} H ${x+w-c} A ${c} ${c} 0 0 1 ${x+w} ${y+c} V ${y+h-c} A ${c} ${c} 0 0 1 ${x+w-c} ${y+h} H ${x+c} A ${c} ${c} 0 0 1 ${x} ${y+h-c} V ${y+c} A ${c} ${c} 0 0 1 ${x+c} ${y} Z`;
+}
+function baseDims(){ const b=S.base; return (b.shape==='circle'||b.shape==='square') ? {w:b.w,h:b.w} : {w:b.w,h:b.h}; }
+function holes(){
+  if (S.mode!=='sign' || !S.mount) return [];
+  const {w,h} = baseDims(), o = HOLE_OFF;
+  if (S.base.shape==='circle'){
+    const r = w/2 - o, angs = S.mount===4 ? [45,135,225,315] : [180,0];
+    return angs.map(a => ({x:r*Math.cos(a*Math.PI/180), y:-r*Math.sin(a*Math.PI/180)}));
+  }
+  if (S.base.shape==='arrow' || S.base.shape==='pointer'){
+    const k = S.base.dir||1, hl = headLen(S.base.shape, w, h);
+    if (S.base.shape==='arrow' || S.mount===2) return [{x:k*(-w/2+o), y:0}, {x:k*(w/2-hl*0.7), y:0}];
+    return [{x:k*(-w/2+o),y:-h/2+o},{x:k*(-w/2+o),y:h/2-o},{x:k*(w/2-hl-o),y:-h/2+o},{x:k*(w/2-hl-o),y:h/2-o}];
+  }
+  const xs=[-w/2+o, w/2-o], ys=[-h/2+o, h/2-o];
+  return S.mount===4 ? [{x:xs[0],y:ys[0]},{x:xs[1],y:ys[0]},{x:xs[0],y:ys[1]},{x:xs[1],y:ys[1]}] : [{x:xs[0],y:ys[0]},{x:xs[1],y:ys[0]}];
+}
+
+function fillFor(matId){ const m=M[matId]; return m.finish==='mirror' ? `url(#g-${m.id})` : m.finish==='clear' ? 'rgba(235,245,252,.55)' : `url(#g-${m.id})`; }
+function defs(){
+  const d = el('defs', {}, svg);
+  for (const m of MATS){
+    const g = el('linearGradient', {id:'g-'+m.id, x1:'0', y1:'0', x2:'1', y2:'1'}, d);
+    const stops = m.stops || [shade(m.hex,.16), m.hex, shade(m.hex,-.12)];
+    stops.forEach((c,i) => el('stop', {offset:(i/(stops.length-1)).toFixed(2), 'stop-color':c}, g));
+  }
+  const sheen = el('linearGradient', {id:'sheen', x1:'0', y1:'0', x2:'1', y2:'0'}, d);
+  [['0','#fff','0'],['.5','#fff','.55'],['1','#fff','0']].forEach(([o,c,a]) => el('stop',{offset:o,'stop-color':c,'stop-opacity':a},sheen));
+  const f1 = el('filter', {id:'soft', x:'-20%', y:'-20%', width:'140%', height:'150%'}, d);
+  el('feDropShadow', {dx:'0', dy:'10', stdDeviation:'10', 'flood-color':'#0f172a', 'flood-opacity':'.28'}, f1);
+  const f2 = el('filter', {id:'raise', x:'-10%', y:'-10%', width:'120%', height:'130%'}, d);
+  el('feDropShadow', {dx:'0.6', dy:'1.8', stdDeviation:'0', 'flood-color':'#0f172a', 'flood-opacity':'.45', result:'a'}, f2);
+  el('feDropShadow', {dx:'1', dy:'3', stdDeviation:'2', 'flood-color':'#0f172a', 'flood-opacity':'.25'}, f2);
+  return d;
+}
+
+let layerNodes = {};
+function render(){
+  svg.innerHTML = '';
+  const prod = S.bg==='prod';
+  const {w,h} = baseDims();
+  const pad = Math.max(w,h)*0.12 + 20;
+  let vb = [-w/2-pad, -h/2-pad, w+2*pad, h+2*pad];
+  if (S.mode==='letters') { const s = Math.max(w,h)*0.9; vb = [-s/2-pad/2, -s/2-pad/2, s+pad, s+pad]; }
+  svg.setAttribute('viewBox', vb.join(' '));
+  const d = defs();
+  const sign = S.mode==='sign';
+  const bp = shapePath(S.base.shape, w, h);
+
+  if (sign){
+    if (prod){
+      el('path', {d:bp, fill:'none', stroke:'#FF0000', 'stroke-width':'0.8'}, svg);
+    } else {
+      const bm = M[S.base.mat];
+      el('path', {d:bp, fill:shade(bm.hex,-.35), transform:`translate(0 ${S.base.t*1.2})`, filter:'url(#soft)'}, svg);
+      el('path', {d:bp, fill:fillFor(S.base.mat), stroke:shade(bm.hex,-.2), 'stroke-width':'0.6'}, svg);
+      if (bm.finish==='mirror'){
+        const cp = el('clipPath', {id:'clip-base'}, d); el('path', {d:bp}, cp);
+        const g = el('g', {'clip-path':'url(#clip-base)'}, svg);
+        const sk = el('g', {transform:'skewX(-18)'}, g);
+        el('rect', {class:'sheen', x:-w*1.1, y:-h/2-40, width:w*0.5, height:h+80, fill:'url(#sheen)', style:'transform-box:fill-box'}, sk);
+      }
+    }
+  }
+
+  layerNodes = {};
+  S.layers.forEach((L) => {
+    const outer = el('g', {transform:`translate(${L.x} ${L.y})`, 'data-id':L.id, style:'cursor:grab'}, svg);
+    const inner = el('g', prod ? {} : {filter:'url(#raise)'}, outer);
+    const fill = prod ? 'none' : fillFor(L.mat), stroke = prod ? '#0000FF' : 'none', sw = prod ? '0.6' : '0';
+    if (L.kind==='text'){
+      const f = F[L.font];
+      const lines = String(L.text||' ').split('\n');
+      const fs = L.h / CAP, lh = fs*1.05;
+      lines.forEach((t,i) => {
+        const tx = el('text', {x:0, y:(i-(lines.length-1)/2)*lh + L.h/2, 'text-anchor':'middle', 'font-family':`'${f.id}'`, 'font-weight':f.w, 'font-size':fs, fill, stroke, 'stroke-width':sw}, inner);
+        tx.textContent = t || ' ';
+      });
+    } else if (L.kind==='arc'){
+      const f = F[L.font], R = Math.min(w,h)/2, fs = L.h/CAP;
+      const fr = S.layers.find(o=>o.kind==='frame'); const inset = fr ? fr.inset + fr.width + 10 : 16;
+      const r = L.pos==='top' ? R - inset - L.h : R - inset;
+      const pid = 'arc-' + L.id;
+      el('path', {id:pid, d: L.pos==='top' ? `M ${-r} 0 A ${r} ${r} 0 1 1 ${r} 0` : `M ${-r} 0 A ${r} ${r} 0 1 0 ${r} 0`, fill:'none'}, d);
+      const tx = el('text', {'font-family':`'${f.id}'`, 'font-weight':f.w, 'font-size':fs, fill, stroke, 'stroke-width':sw, 'letter-spacing':fs*0.08}, inner);
+      const tp = el('textPath', {href:'#'+pid, startOffset:'50%', 'text-anchor':'middle'}, tx);
+      tp.textContent = L.text || ' ';
+    } else if (L.kind==='frame'){
+      const o = S.mode==='sign' ? {w:w-2*L.inset, h:h-2*L.inset} : {w:w*0.8, h:h*0.8};
+      const i = {w:o.w-2*L.width, h:o.h-2*L.width};
+      const corner = S.base.shape==='rounded' ? Math.min(w,h)*0.12 - L.inset : 0;
+      el('path', {d: shapePath(S.base.shape, o.w, o.h, corner) + ' ' + shapePath(S.base.shape, i.w, i.h, Math.max(0,corner-L.width)), 'fill-rule':'evenodd', fill, stroke, 'stroke-width':sw}, inner);
+    } else if (L.kind==='logo'){
+      const g = el('g', {transform:`translate(${L.tx} ${L.ty}) scale(${L.scale})`}, inner);
+      g.innerHTML = L.markup;
+      g.querySelectorAll('*').forEach(n => { if (n.tagName!=='g'){ n.setAttribute('fill', fill); n.setAttribute('stroke', prod?'#0000FF':'none'); n.setAttribute('stroke-width', prod? (0.6/L.scale):0); n.removeAttribute('style'); } });
+    }
+    if (L.id===S.sel && !prod){
+      // selection outline added after measuring
+    }
+    layerNodes[L.id] = {outer, inner};
+  });
+
+  if (prod && S.tpl){
+    // Layer 4: the same letters on a carton/HDF sheet; production offsets each contour by +0.2 mm.
+    const shift = (S.mode==='sign' ? w : Math.max(w,h)*0.9) + 40;
+    const vb2 = svg.getAttribute('viewBox').split(' ').map(Number); vb2[2] += shift; svg.setAttribute('viewBox', vb2.join(' '));
+    const sheet = el('g', {transform:`translate(${shift} 0)`, 'pointer-events':'none'}, svg);
+    el('path', {d: S.mode==='sign' ? bp : shapePath('rect', w*0.9, h*0.9), fill:'none', stroke:'#000000', 'stroke-width':'0.8', 'stroke-dasharray':'6 3'}, sheet);
+    S.layers.forEach(L => { const c = layerNodes[L.id].outer.cloneNode(true); c.removeAttribute('data-id'); c.querySelectorAll('*').forEach(n => { if (n.getAttribute('stroke')) n.setAttribute('stroke', '#000000'); }); sheet.appendChild(c); });
+    const t = el('text', {x:0, y:-h/2-10, 'text-anchor':'middle', 'font-size':Math.max(11, w*0.03), 'font-family':'Inter, sans-serif', fill:'#000000'}, sheet); t.textContent = 'Шар 4: монтажний трафарет';
+  }
+  for (const p of holes()){
+    if (prod) el('circle', {cx:p.x, cy:p.y, r:HOLE_D/2, fill:'none', stroke:'#00B000', 'stroke-width':'0.6'}, svg);
+    else {
+      el('circle', {cx:p.x, cy:p.y+1.5, r:9.5, fill:'#0f172a', opacity:'.25'}, svg);
+      el('circle', {cx:p.x, cy:p.y, r:9, fill:'url(#g-mirror-silver)', stroke:'#7d858f', 'stroke-width':'0.8'}, svg);
+      el('circle', {cx:p.x-2.5, cy:p.y-2.5, r:2.6, fill:'#ffffff', opacity:'.7'}, svg);
+    }
+  }
+
+  // Selection frame and measurements (bbox in mm, since 1 user unit = 1 mm).
+  const sel = S.layers.find(l=>l.id===S.sel);
+  if (sel && layerNodes[sel.id] && !prod){
+    const b = bboxOf(sel);
+    if (b) el('rect', {x:b.x-3, y:b.y-3, width:b.w+6, height:b.h+6, fill:'none', stroke:'#1557D6', 'stroke-width':'1', 'stroke-dasharray':'4 3', 'pointer-events':'none', rx:'2'}, svg);
+  }
+  if (S.mode==='sign'){
+    const dimY = h/2 + pad*0.55, col = prod ? '#555' : (S.bg==='dark' ? '#cbd5e1' : '#334155');
+    el('path', {d:`M ${-w/2} ${dimY} H ${w/2} M ${-w/2} ${dimY-5} V ${dimY+5} M ${w/2} ${dimY-5} V ${dimY+5}`, stroke:col, 'stroke-width':'0.8', fill:'none'}, svg);
+    const t = el('text', {x:0, y:dimY-6, 'text-anchor':'middle', 'font-size':Math.max(11, w*0.03), 'font-family':'Inter, sans-serif', fill:col}, svg);
+    t.textContent = (S.base.shape==='circle' ? 'Ø ' : '') + w + (HAS_H(S.base.shape) ? ' × ' + h : '') + ' мм';
+  }
+}
+
+function bboxOf(L){
+  const n = layerNodes[L.id]; if (!n) return null;
+  try { const b = n.inner.getBBox(); return {x:b.x+L.x, y:b.y+L.y, w:b.width, h:b.height}; } catch(e){ return null; }
+}
+
+// Checks
+function inside(x, y, w, h, e){
+  const sh = S.base.shape;
+  if (sh==='circle') return Math.hypot(x,y) <= w/2 - e;
+  if (Math.abs(x) > w/2-e || Math.abs(y) > h/2-e) return false;
+  if (sh==='arrow' || sh==='pointer'){
+    const xl = x*(S.base.dir||1), hl = headLen(sh, w, h);
+    if (xl < w/2-hl) return sh==='arrow' ? Math.abs(y) <= h*0.22 - e : true;
+    return Math.abs(y) <= (w/2-xl)/hl*(h/2) - e;
+  }
+  return true;
+}
+// Logo layers are tested on their real outline, not the bounding box (a ring's box covers the whole sign).
+function edgeSamples(w, h){
+  const pth = el('path', {d: shapePath(S.base.shape, w-EDGE_MIN, h-EDGE_MIN), fill:'none'}, svg);
+  const len = pth.getTotalLength(), pts = [];
+  for (let i=0;i<144;i++){ const q = pth.getPointAtLength(len*i/144); pts.push([q.x,q.y]); }
+  pth.remove(); return pts;
+}
+function hitsFill(L, pts){
+  const n = layerNodes[L.id]; if (!n) return false;
+  const shapes = n.inner.querySelectorAll('path,rect,circle,ellipse,polygon,polyline');
+  const root = svg.getScreenCTM(); if (!root) return false;
+  for (const sh of shapes){
+    const ctm = sh.getScreenCTM(); if (!ctm) continue;
+    const m = ctm.inverse().multiply(root);
+    for (const [x,y] of pts){ const q = new DOMPoint(x,y).matrixTransform(m); try { if (sh.isPointInFill(q)) return true; } catch(e){ return false; } }
+  }
+  return false;
+}
+function checks(){
+  const out = [];
+  const {w,h} = baseDims(), sign = S.mode==='sign';
+  const hs = holes();
+  S.layers.forEach((L,i) => {
+    const m = M[L.mat], n = i+1;
+    if (!m.stock) out.push({t:`Шар ${n}: ${m.name.toLowerCase()} під замовлення, строк довший.`});
+    if (L.kind==='text'||L.kind==='arc'){
+      if (L.h < m.minH) out.push({t:`Шар ${n}: літери ${L.h} мм, для «${m.name}» мінімум ${m.minH} мм.`, err:true});
+      const stroke = L.h * F[L.font].ratio;
+      if (stroke < m.minS) out.push({t:`Шар ${n}: шрифт ${L.font} має лінії ≈${stroke.toFixed(1)} мм, потрібно від ${m.minS} мм. Збільште літери або оберіть товщий шрифт.`});
+    }
+    if (L.kind==='logo' && L.traced && L.id===S.layers.find(o=>o.group===L.group).id) out.push({t:`Логотип з картинки переведено у вектор автоматично. Перед різанням менеджер перевірить і вирівняє контури.`});
+    if (L.kind==='logo' && L.minFeature!=null && L.minFeature*L.scale < m.minS) out.push({t:`Шар ${n}: у логотипі є дрібні деталі, частина може не вирізатись.`});
+    if (L.kind==='frame' && L.width < m.minS*2) out.push({t:`Шар ${n}: рамка тонша за ${m.minS*2} мм, може зламатись.`});
+    const b = bboxOf(L);
+    if (sign && b && L.kind!=='arc' && L.kind!=='frame'){
+      const corners = [[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]];
+      const out1 = L.kind==='logo' ? hitsFill(L, edgeSamples(w, h)) : corners.some(([x,y]) => !inside(x, y, w, h, EDGE_MIN));
+      if (out1) out.push({t:`Шар ${n} заходить ближче ніж ${EDGE_MIN} мм до краю основи.`, err:true});
+    }
+    if (b && hs.length && L.kind!=='frame' && L.kind!=='arc'){
+      const hit = L.kind==='logo'
+        ? hitsFill(L, hs.flatMap(p => [[p.x,p.y], ...[0,1,2,3,4,5,6,7].map(i => [p.x+9*Math.cos(i*Math.PI/4), p.y+9*Math.sin(i*Math.PI/4)])]))
+        : hs.some(p => p.x > b.x-8 && p.x < b.x+b.w+8 && p.y > b.y-8 && p.y < b.y+b.h+8);
+      if (hit) out.push({t:`Отвір під кріплення потрапляє на шар ${n}. Зсуньте шар або оберіть 2 отвори.`, err:true});
+    }
+    if (L.kind==='frame' && hs.length && sign){
+      const R = Math.min(w,h)/2, rin = R - L.inset - L.width - 9, rout = R - L.inset + 9;
+      const hit = S.base.shape==='circle' && hs.some(p => { const d=Math.hypot(p.x,p.y); return d>rin && d<rout; });
+      if (hit) out.push({t:`Отвори потрапляють на рамку (шар ${n}). Збільште відступ рамки до ${HOLE_OFF+HOLE_D+4} мм.`});
+    }
+  });
+  return out;
+}
+
+function price(){
+  const {w,h} = baseDims();
+  const rows = [], adm = [];
+  let total;
+  if (S.mode==='sign'){
+    const baseA = w*h/1e6;
+    let area = baseA;
+    if (S.area==='sum'){
+      S.layers.forEach(L => { const b = bboxOf(L); if (b) area += b.w*b.h/1e6; });
+      adm.push(`Площа: основа ${baseA.toFixed(3)} + шари = ${area.toFixed(3)} м²`);
+    } else {
+      adm.push(`Площа за габаритом: ${w} × ${h} мм = ${area.toFixed(3)} м²`);
+    }
+    let p = area * RATE_SIGN;
+    adm.push(`${area.toFixed(3)} м² × ${fmt(RATE_SIGN)} грн = ${fmt(p)} грн (основа 3 мм + накладні 1–3 мм)`);
+    const tx = thickExtra(M[S.base.mat], S.base.t);
+    const sz = S.base.shape==='circle' ? `Ø${w} мм` : `${w} × ${h} мм`;
+    const SHN = {circle:'Коло', square:'Квадрат', rect:'Прямокутник', rounded:'Заокруглений прямокутник', arrow:'Стрілка', pointer:'Вказівник'};
+    rows.push(`<b>${SHN[S.base.shape]} ${sz}</b>, ${M[S.base.mat].name.toLowerCase()} ${String(S.base.t).replace('.',',')} мм`);
+    rows.push(`Шарів: ${S.layers.length}. Усі кольори й матеріали вже в ціні`);
+    if (tx){ const add = baseA*tx; p += add; rows.push(`Основа ${String(S.base.t).replace('.',',')} мм замість 3 мм: +${fmt(Math.ceil(add/10)*10)} грн`); adm.push(`Товщина ${S.base.t} мм: ${baseA.toFixed(3)} м² × ${fmt(tx)} грн (різниця листа з 3 мм)`); }
+    rows.push(S.mount ? `Отвори під кріплення: ${holes().length}, безкоштовно` : `Без отворів`);
+    if (S.tpl){ const add = baseA*TPL_RATE; p += add; rows.push(`Монтажний трафарет: +${fmt(Math.ceil(add/10)*10)} грн`); adm.push(`Монтажний трафарет: ${baseA.toFixed(3)} м² × ${TPL_RATE} грн`); }
+    if (S.tape){ const add = baseA*TAPE_RATE; p += add; rows.push(`Самоклейка на звороті: +${fmt(Math.ceil(add/10)*10)} грн`); adm.push(`Самоклейка: ${baseA.toFixed(3)} м² × ${TAPE_RATE} грн`); }
+    if (p < MIN_SIGN){ rows.push(`Мінімальна вартість вивіски ${fmt(MIN_SIGN)} грн`); adm.push(`Спрацював мінімум ${fmt(MIN_SIGN)} грн`); p = MIN_SIGN; }
+    total = Math.ceil(p/10)*10;
+  } else {
+    let p = 0;
+    S.layers.forEach((L,i) => {
+      const b = bboxOf(L); if (!b) return;
+      const a = b.w*b.h/1e6, m = M[L.mat], k = L.kind==='text' && /\s/.test((L.text||'').trim()) ? K_WORD : (L.kind==='text' ? K_WORD : K_LETTERS);
+      const part = a*m.rate*k; p += part;
+      rows.push(`${esc((L.text||L.label||'Шар '+(i+1)).replace(/\n/g,' '))}: ${Math.round(b.w)} × ${Math.round(b.h)} мм, ${m.name.toLowerCase()} — ${fmt(Math.ceil(part/10)*10)} грн`); adm.push(`Шар ${i+1}: ${(a).toFixed(4)} м² × ${fmt(m.rate)} грн/м² × ${k}`);
+    });
+    if (S.tpl){ const bs = S.layers.map(bboxOf).filter(Boolean); if (bs.length){ const x0=Math.min(...bs.map(b=>b.x)), x1=Math.max(...bs.map(b=>b.x+b.w)), y0=Math.min(...bs.map(b=>b.y)), y1=Math.max(...bs.map(b=>b.y+b.h)); const a=(x1-x0+40)*(y1-y0+40)/1e6, add=a*TPL_RATE; p += add; rows.push(`Монтажний трафарет: +${fmt(Math.ceil(add/10)*10)} грн`); adm.push(`Монтажний трафарет: ${a.toFixed(4)} м² (габарит напису + 20 мм) × ${TPL_RATE} грн`); } }
+    if (S.tape){ const a = S.layers.reduce((t,L)=>{ const b=bboxOf(L); return t + (b ? b.w*b.h/1e6 : 0); }, 0); const add = a*TAPE_RATE; p += add; rows.push(`Самоклейка на звороті: +${fmt(Math.ceil(add/10)*10)} грн`); adm.push(`Самоклейка: ${a.toFixed(4)} м² × ${TAPE_RATE} грн`); }
+    if (p < MIN_LETTERS){ rows.push(`Мінімальна вартість замовлення ${MIN_LETTERS} грн`); adm.push(`Спрацював мінімум ${MIN_LETTERS} грн`); p = MIN_LETTERS; }
+    total = Math.ceil(p/10)*10;
+  }
+  return {total, rows, adm};
+}
+
+// Panel
+function swatches(container, current, onPick){
+  container.innerHTML = '';
+  MATS.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'sw'; b.type='button';
+    b.style.background = m.stops ? `linear-gradient(135deg,${m.stops.join(',')})` : (m.finish==='clear' ? 'linear-gradient(135deg,#ffffff,#d6e6f0)' : m.hex);
+    b.setAttribute('aria-pressed', String(m.id===current));
+    b.dataset.stock = m.stock;
+    b.title = m.name + (m.stock ? '' : ' (під замовлення)');
+    b.setAttribute('aria-label', b.title);
+    b.onclick = () => onPick(m.id);
+    container.appendChild(b);
+  });
+}
+const KIND = {text:'Текст', arc:'Текст по колу', frame:'Рамка', logo:'Колір логотипу'};
+function renderPanel(){
+  const sign = S.mode==='sign';
+  $('#base-card').hidden = !sign; $('#mount-card').hidden = !sign;
+  document.querySelectorAll('[data-shape]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.shape===S.base.shape)));
+  const pr = $('#size-presets'); pr.innerHTML='';
+  PRESETS.forEach(v => { const b=document.createElement('button'); b.className='chip'; b.textContent=(S.base.shape==='circle'?'Ø':'')+v; b.setAttribute('aria-pressed', String(S.base.w===v)); b.onclick=()=>{S.base.w=v; if(HAS_H(S.base.shape)) S.base.h=Math.round(v*H_RATIO[S.base.shape]/10)*10; update();}; pr.appendChild(b); });
+  $('#w').value = S.base.w; $('#h').value = S.base.h;
+  $('#h-wrap').hidden = !HAS_H(S.base.shape);
+  $('#dir-row').hidden = !(S.base.shape==='arrow'||S.base.shape==='pointer');
+  document.querySelectorAll('[data-dir]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.dir===(S.base.dir||1))));
+  $('#tape').setAttribute('aria-pressed', String(!!S.tape));
+  $('#tpl').setAttribute('aria-pressed', String(!!S.tpl));
+  $('#wl').setAttribute('aria-pressed', String(!!S.wl));
+  $('#base-mat-name').textContent = M[S.base.mat].name + ', ' + String(S.base.t).replace('.',',') + ' мм';
+  const th = $('#thick'); th.innerHTML = '<span class="hint">Товщина:</span>';
+  THICK(M[S.base.mat]).forEach(t => { const b=document.createElement('button'); b.className='chip'; b.textContent=String(t).replace('.',',')+' мм'; b.setAttribute('aria-pressed', String(S.base.t===t)); b.onclick=()=>{S.base.t=t; update();}; th.appendChild(b); });
+  swatches($('#base-sws'), S.base.mat, id => { S.base.mat=id; if (!THICK(M[id]).includes(S.base.t)) S.base.t=3; update(); });
+  document.querySelectorAll('[data-mount]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.mount===S.mount)));
+
+  const ls = $('#layers'); ls.innerHTML='';
+  $('#layer-count').textContent = S.layers.length + (S.layers.length===1?' шар':' шари');
+  S.layers.forEach((L,i) => {
+    const b = document.createElement('div');
+    b.className='layer'; b.tabIndex=0; b.setAttribute('role','button');
+    b.setAttribute('aria-current', String(L.id===S.sel));
+    const m = M[L.mat];
+    b.innerHTML = `<span class="n">${i+1}</span><span class="dot" style="background:${m.stops?`linear-gradient(135deg,${m.stops.join(',')})`:m.hex}"></span><span class="t">${esc(L.kind==='logo' ? (L.label||'Логотип') : L.kind==='frame' ? 'Рамка '+L.width+' мм' : (L.text||'').replace(/\n/g,' '))}<br><span class="k">${KIND[L.kind]} · ${esc(m.name)}, ${L.t||3} мм</span></span>`;
+    const x = document.createElement('button'); x.className='x'; x.textContent='×'; x.setAttribute('aria-label','Видалити шар '+(i+1));
+    x.onclick = e => { e.stopPropagation(); S.layers = S.layers.filter(o=>o.id!==L.id); if (S.sel===L.id) S.sel = S.layers[0]?.id || null; update(); };
+    b.appendChild(x);
+    b.onclick = () => { S.sel=L.id; update(); };
+    b.onkeydown = e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); S.sel=L.id; update(); } };
+    ls.appendChild(b);
+  });
+  renderEditor();
+}
+
+function renderEditor(){
+  const L = S.layers.find(l=>l.id===S.sel), box = $('#edit');
+  $('#edit-card').hidden = !L;
+  if (!L) return;
+  const i = S.layers.indexOf(L)+1;
+  $('#edit-title').textContent = `Шар ${i}: ${KIND[L.kind].toLowerCase()}`;
+  let h = '';
+  if (L.kind==='text' || L.kind==='arc'){
+    h += `<label class="f">Текст${L.kind==='text'?' (Enter — новий рядок)':''}${L.kind==='text' ? `<textarea id="e-text" rows="2" style="font:15px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;resize:vertical">${esc(L.text)}</textarea>` : `<input type="text" id="e-text" value="${esc(L.text)}">`}</label>`;
+    h += `<div class="grid2"><label class="f">Шрифт<select id="e-font">${FONTS.map(f=>`<option value="${f.id}" ${f.id===L.font?'selected':''} style="font-family:'${f.id}'">${f.name}</option>`).join('')}</select></label>`;
+    h += `<label class="f">Висота літер, мм<input type="number" id="e-h" min="8" max="400" value="${L.h}"></label></div>`;
+    h += `<label class="f">Висота: <span id="e-hv">${L.h} мм</span><input type="range" id="e-hr" min="8" max="${Math.round(Math.min(baseDims().w,baseDims().h)*0.4)}" value="${L.h}"></label>`;
+    if (L.kind==='arc') h += `<div class="row" role="group" aria-label="Положення"><button class="chip" data-pos="top" aria-pressed="${L.pos==='top'}">Зверху</button><button class="chip" data-pos="bottom" aria-pressed="${L.pos==='bottom'}">Знизу</button></div>`;
+  }
+  if (L.kind==='frame'){
+    h += `<div class="grid2"><label class="f">Товщина, мм<input type="number" id="e-fw" min="3" max="40" value="${L.width}"></label><label class="f">Відступ від краю, мм<input type="number" id="e-fi" min="6" max="80" value="${L.inset}"></label></div>`;
+  }
+  if (L.kind==='logo'){
+    h += `<div class="hint">Колір у файлі: <span style="display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;background:${L.src};border:1px solid var(--line)"></span> ${L.src}. Акрил підібрано автоматично, можна змінити.</div>`;
+    h += `<label class="f">Розмір логотипу: <span id="e-sv">${Math.round(L.scale*100/L.scale0)}%</span><input type="range" id="e-sc" min="30" max="160" value="${Math.round(L.scale*100/L.scale0)}"></label>`;
+  }
+  h += `<div><div class="swname">Акрил шару: <b>${esc(M[L.mat].name)}, ${L.t||3} мм</b></div><div class="sws" id="layer-sws"></div></div>`;
+  h += `<div class="row" role="group" aria-label="Товщина шару"><span class="hint">Товщина:</span>${[1,2,3].map(t=>`<button class="chip" data-lt="${t}" aria-pressed="${(L.t||3)===t}">${t} мм</button>`).join('')}<span class="hint">входить у ціну</span></div>`;
+  h += `<div class="row"><button class="btn" id="e-center">По центру</button>${L.kind==='logo'?'<button class="btn" id="e-same">Цей акрил для всіх кольорів</button>':''}</div>`;
+  box.innerHTML = h;
+  swatches($('#layer-sws'), L.mat, id => { L.mat=id; update(); });
+  const on = (id, ev, fn) => { const n = box.querySelector('#'+id); if (n) n.addEventListener(ev, fn); };
+  on('e-text','input', e => { L.text = e.target.value; update(true); });
+  on('e-font','change', e => { L.font = e.target.value; update(); });
+  on('e-h','change', e => { L.h = Math.max(8, +e.target.value||L.h); update(); });
+  on('e-hr','input', e => { L.h = +e.target.value; box.querySelector('#e-hv').textContent = L.h+' мм'; box.querySelector('#e-h').value=L.h; update(true); });
+  on('e-fw','change', e => { L.width = Math.max(1,+e.target.value||L.width); update(); });
+  on('e-fi','change', e => { L.inset = Math.max(0,+e.target.value||L.inset); update(); });
+  on('e-sc','input', e => { const k=+e.target.value/100; const s0=L.scale0; S.layers.filter(o=>o.group===L.group).forEach(o=>{o.scale=s0*k; o.tx=o.cx0 - o.cx0*0 ; recenterLogo(o);}); box.querySelector('#e-sv').textContent=e.target.value+'%'; update(true); });
+  on('e-center','click', () => { if (L.kind==='logo') S.layers.filter(o=>o.group===L.group).forEach(o=>{o.x=0;o.y=0;}); else { L.x=0; L.y=0; } update(); });
+  on('e-same','click', () => { S.layers.filter(o=>o.group===L.group).forEach(o=>o.mat=L.mat); update(); });
+  box.querySelectorAll('[data-lt]').forEach(b => b.onclick = () => { const t=+b.dataset.lt; if (L.kind==='logo') S.layers.filter(o=>o.group===L.group).forEach(o=>o.t=t); else L.t=t; update(); });
+  box.querySelectorAll('[data-pos]').forEach(b => b.onclick = () => { L.pos=b.dataset.pos; update(); });
+}
+
+function renderSummary(){
+  const ws = checks(), ul = $('#warns');
+  ul.innerHTML = ws.length ? ws.map(w=>`<li class="${w.err?'err':''}">${esc(w.t)}</li>`).join('') : '<li class="ok">Макет пройшов перевірку: можна різати.</li>';
+  const p = price();
+  $('#price').textContent = fmt(p.total) + ' грн';
+  $('#calc').innerHTML = p.rows.map(r=>`<span>${r}</span>`).join('');
+  $('#adm').innerHTML = p.adm.map(r=>`<span>${r}</span>`).join('');
+  $('#legend').hidden = S.bg!=='prod';
+  $('#hint').textContent = S.bg==='prod' ? 'Лінії різу за шарами, як їх побачить оператор лазера' : 'Шар можна перетягнути на макеті';
+}
+
+let raf = 0;
+function update(soft){
+  render();
+  if (!soft) renderPanel(); else { // keep focus in editor while typing
+    const ls = $('#layers'); if (ls) { const keepSel = S.sel; renderLayersOnly(keepSel); }
+  }
+  renderSummary();
+}
+function renderLayersOnly(){
+  const items = $('#layers').children;
+  S.layers.forEach((L,i) => { const t = items[i]?.querySelector('.t'); if (t && (L.kind==='text'||L.kind==='arc')) t.firstChild.textContent = (L.text||'').replace(/\n/g,' '); });
+}
+
+// Logo import: SVG → group shapes by colour → one layer per colour, nearest acrylic picked.
+function nearestMat(hex){
+  const [r,g,b] = hexRgb(hex);
+  let best=null, bd=1e9;
+  MATS.filter(m=>m.finish!=='clear').forEach(m => { const [r2,g2,b2]=hexRgb(m.hex); const d=(r-r2)**2*0.3+(g-g2)**2*0.59+(b-b2)**2*0.11; if (d<bd){bd=d;best=m;} });
+  return best.id;
+}
+function normColor(c){
+  if (!c) return null; c = c.trim().toLowerCase();
+  if (c==='none'||c==='transparent'||c.startsWith('url')) return null;
+  const ctx = normColor.ctx || (normColor.ctx = document.createElement('canvas').getContext('2d'));
+  ctx.fillStyle = '#000'; ctx.fillStyle = c; const v = ctx.fillStyle;
+  return v.startsWith('#') ? v : null;
+}
+function effFill(node){
+  let n = node;
+  while (n && n.nodeType===1){
+    const st = n.getAttribute('style')||''; const m = st.match(/fill\s*:\s*([^;]+)/i);
+    if (m) return m[1]; const f = n.getAttribute('fill'); if (f) return f;
+    n = n.parentNode;
+  }
+  return '#000000';
+}
+function importSVG(text, label){
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const root = doc.querySelector('svg');
+  if (!root || doc.querySelector('parsererror')) { toast('Файл не схожий на SVG. Збережіть логотип як SVG і спробуйте ще раз.'); return; }
+  if (root.querySelector('text')) toast('У файлі є текст, не переведений у криві. Ми його пропустили: переведіть текст у криві в редакторі.');
+  const shapes = [...root.querySelectorAll('path,rect,circle,ellipse,polygon,polyline')].filter(n => !n.closest('defs,clipPath,mask'));
+  const groups = new Map();
+  shapes.forEach(n => {
+    const c = normColor(effFill(n)); if (!c) return;
+    // merge near-identical shades (antialias, export noise)
+    let key = [...groups.keys()].find(k => { const a=hexRgb(k), b=hexRgb(c); return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2]) < 30; }) || c;
+    const clone = n.cloneNode(true);
+    let p = n.parentNode, tr = [];
+    while (p && p!==root){ if (p.getAttribute && p.getAttribute('transform')) tr.unshift(p.getAttribute('transform')); p = p.parentNode; }
+    if (tr.length) { const own = clone.getAttribute('transform'); clone.setAttribute('transform', tr.join(' ') + (own?' '+own:'')); }
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(new XMLSerializer().serializeToString(clone).replace(/ xmlns="[^"]*"/g,''));
+  });
+  addLogo(groups, label, false, physSize(root));
+}
+// Real size from the file: width/height with mm, cm, in or pt units (px is ambiguous, so ignored).
+function physSize(root){
+  const U = {mm:1, cm:10, in:25.4, pt:25.4/72};
+  const parse = v => { const m = String(v||'').trim().match(/^([\d.]+)\s*(mm|cm|in|pt)$/i); return m ? parseFloat(m[1])*U[m[2].toLowerCase()] : null; };
+  const wmm = parse(root.getAttribute('width')), hmm = parse(root.getAttribute('height'));
+  const vb = (root.getAttribute('viewBox')||'').split(/[\s,]+/).map(Number);
+  if (!wmm || !hmm || vb.length!==4 || !vb[2]) return null;
+  return {w:wmm, h:hmm, k:wmm/vb[2]};
+}
+function addLogo(groups, label, traced, phys){
+  if (phys && S.mode==='sign' && groups.size) return addSignFile(groups, label, phys);
+  if (!groups.size) { toast(traced ? 'На зображенні не знайшлося логотипу: фон і малюнок майже одного кольору.' : 'У файлі не знайшлося зафарбованих фігур.'); return; }
+  // measure the whole logo
+  const tmp = el('g', {}, svg); tmp.innerHTML = [...groups.values()].flat().join('');
+  const bb = tmp.getBBox(); tmp.remove();
+  const {w,h} = baseDims();
+  const target = Math.min(w,h) * (S.mode==='sign' ? 0.42 : 0.8);
+  const scale = target / Math.max(bb.width, bb.height);
+  const grp = 'G'+(++uid);
+  const newLayers = [...groups.entries()].map(([c, parts], idx) => ({
+    id:nid(), kind:'logo', group:grp, label:(label||'Логотип')+' · колір '+(idx+1), src:c, mat:nearestMat(c),
+    markup:parts.join(''), scale, scale0:scale, cx0:bb.x+bb.width/2, cy0:bb.y+bb.height/2, x:0, y:(S.mode==='sign'?-12:0), tx:0, ty:0, traced,
+  }));
+  newLayers.forEach(recenterLogo);
+  // drop the sample text layer to make room
+  S.layers = S.layers.filter(l => l.kind!=='text' && l.kind!=='logo');
+  S.layers.push(...newLayers);
+  S.sel = newLayers[0].id;
+  toast(traced
+    ? `Картинку переведено у вектор і розкладено на ${newLayers.length} ${newLayers.length===1?'шар':'шари'} за кольорами. Краї можуть бути нерівні: менеджер перевірить макет перед різанням.`
+    : `Логотип розкладено на ${newLayers.length} ${newLayers.length===1?'шар':'шари'} за кольорами. Акрил підібрано, перевірте.`);
+  update();
+}
+// A file with real dimensions is the whole sign: its size sets the base (and the price);
+// a colour that fills the whole outline becomes the base material instead of a layer.
+function addSignFile(groups, label, phys){
+  const measure = html => { const t = el('g', {}, svg); t.innerHTML = html; const b = t.getBBox(); t.remove(); return b; };
+  const all = measure([...groups.values()].flat().join(''));
+  const k = phys.k, grp = 'G'+(++uid);
+  let bgKey = null;
+  for (const [c, parts] of groups){ const b = measure(parts.join('')); if (b.width >= all.width*0.97 && b.height >= all.height*0.97 && parts.length <= 2){ bgKey = c; break; } }
+  const W = Math.round(all.width*k), H = Math.round(all.height*k);
+  S.layers = [];
+  if (bgKey){
+    const m = groups.get(bgKey).join('').trim();
+    const round = /^<(circle|ellipse)/.test(m) && Math.abs(W-H) < 3;
+    S.base.shape = round ? 'circle' : (Math.abs(W-H) < 3 ? 'square' : 'rect');
+    S.base.w = W; S.base.h = H; S.base.mat = nearestMat(bgKey);
+  } else {
+    S.base.shape = Math.abs(W-H) < 3 ? 'square' : 'rect';
+    S.base.w = W + 2*HOLE_OFF*2; S.base.h = H + 2*HOLE_OFF*2;
+  }
+  if (!THICK(M[S.base.mat]).includes(S.base.t)) S.base.t = 3;
+  let idx = 0;
+  for (const [c, parts] of groups){
+    if (c===bgKey) continue;
+    const L = {id:nid(), kind:'logo', group:grp, label:(label||'Вивіска')+' · колір '+(++idx), src:c, mat:nearestMat(c),
+      markup:parts.join(''), scale:k, scale0:k, cx0:all.x+all.width/2, cy0:all.y+all.height/2, x:0, y:0, tx:0, ty:0, traced:false};
+    recenterLogo(L); S.layers.push(L);
+  }
+  S.sel = S.layers[0]?.id || null;
+  toast(`Розмір із файлу: ${W/10} × ${H/10} см. Основу й ціну підлаштовано під нього, ${S.layers.length} ${S.layers.length===1?'шар':'шари'} за кольорами${bgKey ? ', фон став основою' : ''}.`);
+  update();
+}
+// Raster → vector draft: downscale, drop background, k-means colours, one path of pixel runs per colour.
+// Production uses server-side tracing (potrace) plus a manager check; this only shows the flow.
+function traceRaster(img, label){
+  const MAX = 320, k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+  const W = Math.max(1, Math.round(img.naturalWidth*k)), H = Math.max(1, Math.round(img.naturalHeight*k));
+  const c = document.createElement('canvas'); c.width=W; c.height=H;
+  const ctx = c.getContext('2d', {willReadFrequently:true}); ctx.drawImage(img, 0, 0, W, H);
+  const px = ctx.getImageData(0,0,W,H).data;
+  const at = (x,y) => { const i=(y*W+x)*4; return [px[i],px[i+1],px[i+2],px[i+3]]; };
+  const corners = [at(0,0),at(W-1,0),at(0,H-1),at(W-1,H-1)];
+  const bg = [0,1,2].map(j => corners.reduce((s,v)=>s+v[j],0)/4);
+  const d2 = (a,b) => (a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+  const fg = new Int32Array(W*H).fill(-1), pts = [];
+  for (let y=0;y<H;y++) for (let x=0;x<W;x++){ const p=at(x,y); if (p[3]<128 || d2(p,bg) < 55*55) continue; fg[y*W+x]=0; pts.push([p[0],p[1],p[2],y*W+x]); }
+  if (pts.length < 20) { addLogo(new Map(), label, true); return; }
+  // k-means, k=5, seeded by spread picks
+  let cent = [0,.2,.4,.6,.8].map(f => pts[Math.floor(f*(pts.length-1))].slice(0,3));
+  for (let it=0; it<10; it++){
+    const sum = cent.map(()=>[0,0,0,0]);
+    for (const p of pts){ let bi=0,bd=1e12; cent.forEach((q,i)=>{const d=d2(p,q); if(d<bd){bd=d;bi=i;}}); p[4]=bi; const s=sum[bi]; s[0]+=p[0];s[1]+=p[1];s[2]+=p[2];s[3]++; }
+    cent = cent.map((q,i)=> sum[i][3] ? [sum[i][0]/sum[i][3],sum[i][1]/sum[i][3],sum[i][2]/sum[i][3]] : q);
+  }
+  // merge close clusters, drop tiny ones (noise, antialias halo)
+  const map = cent.map((_,i)=>i);
+  cent.forEach((q,i)=>{ for (let j=0;j<i;j++) if (map[j]===j && d2(q,cent[j]) < 45*45){ map[i]=j; break; } });
+  const count = cent.map(()=>0); pts.forEach(p => { p[4]=map[p[4]]; count[p[4]]++; fg[p[3]] = p[4]; });
+  const keep = cent.map((_,i)=> map[i]===i && count[i] > pts.length*0.01);
+  const hex = q => '#'+q.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+  const groups = new Map();
+  cent.forEach((q,ci) => {
+    if (!keep[ci]) return;
+    let d = '';
+    for (let y=0;y<H;y++){ let x=0; while (x<W){ if (fg[y*W+x]===ci){ const x0=x; while (x<W && fg[y*W+x]===ci) x++; d += `M${x0} ${y}h${x-x0}v1h${x0-x}z`; } else x++; } }
+    if (d) groups.set(hex(q), [`<path d="${d}"/>`]);
+  });
+  addLogo(groups, label, true);
+}
+function recenterLogo(L){ L.tx = -L.cx0*L.scale; L.ty = -L.cy0*L.scale; }
+const SAMPLE_SIGN = `<svg xmlns="http://www.w3.org/2000/svg" width="500mm" height="500mm" viewBox="0 0 500 500">
+<circle cx="250" cy="250" r="250" fill="#d6b25a"/>
+<path fill="#111111" fill-rule="evenodd" d="M250 30a220 220 0 1 0 0.01 0zM250 44a206 206 0 1 1 -0.01 0z"/>
+<path fill="#111111" d="M160 200h150v40c0 52-34 86-75 86s-75-34-75-86z"/>
+<path fill="#111111" d="M310 214h16c24 0 38 15 38 34s-14 34-38 34h-14v-19h14c12 0 19-7 19-15s-7-15-19-15h-16z"/>
+<path fill="#ffffff" d="M200 186c-16-20 12-30 0-54 20 14 6 34 16 54zM238 186c-16-24 16-38 0-68 24 18 6 44 16 68zM276 186c-16-20 12-30 0-54 20 14 6 34 16 54z"/>
+<path fill="#ffffff" d="M130 350h240c0 14-10 22-24 22H154c-14 0-24-8-24-22z"/>
+</svg>`;
+const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<path fill="#3b2416" d="M48 92h88v22c0 30-20 50-44 50s-44-20-44-50z"/>
+<path fill="#3b2416" d="M136 100h10c14 0 22 9 22 20s-8 20-22 20h-8v-11h8c7 0 11-4 11-9s-4-9-11-9h-10z"/>
+<path fill="#e8722a" d="M74 82c-10-12 8-18 0-32 12 8 4 20 10 32zM96 82c-10-14 10-22 0-40 14 10 4 26 10 40zM118 82c-10-12 8-18 0-32 12 8 4 20 10 32z"/>
+<path fill="#f3f3f1" d="M30 170h140c0 8-6 12-14 12H44c-8 0-14-4-14-12z"/>
+</svg>`;
+
+function toast(t){ const n=$('#toast'); n.textContent=t; clearTimeout(toast.t); toast.t=setTimeout(()=>n.textContent='',7000); }
+
+// Drag layers on the stage
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  const g = e.target.closest('[data-id]'); if (!g || S.bg==='prod') return;
+  const L = S.layers.find(l=>l.id===g.dataset.id); if (!L) return;
+  if (S.sel!==L.id){ S.sel=L.id; update(); }
+  const pt = toSvg(e); const grp = L.kind==='logo' ? S.layers.filter(o=>o.group===L.group) : [L];
+  drag = {pt, items:grp.map(o=>({o, x:o.x, y:o.y}))};
+  svg.setPointerCapture(e.pointerId); e.preventDefault();
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const p = toSvg(e);
+  drag.items.forEach(it => { it.o.x = Math.round(it.x + p.x - drag.pt.x); it.o.y = Math.round(it.y + p.y - drag.pt.y); });
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { render(); renderSummary(); });
+});
+const endDrag = () => { if (drag){ drag=null; update(); } };
+svg.addEventListener('pointerup', endDrag); svg.addEventListener('pointercancel', endDrag);
+function toSvg(e){ const p = svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+
+// Wiring
+document.querySelectorAll('[data-shape]').forEach(b => b.onclick = () => {
+  const prev = S.base.shape, sh = b.dataset.shape; S.base.shape = sh;
+  if (sh==='arrow' || sh==='pointer'){
+    if (prev!=='arrow' && prev!=='pointer'){ S.base.w = Math.max(S.base.w, 500); }
+    S.base.h = Math.round(S.base.w*H_RATIO[sh]/10)*10;
+    // arc text and a round frame don't fit a sign post: keep one straight line of text
+    S.layers = S.layers.filter(l => l.kind!=='arc' && l.kind!=='frame');
+    let t = S.layers.find(l => l.kind==='text');
+    if (!t && !S.layers.length){ t = {id:nid(), kind:'text', mat:'black', text:'ВХІД', font:'Montserrat', h:40, x:0, y:0}; S.layers.push(t); }
+    if (t){ const hl = headLen(sh, S.base.w, S.base.h); t.h = Math.min(t.h, Math.round((sh==='arrow' ? S.base.h*0.44*0.7 : S.base.h*0.45))); t.x = -(S.base.dir||1)*hl/2; t.y = 0; S.sel = t.id; }
+  } else if (HAS_H(sh) && S.base.h===S.base.w) S.base.h = Math.round(S.base.w*0.6/10)*10;
+  update();
+});
+document.querySelectorAll('[data-dir]').forEach(b => b.onclick = () => { const d=+b.dataset.dir; if (d!==(S.base.dir||1)) S.layers.forEach(l => l.x = -l.x); S.base.dir = d; update(); });
+$('#tape').onclick = () => { S.tape = !S.tape; update(); };
+$('#tpl').onclick = () => { S.tpl = !S.tpl; update(); };
+$('#wl').onclick = () => { S.wl = !S.wl; update(); };
+$('#markup').addEventListener('input', e => { S.markup = Math.max(0, +e.target.value || 0); });
+$('#kp-close').onclick = () => { $('#kp').hidden = true; $('#kp-open').focus(); };
+$('#kp').addEventListener('click', e => { if (e.target.id==='kp') $('#kp').hidden = true; });
+document.addEventListener('keydown', e => { if (e.key==='Escape' && !$('#kp').hidden) $('#kp').hidden = true; });
+$('#kp-open').onclick = () => {
+  // The mockup is always the wall scene, whatever the stage shows now.
+  const bg = S.bg, sel = S.sel; S.bg = 'wall'; S.sel = null; render();
+  const mock = svg.cloneNode(true); mock.removeAttribute('id');
+  S.bg = bg; S.sel = sel; update();
+  const {w,h} = baseDims(), p = price(), client = Math.ceil(p.total*(1+S.markup/100)/10)*10;
+  const SHN = {circle:'Коло', square:'Квадрат', rect:'Прямокутник', rounded:'Заокруглений прямокутник', arrow:'Стрілка', pointer:'Вказівник'};
+  const today = new Date(), till = new Date(Date.now()+7*864e5), d = x => x.toLocaleDateString('uk-UA');
+  const rowsT = [];
+  if (S.mode==='sign'){
+    rowsT.push(['Виріб', `Вивіска з акрилу, ${SHN[S.base.shape].toLowerCase()}`]);
+    rowsT.push(['Розмір', S.base.shape==='circle' ? `Ø ${w/10} см` : `${w/10} × ${h/10} см`]);
+    rowsT.push(['Основа', `${esc(M[S.base.mat].name)}, ${String(S.base.t).replace('.',',')} мм`]);
+  } else rowsT.push(['Виріб', 'Літери з акрилу без основи']);
+  S.layers.forEach((L,i) => rowsT.push([`Шар ${i+1}`, `${esc(L.kind==='logo' ? 'логотип' : L.kind==='frame' ? 'рамка' : '«'+(L.text||'').replace(/\n/g,' ')+'»')}, ${esc(M[L.mat].name.toLowerCase())}, ${L.t||3} мм`]));
+  if (S.mode==='sign') rowsT.push(['Кріплення', S.mount ? `${holes().length} отвори під дистанційні тримачі` : 'без отворів']);
+  if (S.tape) rowsT.push(['Самоклейка', 'двосторонній скотч на звороті']);
+  if (S.tpl) rowsT.push(['Монтажний трафарет', 'шаблон для рівного монтажу в комплекті']);
+  rowsT.push(['Виготовлення', 'від 3 робочих днів після погодження']);
+  $('#kp-body').innerHTML = `
+    <div class="kp-head">
+      ${S.wl ? '<div class="kp-logo">Логотип вашого агентства</div>' : '<div class="kp-brand">Trafaret Line</div>'}
+      <div class="kp-meta">Комерційна пропозиція № КП-${String(today.getTime()).slice(-5)}<br>від ${d(today)}, дійсна до ${d(till)}</div>
+    </div>
+    <h3 id="kp-title">Макет для погодження</h3>
+    <div class="kp-grid">
+      <div class="kp-mock" id="kp-mock"></div>
+      <div style="display:grid;gap:12px;min-width:0">
+        <table>${rowsT.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table>
+        <div><div class="kp-meta">Вартість</div><div class="kp-price">${fmt(client)} грн</div></div>
+        <div class="kp-meta">Кольори на екрані можуть трохи відрізнятися від реального акрилу.</div>
+      </div>
+    </div>
+    <div class="kp-meta" style="border-top:1px solid #E2E8F0;padding-top:10px">Тільки для вас, у PDF не потрапляє: наша ціна ${fmt(p.total)} грн, ваша націнка ${S.markup}% = ${fmt(client - p.total)} грн.</div>`;
+  $('#kp-mock').appendChild(mock);
+  $('#kp').hidden = false; $('#kp-close').focus();
+};
+
+$('#w').addEventListener('change', e => { S.base.w = Math.min(1200, Math.max(150, +e.target.value||S.base.w)); update(); });
+$('#h').addEventListener('change', e => { S.base.h = Math.min(1200, Math.max(100, +e.target.value||S.base.h)); update(); });
+document.querySelectorAll('[data-mount]').forEach(b => b.onclick = () => { S.mount=+b.dataset.mount; update(); });
+
+document.querySelectorAll('.stagebar [data-bg]').forEach(b => b.onclick = () => {
+  S.bg=b.dataset.bg; $('#stage').dataset.bg=S.bg;
+  document.querySelectorAll('.stagebar [data-bg]').forEach(o=>o.setAttribute('aria-pressed', String(o===b))); update();
+});
+const setMode = m => { S.mode=m; $('#mode-sign').setAttribute('aria-pressed', String(m==='sign')); $('#mode-letters').setAttribute('aria-pressed', String(m==='letters'));
+  if (m==='letters'){ S.layers = S.layers.filter(l=>l.kind!=='frame' && l.kind!=='arc'); if (!S.layers.length){ S.layers.push({id:nid(),kind:'text',mat:'mirror-gold',text:'Ласкаво просимо',font:'Lobster',h:60,x:0,y:0}); } S.sel=S.layers[0].id; }
+  update(); };
+$('#mode-sign').onclick = () => setMode('sign');
+$('#mode-letters').onclick = () => setMode('letters');
+const add = L => { S.layers.push(L); S.sel=L.id; update(); };
+$('#add-text').onclick = () => add({id:nid(), kind:'text', mat:'black', text:'Ваш текст', font:'Montserrat', h:30, x:0, y:60});
+$('#add-arc').onclick = () => { if (S.mode==='letters') { toast('Текст по колу доступний для вивіски на круглій основі.'); return; } add({id:nid(), kind:'arc', mat:'black', text:'текст по колу', font:'Montserrat', h:20, pos:'top', x:0, y:0}); };
+$('#add-frame').onclick = () => { if (S.mode==='letters') { toast('Рамка робиться тільки на основі.'); return; } add({id:nid(), kind:'frame', mat:'black', width:6, inset:32, x:0, y:0}); };
+$('#add-sample-logo').onclick = () => importSVG(SAMPLE, 'Кав’ярня');
+$('#add-sample-sign').onclick = () => { if (S.mode!=='sign') setMode('sign'); importSVG(SAMPLE_SIGN, 'Вивіска'); };
+$('#logo-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value='';
+  const name = f.name.replace(/\.[^.]+$/,''), ext = (f.name.split('.').pop()||'').toLowerCase();
+  if (ext==='svg'){ const r = new FileReader(); r.onload = () => importSVG(String(r.result), name); r.readAsText(f); return; }
+  if (/^(png|jpe?g|webp)$/.test(ext)){ const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => traceRaster(im, name); im.onerror = () => toast('Не вдалося відкрити зображення.'); im.src = String(r.result); }; r.readAsDataURL(f); return; }
+  if (/^(pdf|ai|dxf|eps|cdr)$/.test(ext)){ toast(`Файли .${ext} на сайті розбирає сервер за кілька секунд, далі все так само. У прототипі спробуйте SVG, PNG або JPG.`); return; }
+  toast('Підходять SVG, PDF, AI, DXF, PNG, JPG.');
+});
+$('#buy').onclick = () => { const t=$('#buy-toast'); t.textContent='У прототипі кошика немає. На сайті тут макет збережеться в кабінеті й піде в замовлення.'; };
+
+update();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => update());
+})();
+</script>

@@ -1,0 +1,39 @@
+# Secrets: only .env.example files (without values) go to the repository.
+.env
+.env.*
+!.env.example
+!.env.template
+bot-state.json
+
+# Dependencies, builds, caches
+node_modules/
+.next/
+.medusa/
+build/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+*.log
+
+# Local tools of the laptop (portable Node.js, npm cache)
+.tools/
+
+# Uploaded and generated files (customer layouts and fonts, Medusa file storage)
+backend/uploads/
+backend/static/
+factory/
+state/
+
+# Heavy catalogue photos and research media stay on disk / in the photo storage
+foto/
+catalog/images/
+catalog/import/
+docs/**/*.jpg
+docs/**/*.jpeg
+docs/**/*.png
+docs/**/*.mp4
+*.zip
+*.rar

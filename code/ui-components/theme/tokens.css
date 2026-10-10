@@ -1,0 +1,79 @@
+/*
+ * Design tokens. Values here are defaults only: in production the root layout
+ * renders the Payload global «Тема сайту» into a <style> tag with the same
+ * variable names, so the owner changes colours in the admin without a deploy.
+ * Base site is white (approved 2026-10-08). The Industrial & B2B section is the
+ * only dark one: <main data-role="industrial">.
+ */
+:root {
+  /* Денис's palette (2026-10-08), strictly: #FAFAFA / anthracite #0F172A / lines #E2E8F0.
+     No blue, no gold. Contrast on --bg: ink 17.1:1, muted 7.3:1. Hover/active = anthracite shades. */
+  --bg: #fafafa;          /* milky white page */
+  --card: #ffffff;        /* cards and panels sit on the page */
+  --surface: #f1f5f9;     /* soft fills: chips, parcel boxes, search field */
+  --ink: #0f172a;         /* anthracite: text, outline buttons, structure */
+  --muted: #475569;
+  --line: #e2e8f0;        /* thin polished dividers */
+  --inv-bg: #0f172a;      /* filled chips, floating cart */
+  --inv-fg: #ffffff;
+  --buy: #0f172a;         /* "У кошик", "Оформити": filled anthracite; other buttons are outlined */
+  --buy-hover: #1e293b;
+  --buy-active: #020617;
+  --buy-fg: #ffffff;
+  --price: #0f172a;
+  --ok: #17733b;
+  --danger: #b42318;
+  --cut: #475569;         /* dashed laser-cut line motif */
+  /* No gold in the interface (Денис, 2026-10-08): gold exists only as a material
+     colour (mirror acrylic) in photos and swatches. Selection = anthracite border. */
+  --backdrop-float: #fcfbf9; /* coloured / black / white acrylic "floats" on this */
+  --role-accent: #334155;
+  --role-accent-fg: #ffffff;
+  --radius: 18px;
+  --font-display: var(--font-unbounded), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-spec: var(--font-body);
+}
+
+[data-role="sweet"] {
+  --role-accent: #334155;
+  --role-accent-fg: #ffffff;
+  --role-band: #f1f5f9;
+  --radius: 18px;
+}
+
+[data-role="interior"] {
+  --role-accent: #334155;
+  --role-accent-fg: #ffffff;
+  --role-band: #f1f5f9;
+  --radius: 12px;
+}
+
+/* Engineering-grade dark theme, B2B section only. All pairs checked >= 4.5:1. */
+[data-role="industrial"] {
+  --bg: #12171d;
+  --card: #1a2129;        /* graphite cards: B2B only */
+  --surface: #1a2129;
+  --ink: #e9edf2;
+  --muted: #9aa7b6;
+  --line: #2b3540;
+  --inv-bg: #f2c200;
+  --inv-fg: #12171d;
+  --price: #ffffff;
+  --cut: #f2c200;
+  --buy: #e9edf2;
+  --buy-hover: #ffffff;
+  --buy-active: #cbd5e1;
+  --buy-fg: #12171d;
+  --role-accent: #f2c200;
+  --role-accent-fg: #12171d;
+  --role-band: #0c1014;
+  --radius: 4px;
+  --font-spec: var(--font-mono);
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

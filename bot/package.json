@@ -1,0 +1,23 @@
+{
+  "name": "trafaret-line-telegram-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram-бот Trafaret Line: фото + підпис → заявка в чергу конвеєра товарів → чернетка в Medusa → публікація кнопкою",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node build/src/index.js",
+    "test": "tsc -p tsconfig.json && node --test build/test/inbox.test.js build/test/parse-caption.test.js"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "dotenv": "16.6.1",
+    "grammy": "1.45.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "typescript": "5.9.3"
+  }
+}

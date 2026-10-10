@@ -1,0 +1,110 @@
+[
+  {
+    "id": "montserrat",
+    "name": "Montserrat",
+    "group": "Без засічок",
+    "files": [
+      "montserrat-cyrillic.woff",
+      "montserrat-latin.woff"
+    ]
+  },
+  {
+    "id": "oswald",
+    "name": "Oswald",
+    "group": "Без засічок",
+    "files": [
+      "oswald-cyrillic.woff",
+      "oswald-latin.woff"
+    ]
+  },
+  {
+    "id": "rubik",
+    "name": "Rubik",
+    "group": "Без засічок",
+    "files": [
+      "rubik-cyrillic.woff",
+      "rubik-latin.woff"
+    ]
+  },
+  {
+    "id": "comfortaa",
+    "name": "Comfortaa",
+    "group": "Без засічок",
+    "files": [
+      "comfortaa-cyrillic.woff",
+      "comfortaa-latin.woff"
+    ]
+  },
+  {
+    "id": "playfair",
+    "name": "Playfair Display",
+    "group": "Класичні",
+    "files": [
+      "playfair-cyrillic.woff",
+      "playfair-latin.woff"
+    ]
+  },
+  {
+    "id": "lora",
+    "name": "Lora",
+    "group": "Класичні",
+    "files": [
+      "lora-cyrillic.woff",
+      "lora-latin.woff"
+    ]
+  },
+  {
+    "id": "roboto-slab",
+    "name": "Roboto Slab",
+    "group": "Класичні",
+    "files": [
+      "roboto-slab-cyrillic.woff",
+      "roboto-slab-latin.woff"
+    ]
+  },
+  {
+    "id": "marck",
+    "name": "Marck Script",
+    "group": "Рукописні",
+    "files": [
+      "marck-cyrillic.woff",
+      "marck-latin.woff"
+    ]
+  },
+  {
+    "id": "caveat",
+    "name": "Caveat",
+    "group": "Рукописні",
+    "files": [
+      "caveat-cyrillic.woff",
+      "caveat-latin.woff"
+    ]
+  },
+  {
+    "id": "bad-script",
+    "name": "Bad Script",
+    "group": "Рукописні",
+    "files": [
+      "bad-script-cyrillic.woff",
+      "bad-script-latin.woff"
+    ]
+  },
+  {
+    "id": "lobster",
+    "name": "Lobster",
+    "group": "Рукописні",
+    "files": [
+      "lobster-cyrillic.woff",
+      "lobster-latin.woff"
+    ]
+  },
+  {
+    "id": "pacifico",
+    "name": "Pacifico",
+    "group": "Рукописні",
+    "files": [
+      "pacifico-cyrillic.woff",
+      "pacifico-latin.woff"
+    ]
+  }
+]

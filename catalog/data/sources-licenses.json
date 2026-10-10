@@ -1,0 +1,281 @@
+{
+ "fonts": {
+  "license": "SIL Open Font License 1.1 (Google Fonts)",
+  "files": [
+   "AmaticSC_wght_700.ttf",
+   "BadScript.ttf",
+   "Caveat_wght_700.ttf",
+   "Comfortaa_wght_700.ttf",
+   "CormorantGaramond_wght_600.ttf",
+   "DancingScript_wght_700.ttf",
+   "GreatVibes.ttf",
+   "Inter_wght_400.ttf",
+   "Inter_wght_600.ttf",
+   "Inter_wght_700.ttf",
+   "Kurale.ttf",
+   "Lobster.ttf",
+   "MarckScript.ttf",
+   "Montserrat_wght_800.ttf",
+   "Oswald_wght_700.ttf",
+   "Pacifico.ttf",
+   "Philosopher_wght_700.ttf",
+   "PlayfairDisplay_ital_wght_1_600.ttf",
+   "PlayfairDisplay_wght_700.ttf",
+   "Rubik_wght_800.ttf",
+   "RussoOne.ttf",
+   "StardosStencil_wght_700.ttf",
+   "Unbounded_wght_700.ttf"
+  ]
+ },
+ "icons": {
+  "ph:flower-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:pizza-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mdi:cupcake": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:boot-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:gift-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:crown-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mdi:stairs": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:fire-extinguisher": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:chef-hat-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mingcute:fork-spoon-fill": {
+   "set": "MingCute Icon",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Richard9394/MingCute/blob/main/LICENSE",
+   "author": "MingCute Design",
+   "source": "https://github.com/Richard9394/MingCute",
+   "varied": true
+  },
+  "fluent-emoji-high-contrast:black-cat": {
+   "set": "Fluent Emoji High Contrast",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE",
+   "author": "Microsoft Corporation",
+   "source": "https://github.com/microsoft/fluentui-emoji",
+   "varied": true
+  },
+  "ph:paw-print-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:fork-knife-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mdi:cat": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:mustache": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:bell-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mingcute:christmas-hat-fill": {
+   "set": "MingCute Icon",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Richard9394/MingCute/blob/main/LICENSE",
+   "author": "MingCute Design",
+   "source": "https://github.com/Richard9394/MingCute",
+   "varied": true
+  },
+  "mdi:ring": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:silverware-fork-knife": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:crown-simple-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:coffee-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:trash-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mdi:wheelchair-accessibility": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:snowman": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:ice-cream-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "mingcute:sleigh-fill": {
+   "set": "MingCute Icon",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Richard9394/MingCute/blob/main/LICENSE",
+   "author": "MingCute Design",
+   "source": "https://github.com/Richard9394/MingCute",
+   "varied": true
+  },
+  "mdi:car": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:run": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "ph:coat-hanger-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "ph:flower-lotus-fill": {
+   "set": "Phosphor",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/phosphor-icons/core/blob/main/LICENSE",
+   "author": "Phosphor Icons",
+   "source": "https://github.com/phosphor-icons/core",
+   "varied": true
+  },
+  "pinhead:bird-flying": {
+   "set": "Pinhead Map Icons",
+   "license": "CC0-1.0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "Quincy Morgan",
+   "source": "https://github.com/waysidemapping/pinhead",
+   "varied": true
+  }
+ },
+ "rule": "Only MIT, Apache-2.0, CC0, ISC, Unlicense, BSD-3-Clause sources are allowed; third-party images are used only as ideas, never as generator input."
+}
