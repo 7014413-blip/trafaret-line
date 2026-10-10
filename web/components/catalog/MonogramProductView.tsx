@@ -1,16 +1,17 @@
 "use client";
 
-// Product page of a wedding monogram stencil: the buyer picks a design, types two
-// initials (and the date where the design has one) and sees the real cut for the chosen
-// size. Price, quantity scale and cart come from the usual buy box; the design, letters
-// and date go with the order as production data.
+// Wedding initials constructor on a monogram product page: the buyer picks a design (all
+// site designs, the product's own first), types two initials (and the date where the
+// design has one) and sees the real cut for the chosen size. Price, quantity scale and
+// cart come from the usual buy box; the design, letters and date go with the order as
+// production data.
 
 import { useCallback, useMemo, useState } from "react";
 import type { CatalogProduct, CatalogVariant } from "@/types/catalog";
 import type { MonogramField, MonogramInput, MonogramStyleId } from "@/types/monogram";
 import { checkMonogramInput } from "@/lib/monogram/check-input";
 import { MONOGRAM_CONFIG } from "@/lib/monogram/config";
-import { stylesFor } from "@/lib/monogram/styles";
+import { constructorStyles } from "@/lib/monogram/constructor-styles";
 import { Gallery, ProductBuyBox, type BuyBoxPersonalisation } from "./ProductBuyBox";
 import { MonogramPreview, type MonogramView } from "./MonogramPreview";
 
@@ -23,7 +24,7 @@ const FIELD_LABEL: Record<MonogramField, string> = {
 const DEFAULT_SHEET: [number, number] = [100, 100];
 
 export function MonogramProductView({ p }: { p: CatalogProduct }) {
-  const styles = useMemo(() => stylesFor(p.monogram?.styles ?? []), [p.monogram]);
+  const styles = useMemo(() => constructorStyles(p.monogram?.styles ?? []), [p.monogram]);
   const [styleId, setStyleId] = useState<MonogramStyleId | undefined>(styles[0]?.id);
   const style = styles.find((s) => s.id === styleId) ?? styles[0];
   const [raw, setRaw] = useState<MonogramInput>(() => ({ ...(styles[0]?.sample ?? { first: "", second: "", date: "" }) }));
@@ -61,8 +62,8 @@ export function MonogramProductView({ p }: { p: CatalogProduct }) {
       <fieldset className="grid gap-3">
         {styles.length > 1 && (
           <div className="grid gap-2">
-            <span className="text-sm font-semibold">Дизайн</span>
-            <div role="radiogroup" aria-label="Дизайн" className="flex flex-wrap gap-2">
+            <span className="text-sm font-semibold">Шаблон</span>
+            <div role="radiogroup" aria-label="Шаблон" className="flex flex-wrap gap-2">
               {styles.map((s) => (
                 <button key={s.id} type="button" role="radio" aria-checked={s.id === style.id}
                   onClick={() => setStyleId(s.id)}
