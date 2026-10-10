@@ -15,6 +15,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/na-zamovlennia", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/vkazivnyky", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/vyvisky/ofisni-tablychky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/dostavka-i-oplata", priority: 0.5, changeFrequency: "monthly" },
   { path: "/povernennia", priority: 0.4, changeFrequency: "yearly" },
   { path: "/pro-nas", priority: 0.4, changeFrequency: "yearly" },

@@ -1,19 +1,19 @@
-// One text line of a pointer sign in its own font: outline for the preview and the
-// measures the layout needs (lib/pointer-sign/layout.ts). Each line is laid out alone, so
+// One text line of a plaque (pointer sign, office plaque) in its own font: outline for the preview and the
+// measures the layouts need (lib/plaques/fit-lines.ts). Each line is laid out alone, so
 // every line can have its own font, including the customer's own fonts.
 
-import type { PointerLineMeasure } from "../../types/pointer-sign";
+import type { PlaqueLineMeasure } from "../../types/plaques";
 import type { LoadedFont } from "../../types/text";
 import { textToDesign } from "../text/text-layout";
 
-export interface MeasuredPointerLine {
-  measure: PointerLineMeasure;
+export interface MeasuredPlaqueLine {
+  measure: PlaqueLineMeasure;
   /** SVG path data in layout units, box starting at (0, 0). */
   pathData: string;
   missing: string[];
 }
 
-export function measurePointerLine(font: LoadedFont, text: string): MeasuredPointerLine | null {
+export function measurePlaqueLine(font: LoadedFont, text: string): MeasuredPlaqueLine | null {
   const clean = text.replace(/\s+/g, " ").trim();
   if (!clean) return null;
   const result = textToDesign(font, clean, { align: "center", maxLines: 1 });

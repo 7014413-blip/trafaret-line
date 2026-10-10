@@ -8,9 +8,11 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { MATERIALS } from "../lib/materials";
 import { priceCatalogVariant, priceStencil, priceWelded } from "../lib/calculators/pricing";
 import { pricePointerSign } from "../lib/pointer-sign/price";
+import { priceOfficePlaque } from "../lib/office-plaque/price";
 import type { CartLine, MaterialType, SectionTheme } from "../types/customizer";
 import type { OrderLineKind } from "../types/order";
 import type { PointerSignDesign } from "../types/pointer-sign";
+import type { OfficePlaqueDesign } from "../types/office-plaque";
 
 export type NewLine = {
   key: string;            // same key = same item, quantities add up
@@ -29,6 +31,8 @@ export type NewLine = {
   sign?: unknown;
   /** Pointer sign design (kind "pointer"): the price follows the quantity, the server recomputes it. */
   pointer?: PointerSignDesign;
+  /** Office plaque design (kind "plaque"), priced like pointer signs. */
+  plaque?: OfficePlaqueDesign;
   /** Customer layout file key (tl-upload). */
   uploadKey?: string;
   /** Catalogue product: Medusa variant id and its 1-piece price (the server re-reads it from the database). */
@@ -40,7 +44,7 @@ export type NewLine = {
 
 type Stored = NewLine & { id: string };
 
-const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer">) => {
+const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer" | "plaque">) => {
   if (l.fixedPrice != null) return l.fixedPrice;
   if (l.kind === "pointer" && l.pointer) {
     try {
@@ -48,6 +52,14 @@ const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity
     } catch {
       // A design saved before the size list changed: keep the price it was added with;
       // the server refuses the line at checkout and the customer rebuilds it.
+      return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
+    }
+  }
+  if (l.kind === "plaque" && l.plaque) {
+    try {
+      return priceOfficePlaque({ ...l.plaque, quantity: l.quantity }).unitPrice;
+    } catch {
+      // Saved before the size list changed: keep the price it was added with (see above).
       return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
     }
   }

@@ -18,6 +18,9 @@ import { priceCatalogVariant, priceStencil, priceWelded } from "../../../shared/
 import { priceSign } from "../../../shared/lib/calculators/signage";
 import { pricePointerSign } from "../../../shared/lib/pointer-sign/price";
 import { readPointerSignDesign } from "../../../shared/lib/pointer-sign/read-design";
+import { findPlaquePlate } from "../../../shared/lib/office-plaque/colours";
+import { priceOfficePlaque } from "../../../shared/lib/office-plaque/price";
+import { readOfficePlaqueDesign } from "../../../shared/lib/office-plaque/read-design";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -93,6 +96,15 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     return {
       title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cm(design.widthMm)}×${cm(design.heightMm)} см`,
       unitPrice: pricePointerSign(design).unitPrice,
+    };
+  }
+  if (line.kind === "plaque") {
+    // Office plaque: the design is re-read field by field and priced here by its size.
+    const design = readOfficePlaqueDesign(line.plaque, line.quantity);
+    const texts = cleanText(design.lines.map((l) => l.text).filter(Boolean).join(" / "));
+    return {
+      title: `Офісна табличка «${texts}», ${cm(design.widthMm)}×${cm(design.heightMm)} см, ${findPlaquePlate(design.plateColourId).name.uk.toLowerCase()}`,
+      unitPrice: priceOfficePlaque(design).unitPrice,
     };
   }
   const material = line.materialId && MATERIALS[line.materialId];
@@ -202,6 +214,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           widthCm: line.widthCm ?? null, heightCm: line.heightCm ?? null,
           sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, spec: safeSpec(line.spec),
           pointer: line.kind === "pointer" ? readPointerSignDesign(line.pointer, quantity) : null,
+          plaque: line.kind === "plaque" ? readOfficePlaqueDesign(line.plaque, quantity) : null,
           needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };

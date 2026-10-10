@@ -2,41 +2,22 @@
 // the sign centre, Y down). Pure function: the constructor preview, the checks and the
 // production file use the same numbers. Layout follows Денис's signs: the logo in a ring
 // sits in the tip, the text block fills the rest, every line keeps its relative size.
-// The base outline is the «pointer» shape of the sign constructor (lib/calculators/signage.ts).
+// The base outline is the «pointer» shape of the sign constructor (lib/calculators/signage.ts);
+// the text block is fitted by the common plaque module (lib/plaques/fit-lines.ts).
 
 import type {
   PointerLineMeasure, PointerLinePlacement, PointerLogoPlacement, PointerSignDesign, PointerSignLayout,
 } from "../../types/pointer-sign";
 import type { SignBase } from "../../types/signage";
 import { headLength, signOutline } from "../calculators/signage";
+import type { PlaqueLineInput, PlaqueZone } from "../../types/plaques";
+import { fitPlaqueLines } from "../plaques/fit-lines";
 import { arrowGlyphOutline } from "./arrow-glyph";
 
 /** Arrow box per cap height of its line: length, height and the gap to the text. */
 const ARROW_LENGTH = 1.9;
 const ARROW_HEIGHT = 0.8;
 const ARROW_GAP = 0.5;
-/** Space between lines as a share of the cap height. */
-const LINE_GAP = 0.45;
-
-interface Zone { left: number; right: number; top: number; bottom: number }
-interface Fitted { cap: number; blockHeight: number }
-
-type Active = { index: number; size: number; m: PointerLineMeasure; arrow: boolean };
-
-function fitLines(active: Active[], zone: Zone): Fitted {
-  const zoneW = Math.max(0, zone.right - zone.left);
-  const zoneH = Math.max(0, zone.bottom - zone.top);
-  const heightRatio = (a: Active) => a.m.heightUnits / a.m.capUnits;
-  const widthRatio = (a: Active) => a.m.widthUnits / a.m.capUnits + (a.arrow ? ARROW_LENGTH + ARROW_GAP : 0);
-  let heightPerCap = 0;
-  active.forEach((a, i) => {
-    heightPerCap += a.size * Math.max(heightRatio(a), a.arrow ? ARROW_HEIGHT : 0);
-    if (i < active.length - 1) heightPerCap += LINE_GAP * (a.size + active[i + 1].size) / 2;
-  });
-  let cap = heightPerCap > 0 ? zoneH / heightPerCap : 0;
-  for (const a of active) cap = Math.min(cap, zoneW / Math.max(1e-6, a.size * widthRatio(a)));
-  return { cap: Math.max(0, cap), blockHeight: Math.max(0, cap * heightPerCap) };
-}
 
 /** How far the text block may go into the tip and stay `margin` away from its slanted edges. */
 function tipAllowance(blockHeight: number, h: number, head: number, margin: number): number {
@@ -73,14 +54,17 @@ export function computePointerLayout(
     textRight = cx - radius - margin * 0.8;
   }
 
-  const zone: Zone = { left: -w / 2 + margin, right: textRight, top: -h / 2 + margin, bottom: h / 2 - margin };
+  const zone: PlaqueZone = { left: -w / 2 + margin, right: textRight, top: -h / 2 + margin, bottom: h / 2 - margin };
   const arrowLine = design.arrow.placement === "none" ? -1 : design.arrow.lineIndex;
-  const active: Active[] = design.lines
-    .map((line, index) => ({ index, size: line.size, m: measures[index], text: line.text.trim() }))
-    .filter((a): a is { index: number; size: number; m: PointerLineMeasure; text: string } => !!a.text && !!a.m && a.m.capUnits > 0)
-    .map(({ index, size, m }) => ({ index, size: Math.min(1.6, Math.max(0.6, size)), m, arrow: index === arrowLine }));
+  const active: PlaqueLineInput[] = [];
+  design.lines.forEach((line, index) => {
+    const measure = measures[index];
+    if (!line.text.trim() || !measure || measure.capUnits <= 0) return;
+    active.push({ index, size: Math.min(1.6, Math.max(0.6, line.size)), measure });
+  });
   // The arrow goes on the chosen line; if that line is empty, on the last line with text.
-  if (arrowLine >= 0 && active.length && !active.some((a) => a.arrow)) active[active.length - 1].arrow = true;
+  const arrowOn = arrowLine < 0 || !active.length ? null : active.find((a) => a.index === arrowLine) ?? active[active.length - 1];
+  if (arrowOn) { arrowOn.extraWidthPerCap = ARROW_LENGTH + ARROW_GAP; arrowOn.minRowPerCap = ARROW_HEIGHT; }
 
   const lines: PointerLinePlacement[] = [];
   let arrow: PointerSignLayout["arrow"] = null;
@@ -98,46 +82,41 @@ export function computePointerLayout(
     return { widthMm: w, heightMm: h, outline, textZone: zoneBox(zone, flipX), lines, arrow, logo, marginMm: margin };
   }
 
-  let fitted = fitLines(active, zone);
+  let fitted = fitPlaqueLines(active, zone);
   if (!design.logo) {
     // Use part of the tip when the text block is low enough to fit there.
     const first = tipAllowance(fitted.blockHeight, h, head, margin);
     if (first > 0.5) {
       const wider = { ...zone, right: zone.right + first };
-      const second = fitLines(active, wider);
+      const second = fitPlaqueLines(active, wider);
       if (tipAllowance(second.blockHeight, h, head, margin) >= first - 0.5) { fitted = second; zone.right = wider.right; }
     }
   }
 
-  let y = (zone.top + zone.bottom) / 2 - fitted.blockHeight / 2;
-  const centreX = (zone.left + zone.right) / 2;
-  active.forEach((a, i) => {
-    const cap = fitted.cap * a.size;
-    const scale = cap / a.m.capUnits;
-    const textW = a.m.widthUnits * scale;
-    const textH = a.m.heightUnits * scale;
-    const rowH = Math.max(textH, a.arrow ? cap * ARROW_HEIGHT : 0);
-    const arrowW = a.arrow ? cap * ARROW_LENGTH : 0;
-    const gap = a.arrow ? cap * ARROW_GAP : 0;
-    const groupW = textW + arrowW + gap;
-    const groupX = flipX(centreX - groupW / 2, groupW);
-    const textTop = y + (rowH - textH) / 2;
-    const textX = a.arrow && design.arrow.placement === "start" ? groupX + arrowW + gap : groupX;
-    lines.push({ index: a.index, x: textX, y: textTop, width: textW, height: textH, capMm: cap, scale });
-    if (a.arrow) {
-      const ah = cap * ARROW_HEIGHT;
+  for (const slot of fitted.slots) {
+    const a = active.find((x) => x.index === slot.index) as PlaqueLineInput;
+    const textW = a.measure.widthUnits * slot.scale;
+    const textH = a.measure.heightUnits * slot.scale;
+    const hasArrow = a === arrowOn;
+    const arrowW = hasArrow ? slot.capMm * ARROW_LENGTH : 0;
+    const gap = hasArrow ? slot.capMm * ARROW_GAP : 0;
+    const groupX = flipX(slot.groupLeft, slot.groupWidth);
+    const textTop = slot.rowTop + (slot.rowHeight - textH) / 2;
+    const textX = hasArrow && design.arrow.placement === "start" ? groupX + arrowW + gap : groupX;
+    lines.push({ index: slot.index, x: textX, y: textTop, width: textW, height: textH, capMm: slot.capMm, scale: slot.scale });
+    if (hasArrow) {
+      const ah = slot.capMm * ARROW_HEIGHT;
       const ax = design.arrow.placement === "start" ? groupX : groupX + textW + gap;
       // Centred on the capital letters: half a cap above the baseline.
-      const ay = textTop + a.m.baselineUnits * scale - cap / 2 - ah / 2;
+      const ay = textTop + a.measure.baselineUnits * slot.scale - slot.capMm / 2 - ah / 2;
       arrow = { x: ax, y: ay, width: arrowW, height: ah, points: arrowGlyphOutline(ax, ay, arrowW, ah, dir) };
     }
-    y += rowH + (i < active.length - 1 ? LINE_GAP * cap * (1 + active[i + 1].size / a.size) / 2 : 0);
-  });
+  }
 
   return { widthMm: w, heightMm: h, outline, textZone: zoneBox(zone, flipX), lines, arrow, logo, marginMm: margin };
 }
 
-function zoneBox(zone: Zone, flipX: (x: number, width: number) => number): PointerSignLayout["textZone"] {
+function zoneBox(zone: PlaqueZone, flipX: (x: number, width: number) => number): PointerSignLayout["textZone"] {
   const width = Math.max(0, zone.right - zone.left);
   return { x: flipX(zone.left, width), y: zone.top, width, height: Math.max(0, zone.bottom - zone.top) };
 }

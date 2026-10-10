@@ -4,6 +4,7 @@
 // Every colour and material is included in the price. The customer sees sizes in cm and UAH only.
 
 import type { LocalizedText } from "./customizer";
+import type { PlaqueLineMeasure, PlaqueTextLine } from "./plaques";
 
 /** -1 = the tip points left, 1 = the tip points right. */
 export type PointerDirection = -1 | 1;
@@ -40,12 +41,7 @@ export interface PointerSizePreset {
 /** Where the small direction arrow sits on its text line. */
 export type PointerArrowPlacement = "none" | "start" | "end";
 
-export interface PointerTextLine {
-  text: string;
-  fontId: string;
-  /** Relative letter size of the line: 0.6 … 1.6 (1 = normal). */
-  size: number;
-}
+export type PointerTextLine = PlaqueTextLine;
 
 export interface PointerLogo {
   /** Customer file key from POST /store/tl-upload, set when the line goes to the cart. */
@@ -96,13 +92,7 @@ export interface PointerSignConfig {
 }
 
 /** One measured text line, in layout units of lib/text/text-layout.ts (font size 100). */
-export interface PointerLineMeasure {
-  widthUnits: number;
-  heightUnits: number;
-  capUnits: number;
-  /** Distance from the top of the text box to the baseline. */
-  baselineUnits: number;
-}
+export type PointerLineMeasure = PlaqueLineMeasure;
 
 /** Position of one text line on the sign, mm, origin at the sign centre, Y down. */
 export interface PointerLinePlacement {

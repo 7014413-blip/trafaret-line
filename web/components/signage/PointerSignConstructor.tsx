@@ -8,14 +8,15 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CustomFontPanel } from "@/components/constructor/CustomFontPanel";
+import { PlaqueChip } from "@/components/signage/PlaqueChip";
+import { PlaqueLinesEditor } from "@/components/signage/PlaqueLinesEditor";
 import { PointerMaterialPicker } from "@/components/signage/PointerMaterialPicker";
 import { PointerSignPreview } from "@/components/signage/PointerSignPreview";
 import { nextTierHint } from "@/lib/calculators/pricing";
-import { listCustomFonts } from "@/lib/client/custom-fonts";
-import { readPointerSizeParam } from "@/lib/client/pointer-size-param";
+import { readPlaqueSizeParam } from "@/lib/client/plaque-size-param";
 import { LOGO_ACCEPT, readLogoFile } from "@/lib/client/read-logo-file";
 import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
+import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { pointerThumbnailSvg } from "@/lib/export/pointer-thumbnail";
 import { formatUAH } from "@/lib/format";
 import { checkPointerSign } from "@/lib/pointer-sign/check";
@@ -23,33 +24,24 @@ import { clampPointerSizeMm } from "@/lib/pointer-sign/clamp-size";
 import { DEFAULT_POINTER_SIGN_CONFIG } from "@/lib/pointer-sign/config";
 import { findPointerMaterial } from "@/lib/pointer-sign/find-material";
 import { computePointerLayout } from "@/lib/pointer-sign/layout";
-import { measurePointerLine, type MeasuredPointerLine } from "@/lib/pointer-sign/measure-line";
 import { pricePointerSign } from "@/lib/pointer-sign/price";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
-import { loadFont, loadFontManifest, registerLoadedFont } from "@/lib/text/font-loader";
 import { useCart } from "@/store/cart-store";
 import type {
   PointerArrowPlacement, PointerDirection, PointerLogo, PointerSignDesign, PointerTextLine,
 } from "@/types/pointer-sign";
-import type { FontEntry, LoadedFont } from "@/types/text";
 
 const CFG = DEFAULT_POINTER_SIGN_CONFIG;
 const FIRST_LINES: PointerTextLine[] = [
   { text: "КАВʼЯРНЯ", fontId: "roboto-slab", size: 1.3 },
   { text: "ВХІД З ДВОРУ", fontId: "rubik", size: 0.8 },
 ];
-const SIZE_STEPS: [number, string][] = [[0.8, "Малий"], [1, "Середній"], [1.3, "Великий"], [1.6, "Найбільший"]];
 const ARROWS: [PointerArrowPlacement, string][] = [["start", "Перед текстом"], ["end", "Після тексту"], ["none", "Без стрілки"]];
 
 type LogoState = Omit<PointerLogo, "uploadKey"> & { file: File; previewUrl: string; uploadKey: string | null };
 
 const legend = "mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]";
 const input = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none";
-
-const Chip = ({ on, onClick, children, id }: { on: boolean; onClick: () => void; children: React.ReactNode; id?: string }) => (
-  <button id={id} type="button" aria-pressed={on} onClick={onClick}
-    className={`min-h-10 rounded-full border-[1.5px] px-3.5 text-sm tabular-nums ${on ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>{children}</button>
-);
 
 const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
@@ -59,15 +51,13 @@ export function PointerSignConstructor() {
   const [direction, setDirection] = useState<PointerDirection>(-1);
   const [baseId, setBaseId] = useState("black");
   const [overlayId, setOverlayId] = useState("white");
-  const [lines, setLines] = useState<PointerTextLine[]>(FIRST_LINES);
+  const text = usePlaqueLines(FIRST_LINES, CFG.maxLines);
+  const lines = text.lines;
   const [arrowPlacement, setArrowPlacement] = useState<PointerArrowPlacement>("start");
   const [arrowLine, setArrowLine] = useState(1);
   const [logo, setLogo] = useState<LogoState | null>(null);
   const [logoError, setLogoError] = useState("");
   const [qty, setQty] = useState(1);
-  const [shopFonts, setShopFonts] = useState<FontEntry[]>([]);
-  const [customFonts, setCustomFonts] = useState<LoadedFont[]>([]);
-  const [loaded, setLoaded] = useState<Record<string, LoadedFont>>({});
   const [state, setState] = useState<"idle" | "uploading" | "added" | "error">("idle");
   const [message, setMessage] = useState("");
   // Shipping date only in the browser: server and browser format weekdays differently.
@@ -77,24 +67,9 @@ export function PointerSignConstructor() {
 
   useEffect(() => {
     setDispatch(formatDispatch(estimateDispatchDate(new Date())));
-    const fromLink = readPointerSizeParam(CFG.presets.map((p) => p.code));
+    const fromLink = readPlaqueSizeParam(CFG.presets.map((p) => p.code));
     if (fromLink) setSizeCode(fromLink);
-    loadFontManifest().then(setShopFonts).catch(() => setShopFonts([]));
-    listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
   }, []);
-
-  const allFonts = useMemo<FontEntry[]>(() => [...shopFonts, ...customFonts.map((f): FontEntry => ({ id: f.id, name: f.name, group: f.group, files: f.files, custom: f.custom }))], [shopFonts, customFonts]);
-
-  // Load every font a line uses (each line may have its own).
-  useEffect(() => {
-    for (const id of new Set(lines.map((l) => l.fontId))) {
-      if (loaded[id]) continue;
-      const custom = customFonts.find((f) => f.id === id);
-      if (custom) { setLoaded((map) => ({ ...map, [id]: custom })); continue; }
-      const entry = shopFonts.find((f) => f.id === id);
-      if (entry) loadFont(entry).then((font) => setLoaded((map) => ({ ...map, [id]: font }))).catch(() => undefined);
-    }
-  }, [lines, shopFonts, customFonts, loaded]);
 
   // Revoke the preview URL of a replaced or removed logo.
   const logoUrl = logo?.previewUrl ?? null;
@@ -106,10 +81,7 @@ export function PointerSignConstructor() {
     return clampPointerSizeMm(customCm.w * 10, customCm.h * 10, CFG);
   }, [sizeCode, customCm]);
 
-  const measured = useMemo<(MeasuredPointerLine | null)[]>(
-    () => lines.map((line) => { const font = loaded[line.fontId]; return font ? measurePointerLine(font, line.text) : null; }),
-    [lines, loaded],
-  );
+  const measured = text.measured;
 
   const design: PointerSignDesign = {
     sizeCode, widthMm: size.widthMm, heightMm: size.heightMm, direction,
@@ -123,7 +95,7 @@ export function PointerSignConstructor() {
   const layout = computePointerLayout(design, measured.map((m) => m?.measure ?? null));
   const linePaths = new Map<number, string>();
   measured.forEach((m, i) => { if (m) linePaths.set(i, m.pathData); });
-  const fontsReady = lines.every((l) => !l.text.trim() || loaded[l.fontId]);
+  const fontsReady = text.fontsReady;
   const checks = fontsReady ? checkPointerSign(design, layout, measured.map((m) => m?.missing ?? [])) : [];
   const errors = checks.filter((c) => c.level === "error");
   const price = pricePointerSign(design);
@@ -131,12 +103,7 @@ export function PointerSignConstructor() {
   const overlay = findPointerMaterial(overlayId);
   const hint = nextTierHint(qty);
 
-  const setLine = (i: number, patch: Partial<PointerTextLine>) => setLines((list) => list.map((l, k) => (k === i ? { ...l, ...patch } : l)));
-  const addLine = () => setLines((list) => (list.length >= CFG.maxLines ? list : [...list, { text: "", fontId: list[list.length - 1]?.fontId ?? "montserrat", size: 0.8 }]));
-  const removeLine = (i: number) => {
-    setLines((list) => list.filter((_, k) => k !== i));
-    setArrowLine((a) => (a > i ? a - 1 : a === i ? 0 : a));
-  };
+  const onLineRemoved = (i: number) => setArrowLine((a) => (a > i ? a - 1 : a === i ? 0 : a));
 
   const pickLogo = async (file: File | undefined) => {
     setLogoError("");
@@ -181,10 +148,6 @@ export function PointerSignConstructor() {
   };
 
   const buyLabel = state === "uploading" ? "Завантажуємо логотип…" : state === "added" ? "✓ Додано в кошик" : "В кошик";
-  const fontOptions = (value: string) => allFonts.length
-    ? allFonts.map((f) => <option key={f.id} value={f.id}>{f.custom ? `Ваш: ${f.name}` : f.name}</option>)
-    : <option value={value}>Шрифти завантажуються…</option>;
-
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label="Превʼю таблички" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
@@ -239,54 +202,20 @@ export function PointerSignConstructor() {
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Куди показує стрілка</legend>
           <div className="flex flex-wrap gap-2">
-            <Chip id="ps-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>← Вліво</Chip>
-            <Chip id="ps-dir-right" on={direction === 1} onClick={() => setDirection(1)}>Вправо →</Chip>
+            <PlaqueChip id="ps-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>← Вліво</PlaqueChip>
+            <PlaqueChip id="ps-dir-right" on={direction === 1} onClick={() => setDirection(1)}>Вправо →</PlaqueChip>
           </div>
           <span className="text-[13px] text-[var(--muted)]">Вістря таблички і маленька стрілка в тексті показують в один бік.</span>
         </fieldset>
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3"><legend className={legend}>Напис</legend>
-          {lines.map((line, i) => (
-            <div key={i} className="grid grid-cols-[minmax(0,1fr)] gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
-              <div className="flex items-center gap-2">
-                <input id={`ps-line-${i}`} aria-label={`Рядок ${i + 1}`} value={line.text} maxLength={CFG.maxLineChars} placeholder={`Рядок ${i + 1}`}
-                  onChange={(e) => setLine(i, { text: e.target.value })} className={`${input} h-12 min-w-0 flex-1 text-lg`} />
-                {lines.length > 1 && (
-                  <button type="button" aria-label={`Прибрати рядок ${i + 1}`} onClick={() => removeLine(i)} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-xl">×</button>
-                )}
-              </div>
-              <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
-                <label className="grid gap-1 text-sm text-[var(--muted)]">Шрифт
-                  <select id={`ps-font-${i}`} value={line.fontId} onChange={(e) => setLine(i, { fontId: e.target.value })} className={`${input} w-full min-w-0`}>{fontOptions(line.fontId)}</select>
-                </label>
-                <label className="grid gap-1 text-sm text-[var(--muted)]">Розмір літер
-                  <select id={`ps-lsize-${i}`} value={line.size} onChange={(e) => setLine(i, { size: Number(e.target.value) })} className={`${input} w-full min-w-0`}>
-                    {SIZE_STEPS.map(([v, name]) => <option key={v} value={v}>{name}</option>)}
-                  </select>
-                </label>
-              </div>
-              {layout.lines.find((p) => p.index === i) && (
-                <span className="text-[13px] text-[var(--muted)] tabular-nums">Висота великих літер ≈ {cm(layout.lines.find((p) => p.index === i)!.capMm)} см</span>
-              )}
-            </div>
-          ))}
-          {lines.length < CFG.maxLines && (
-            <button id="ps-add-line" type="button" onClick={addLine} className="h-11 justify-self-start rounded-full border-[1.5px] border-dashed border-[var(--line)] px-4 text-sm font-semibold">+ Додати рядок</button>
-          )}
-          <CustomFontPanel fonts={customFonts} text={lines.map((l) => l.text).join(" ")}
-            onAdded={(added) => { registerLoadedFont(added); setCustomFonts((list) => [...list.filter((f) => f.id !== added.id), added]); }}
-            onRemoved={(removed) => {
-              setCustomFonts((list) => list.filter((f) => f.id !== removed));
-              setLines((list) => list.map((l) => (l.fontId === removed ? { ...l, fontId: "montserrat" } : l)));
-              setLoaded((map) => { const next = { ...map }; delete next[removed]; return next; });
-            }} />
-        </fieldset>
+        <PlaqueLinesEditor state={text} legend="Напис" idPrefix="ps" maxChars={CFG.maxLineChars} onRemove={onLineRemoved}
+          capByLine={new Map(layout.lines.map((l) => [l.index, l.capMm]))} />
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Маленька стрілка в тексті</legend>
-          <div className="flex flex-wrap gap-2">{ARROWS.map(([v, name]) => <Chip key={v} id={`ps-arrow-${v}`} on={arrowPlacement === v} onClick={() => setArrowPlacement(v)}>{name}</Chip>)}</div>
+          <div className="flex flex-wrap gap-2">{ARROWS.map(([v, name]) => <PlaqueChip key={v} id={`ps-arrow-${v}`} on={arrowPlacement === v} onClick={() => setArrowPlacement(v)}>{name}</PlaqueChip>)}</div>
           {arrowPlacement !== "none" && lines.length > 1 && (
             <div className="flex flex-wrap gap-2">
-              {lines.map((_, i) => <Chip key={i} id={`ps-arrow-line-${i}`} on={design.arrow.lineIndex === i} onClick={() => setArrowLine(i)}>У рядку {i + 1}</Chip>)}
+              {lines.map((_, i) => <PlaqueChip key={i} id={`ps-arrow-line-${i}`} on={design.arrow.lineIndex === i} onClick={() => setArrowLine(i)}>У рядку {i + 1}</PlaqueChip>)}
             </div>
           )}
         </fieldset>
