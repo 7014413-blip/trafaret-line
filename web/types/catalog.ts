@@ -2,6 +2,8 @@
 // what /store/product-categories and /store/products return with our metadata
 // (backend/src/scripts/import-catalog.ts); the normalised shapes are what pages use.
 
+import type { MonogramProductConfig } from "./monogram";
+
 export interface FaqEntry {
   q: string;
   a: string;
@@ -75,6 +77,8 @@ export interface RawProduct {
     fields?: { key: string; uk: string; ru: string; def: string }[] | null;
     /** Set in «Простий кабінет»; missing means in stock. */
     availability?: ProductAvailability;
+    /** Wedding monogram products: designs with a live preview (types/monogram.ts). */
+    monogram?: MonogramProductConfig | null;
   } | null;
 }
 
@@ -171,4 +175,6 @@ export interface CatalogProduct extends CatalogProductCard {
   /** Fields the customer fills in for named products (word, date …). */
   fields: { key: string; label: string; placeholder: string }[];
   availability: ProductAvailability;
+  /** Designs of a wedding monogram product; null for every other product. */
+  monogram: MonogramProductConfig | null;
 }

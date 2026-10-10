@@ -12,3 +12,4 @@ export type * from "./integrations";
 export type * from "./geometry-worker";
 export type * from "./catalog";
 export type * from "./text";
+export type * from "./monogram";
