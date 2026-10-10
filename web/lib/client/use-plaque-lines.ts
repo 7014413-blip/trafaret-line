@@ -63,10 +63,14 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
   );
 
   const fontFor = useCallback((id: string) => loaded[id], [loaded]);
+  // Stable, so constructors can call it from effects.
+  const setLine = useCallback((index: number, patch: Partial<PlaqueTextLine>) => {
+    setLines((list) => list.map((l, k) => (k === index ? { ...l, ...patch } : l)));
+  }, []);
 
   return {
     lines,
-    setLine: (index, patch) => setLines((list) => list.map((l, k) => (k === index ? { ...l, ...patch } : l))),
+    setLine,
     addLine: () => setLines((list) => (list.length >= maxLines ? list : [...list, { text: "", fontId: list[list.length - 1]?.fontId ?? FALLBACK_FONT, size: 0.8 }])),
     removeLine: (index) => setLines((list) => (list.length > 1 ? list.filter((_, k) => k !== index) : list)),
     maxLines,

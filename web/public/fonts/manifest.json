@@ -45,6 +45,15 @@
     ]
   },
   {
+    "id": "pt-serif",
+    "name": "PT Serif",
+    "group": "Класичні",
+    "files": [
+      "pt-serif-cyrillic.woff",
+      "pt-serif-latin.woff"
+    ]
+  },
+  {
     "id": "lora",
     "name": "Lora",
     "group": "Класичні",

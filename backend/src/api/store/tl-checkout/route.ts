@@ -28,6 +28,8 @@ import { loadFontById } from "../../../shared/lib/text/node-fonts";
 import { LAYERED_PLAQUE_CONFIGS } from "../../../shared/lib/layered-plaque/configs";
 import { priceLayeredPlaque } from "../../../shared/lib/layered-plaque/price";
 import { readLayeredPlaqueDesign } from "../../../shared/lib/layered-plaque/read-design";
+import { priceInitialsDesign } from "../../../shared/lib/initials/price-design";
+import { readInitialsDesign } from "../../../shared/lib/initials/read-design";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -133,6 +135,17 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     const words = cleanText(design.lines.map((l) => l.text || l.tail).join(" / "));
     return {
       title: `Напис на планці «${words}», літери ${cm(design.letterHeightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}`,
+      unitPrice: price.unitPrice,
+    };
+  }
+  if (line.kind === "initials") {
+    const INITIALS_SEPARATOR_TITLE = { bar: "|", amp: "&", plus: "+", dot: "·", none: "" } as const;
+    // Wedding cake initials: re-read and measured with the server's fonts, priced by the composition.
+    const design = readInitialsDesign(line.initials, line.quantity);
+    const price = priceInitialsDesign(design, loadFontById);
+    const letters = cleanText([design.first, INITIALS_SEPARATOR_TITLE[design.separator], design.second].filter(Boolean).join(" "));
+    return {
+      title: `Ініціали на торт «${letters}», літери ${cm(design.letterHeightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}${design.mode === "topper" ? ", на планці зі шпажкою" : ", окремі деталі"}`,
       unitPrice: price.unitPrice,
     };
   }
@@ -255,6 +268,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           plaque: line.kind === "plaque" ? readOfficePlaqueDesign(line.plaque, quantity) : null,
           words: line.kind === "words" ? readJoinedWordsDesign(line.words, quantity) : null,
           layered: line.kind === "layered" ? readLayeredPlaqueDesign(line.layered, quantity) : null,
+          initials: line.kind === "initials" ? readInitialsDesign(line.initials, quantity) : null,
           needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };

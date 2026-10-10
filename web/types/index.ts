@@ -17,3 +17,4 @@ export type * from "./plaques";
 export type * from "./office-plaque";
 export type * from "./joined-words";
 export type * from "./layered-plaque";
+export type * from "./initials";

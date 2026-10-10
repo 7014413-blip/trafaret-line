@@ -15,6 +15,7 @@ import type { PointerSignDesign } from "../types/pointer-sign";
 import type { OfficePlaqueDesign } from "../types/office-plaque";
 import type { JoinedWordsDesign } from "../types/joined-words";
 import type { LayeredPlaqueDesign } from "../types/layered-plaque";
+import type { InitialsDesign } from "../types/initials";
 import { LAYERED_PLAQUE_CONFIGS } from "../lib/layered-plaque/configs";
 import { priceLayeredPlaque } from "../lib/layered-plaque/price";
 
@@ -44,6 +45,8 @@ export type NewLine = {
   words?: JoinedWordsDesign;
   /** Two-layer plaque (kind "layered": floor, door, number); unit = one set of the series. */
   layered?: LayeredPlaqueDesign;
+  /** Wedding cake initials (kind "initials"); priced like "words" from the stored base price. */
+  initials?: InitialsDesign;
   /** Customer layout file key (tl-upload). */
   uploadKey?: string;
   /** Catalogue product: Medusa variant id and its 1-piece price (the server re-reads it from the database). */
@@ -82,7 +85,7 @@ const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity
       return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
     }
   }
-  if (l.kind === "words" && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
+  if ((l.kind === "words" || l.kind === "initials") && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
   if (l.kind === "catalog" && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
   if (l.kind === "welded") return priceWelded(l.widthCm * 10, l.heightCm * 10, MATERIALS[l.materialId], l.quantity).unitPrice;
   return priceStencil({ shape: "rect", widthMm: l.widthCm * 10, heightMm: l.heightCm * 10 }, MATERIALS[l.materialId], l.quantity).unitPrice;
