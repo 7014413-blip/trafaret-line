@@ -5,6 +5,7 @@
 // mounting holes, options, quantity. Price and checks from lib/signage-math (priceSign,
 // checkSign); the customer sees sizes and UAH only, never m².
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ACRYLIC_PALETTE, baseSize, checkSign, priceSign, signHoles, signOutline } from "@/lib/calculators/signage";
 import { formatUAH } from "@/lib/format";
@@ -128,6 +129,7 @@ export function SignConstructor() {
           <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Конструктор вивісок</p>
           <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">Вивіска з акрилу у два шари</h1>
           <p className="mt-1.5 mb-0 text-[var(--muted)]">Усі кольори й матеріали шарів уже в ціні. Ціна змінюється одразу.</p>
+          <p className="mt-1.5 mb-0 text-sm"><Link href="/vyvisky/vkazivnyky" className="underline">Невелика табличка-стрілка 25×10 см від 450 ₴ →</Link></p>
         </header>
 
         <fieldset className="grid gap-2"><legend className="mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]">Форма і розмір</legend>

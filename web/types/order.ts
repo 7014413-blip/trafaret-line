@@ -4,15 +4,16 @@
 
 import type { MaterialType, SectionTheme } from "./customizer";
 import type { SignDesign } from "./signage";
+import type { PointerSignDesign } from "./pointer-sign";
 import type { B2BCompany } from "./invoice";
 import type { PackKind } from "./packaging";
 
 /**
  * stencil: sheet with cut-outs priced by size; welded: one solid piece (topper, acrylic word);
  * catalog: a ready product variant from Medusa, priced by the variant price in the database;
- * sign; accessory.
+ * sign; pointer: two-layer pointer sign from its constructor, priced by its design; accessory.
  */
-export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "accessory";
+export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "pointer" | "accessory";
 
 export interface OrderLineInput {
   key: string;
@@ -25,6 +26,8 @@ export interface OrderLineInput {
   widthCm?: number;
   heightCm?: number;
   sign?: SignDesign;
+  /** kind "pointer": the design, re-read and re-priced on the server. */
+  pointer?: PointerSignDesign;
   /** Customer layout file (POST /store/tl-upload). */
   uploadKey?: string;
   section?: SectionTheme;

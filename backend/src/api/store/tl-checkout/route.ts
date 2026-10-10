@@ -16,6 +16,8 @@ import {
 import { MATERIALS } from "../../../shared/lib/materials";
 import { priceCatalogVariant, priceStencil, priceWelded } from "../../../shared/lib/calculators/pricing";
 import { priceSign } from "../../../shared/lib/calculators/signage";
+import { pricePointerSign } from "../../../shared/lib/pointer-sign/price";
+import { readPointerSignDesign } from "../../../shared/lib/pointer-sign/read-design";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -82,6 +84,16 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     if (!line.sign) throw new Error("sign design missing");
     const label = cleanText(line.title);
     return { title: label ? `Вивіска: ${label}` : "Вивіска з акрилу", unitPrice: priceSign({ ...line.sign, quantity: line.quantity }).unitPrice };
+  }
+  if (line.kind === "pointer") {
+    // Pointer sign: the design is re-read field by field and priced here (fixed sizes at
+    // Денис's prices, custom sizes by the sign rate); the logo goes to the manager for a check.
+    const design = readPointerSignDesign(line.pointer, line.quantity);
+    const texts = cleanText(design.lines.map((l) => l.text).filter(Boolean).join(" / "));
+    return {
+      title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cm(design.widthMm)}×${cm(design.heightMm)} см`,
+      unitPrice: pricePointerSign(design).unitPrice,
+    };
   }
   const material = line.materialId && MATERIALS[line.materialId];
   if (!material || !material.available || !line.widthCm || !line.heightCm) throw new Error(`bad ${line.kind} line`);
@@ -188,7 +200,9 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           kind: line.kind, key: String(line.key ?? "").slice(0, 300), variantId: line.variantId ?? null,
           sku: line.variantId ? variants.get(line.variantId)?.sku ?? null : null, materialId: line.materialId ?? null,
           widthCm: line.widthCm ?? null, heightCm: line.heightCm ?? null,
-          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas"), spec: safeSpec(line.spec),
+          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, spec: safeSpec(line.spec),
+          pointer: line.kind === "pointer" ? readPointerSignDesign(line.pointer, quantity) : null,
+          needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };
     });

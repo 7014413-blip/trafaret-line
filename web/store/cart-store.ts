@@ -7,8 +7,10 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { MATERIALS } from "../lib/materials";
 import { priceCatalogVariant, priceStencil, priceWelded } from "../lib/calculators/pricing";
+import { pricePointerSign } from "../lib/pointer-sign/price";
 import type { CartLine, MaterialType, SectionTheme } from "../types/customizer";
 import type { OrderLineKind } from "../types/order";
+import type { PointerSignDesign } from "../types/pointer-sign";
 
 export type NewLine = {
   key: string;            // same key = same item, quantities add up
@@ -25,6 +27,8 @@ export type NewLine = {
   /** What the server prices: stencil by size × material, welded word by its size, sign by design, accessory by key. */
   kind?: OrderLineKind;
   sign?: unknown;
+  /** Pointer sign design (kind "pointer"): the price follows the quantity, the server recomputes it. */
+  pointer?: PointerSignDesign;
   /** Customer layout file key (tl-upload). */
   uploadKey?: string;
   /** Catalogue product: Medusa variant id and its 1-piece price (the server re-reads it from the database). */
@@ -36,8 +40,17 @@ export type NewLine = {
 
 type Stored = NewLine & { id: string };
 
-const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice">) => {
+const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer">) => {
   if (l.fixedPrice != null) return l.fixedPrice;
+  if (l.kind === "pointer" && l.pointer) {
+    try {
+      return pricePointerSign({ ...l.pointer, quantity: l.quantity }).unitPrice;
+    } catch {
+      // A design saved before the size list changed: keep the price it was added with;
+      // the server refuses the line at checkout and the customer rebuilds it.
+      return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
+    }
+  }
   if (l.kind === "catalog" && l.basePrice != null) return priceCatalogVariant(l.basePrice, l.quantity);
   if (l.kind === "welded") return priceWelded(l.widthCm * 10, l.heightCm * 10, MATERIALS[l.materialId], l.quantity).unitPrice;
   return priceStencil({ shape: "rect", widthMm: l.widthCm * 10, heightMm: l.heightCm * 10 }, MATERIALS[l.materialId], l.quantity).unitPrice;

@@ -9,6 +9,7 @@ import { MATERIALS } from "@/lib/materials";
 import { priceStencil } from "@/lib/calculators/pricing";
 import { formatUAH } from "@/lib/format";
 import { useCart } from "@/store/cart-store";
+import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
 import type { MaterialType } from "@/types/customizer";
 
 const ACCEPT = ".dxf,.ai,.eps,.pdf,.svg,.cdr,.png,.jpg,.jpeg";
@@ -32,13 +33,6 @@ async function readAspect(file: File): Promise<number | null> {
   }
   return null;
 }
-
-const toBase64 = (file: File) => new Promise<string>((ok, bad) => {
-  const r = new FileReader();
-  r.onload = () => ok(String(r.result).split(",")[1] ?? "");
-  r.onerror = bad;
-  r.readAsDataURL(file);
-});
 
 export function UploadOrder() {
   const [file, setFile] = useState<File | null>(null);
@@ -66,13 +60,8 @@ export function UploadOrder() {
     if (!file) return;
     setState("uploading");
     try {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_URL}/store/tl-upload`, {
-        method: "POST", headers: { "content-type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PK ?? "" },
-        body: JSON.stringify({ name: file.name, data: await toBase64(file) }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message);
-      cart.add({ key: `upload|${d.key}|${w}x${height}|${mat}`, title: `За вашим макетом «${file.name}», ${w}×${height} см`, materialId: mat, widthCm: w, heightCm: height, quantity: qty, kind: "stencil", uploadKey: d.key });
+      const key = await uploadLayoutFile(file);
+      cart.add({ key: `upload|${key}|${w}x${height}|${mat}`, title: `За вашим макетом «${file.name}», ${w}×${height} см`, materialId: mat, widthCm: w, heightCm: height, quantity: qty, kind: "stencil", uploadKey: key });
       setState("added");
     } catch (e) {
       setState("error"); setMsg((e as Error).message || "Не вдалося завантажити файл. Спробуйте ще раз.");
