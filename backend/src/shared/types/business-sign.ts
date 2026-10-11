@@ -57,6 +57,9 @@ export interface BusinessSignDesign {
   holes: 0 | 2 | 4;
   selfAdhesive: boolean;
   positioningStencil: boolean;
+  /** Our designer draws the logo (included in the price); the wishes go with the order. */
+  logoDevelopment: boolean;
+  logoBrief: string;
   quantity: number;
 }
 

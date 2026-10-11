@@ -48,7 +48,11 @@ export function businessSignToSignDesign(design: BusinessSignDesign, layout: Bus
       materialId: design.baseMaterialId, thicknessMm: design.baseThicknessMm,
     },
     layers,
-    options: { holes: design.holes, selfAdhesive: design.selfAdhesive, positioningStencil: design.positioningStencil, whiteLabel: false },
+    options: {
+      holes: design.holes, selfAdhesive: design.selfAdhesive, positioningStencil: design.positioningStencil, whiteLabel: false,
+      logoDevelopment: design.logoDevelopment,
+      logoBrief: design.logoDevelopment ? design.logoBrief.trim().slice(0, 500) : "",
+    },
     quantity: design.quantity,
   };
 }

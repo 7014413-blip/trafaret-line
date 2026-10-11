@@ -17,7 +17,7 @@ import { computeBusinessSignLayout } from "@/lib/business-sign/layout";
 import { measureArcText } from "@/lib/business-sign/measure-arc";
 import { BUSINESS_SIGN_PALETTE, findBusinessSignSheet } from "@/lib/business-sign/palette";
 import { businessSignToSignDesign } from "@/lib/business-sign/to-sign-design";
-import { checkSign, priceSign } from "@/lib/calculators/signage";
+import { DEFAULT_SIGN_PRICING, checkSign, priceSign } from "@/lib/calculators/signage";
 import { nextTierHint } from "@/lib/calculators/pricing";
 import { SIGN_LOGO_ACCEPT, readSignLogoFile } from "@/lib/client/read-sign-logo-file";
 import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
@@ -67,6 +67,8 @@ export function BusinessSignConstructor() {
   const [template, setTemplate] = useState(false);
   const [qty, setQty] = useState(1);
   const [view, setView] = useState<BusinessSignView>("close");
+  const [logoDevelopment, setLogoDevelopment] = useState(false);
+  const [logoBrief, setLogoBrief] = useState("");
   const [state, setState] = useState<"idle" | "uploading" | "added" | "error">("idle");
   const [message, setMessage] = useState("");
   // Shipping date only in the browser: server and browser format weekdays differently.
@@ -102,7 +104,8 @@ export function BusinessSignConstructor() {
     baseMaterialId: baseId, baseThicknessMm: thickness, lines,
     logo: logo ? { fileName: logo.fileName, format: logo.format, aspect: logo.aspect, share: logo.share, place: logo.place, invert: logo.invert, materialId: logo.materialId } : null,
     arc: round && arcOn ? { top: arcTop, bottom: arcBottom, fontId: arcFontId, materialId: arcSheet } : null,
-    frameMaterialId: frameId, holes, selfAdhesive: adhesive, positioningStencil: template, quantity: qty,
+    frameMaterialId: frameId, holes, selfAdhesive: adhesive, positioningStencil: template,
+    logoDevelopment: !logo && logoDevelopment, logoBrief, quantity: qty,
   };
 
   const arcMeasures = useMemo(() => ({
@@ -116,7 +119,7 @@ export function BusinessSignConstructor() {
   const price = priceSign(sign, BUSINESS_SIGN_PALETTE);
   const checks = checkSign(sign, BUSINESS_SIGN_PALETTE);
   const missing = [...new Set([...fonts.measured.flatMap((m) => m?.missing ?? []), ...layout.arcs.flatMap((a) => a.missing)])];
-  const empty = !layout.lines.length && !layout.logo && !layout.arcs.length;
+  const empty = !layout.lines.length && !layout.logo && !layout.arcs.length && !design.logoDevelopment;
   const errors = checks.filter((c) => c.level === "error");
   const canBuy = !empty && errors.length === 0 && fonts.fontsReady && state !== "uploading";
   const hint = nextTierHint(qty);
@@ -192,7 +195,7 @@ export function BusinessSignConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `sign|${JSON.stringify({ ...design, quantity: 0 })}|${uploadKey ?? ""}`,
-      title: `Вивіска${texts ? ` «${texts}»` : ""}${design.logo ? " з логотипом" : ""}, ${sizeName(shape, layout.widthMm, layout.heightMm)}`,
+      title: `Вивіска${texts ? ` «${texts}»` : ""}${design.logo ? " з логотипом" : design.logoDevelopment ? ", розробка логотипа" : ""}, ${sizeName(shape, layout.widthMm, layout.heightMm)}`,
       materialId: "acrylic",
       widthCm: layout.widthMm / 10,
       heightCm: layout.heightMm / 10,
@@ -230,8 +233,8 @@ export function BusinessSignConstructor() {
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
         <header>
           <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Конструктор вивісок</p>
-          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">Вивіска з вашим логотипом</h1>
-          <p className="mt-1.5 mb-0 text-[var(--muted)]">Акрил у два шари: основа і обʼємний напис, логотип, дзеркальна рамка. Усі кольори вже в ціні, ціна змінюється одразу.</p>
+          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">3D акрилова бізнес-вивіска</h1>
+          <p className="mt-1.5 mb-0 text-[var(--muted)]">Персоналізована вивіска з акрилу у два шари: основа і обʼємний напис, ваш логотип, дзеркальна рамка. Немає логотипа — розробимо індивідуально. Кругла від Ø30 см за 1 600 ₴.</p>
           <p className="mt-1.5 mb-0 text-sm"><Link href="/vyvisky/vkazivnyky" className="underline">Табличка-стрілка 25×10 см від 450 ₴ →</Link> · <Link href="/vyvisky/ofisni-tablychky" className="underline">Офісна табличка 21×6 см від 220 ₴ →</Link> · <Link href="/vyvisky/napysy-na-plantsi" className="underline">Написи на планці, меню з акрилу →</Link> · <Link href="/vyvisky/tablychky-poverkh" className="underline">Таблички поверхів →</Link> · <Link href="/vyvisky/tablychky-na-dveri" className="underline">Таблички на двері →</Link> · <Link href="/vyvisky/nomerky" className="underline">Номерки від 65 ₴ →</Link></p>
         </header>
 
@@ -241,7 +244,7 @@ export function BusinessSignConstructor() {
             {CFG.presets[shape].map((p) => (
               <PlaqueChip key={`${p.widthMm}x${p.heightMm}`} id={`bs-size-${p.widthMm}x${p.heightMm}`}
                 on={widthMm === p.widthMm && (isSquare(shape) || heightMm === p.heightMm)} onClick={() => setSize(p.widthMm, p.heightMm)}>
-                {sizeName(shape, p.widthMm, p.heightMm)}
+                {sizeName(shape, p.widthMm, p.heightMm)}{shape === "circle" && DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm] ? ` · ${formatUAH(DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm])}` : ""}
               </PlaqueChip>
             ))}
           </div>
@@ -309,6 +312,18 @@ export function BusinessSignConstructor() {
             </button>
           )}
           {!logo && <button type="button" id="bs-logo-sample" onClick={trySample} className="justify-self-start text-sm underline">Приміряти приклад логотипа</button>}
+          {!logo && (
+            <div className="grid min-w-0 gap-2 rounded-xl bg-[var(--surface)] p-3">
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-logo-dev" checked={logoDevelopment} onChange={(e) => setLogoDevelopment(e.target.checked)} className="accent-[var(--ink)]" />
+                <span><b>Немає логотипа? Розробимо індивідуально</b>, у ціні вивіски</span></label>
+              {logoDevelopment && (
+                <textarea id="bs-logo-brief" rows={3} maxLength={500} value={logoBrief} onChange={(e) => setLogoBrief(e.target.value)}
+                  placeholder="Назва, сфера, стиль, кольори, що подобається"
+                  className="min-w-0 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none" />
+              )}
+              {logoDevelopment && <span className="text-[13px] text-[var(--muted)]">Дизайнер намалює 2–3 варіанти і надішле вам на вибір перед виготовленням.</span>}
+            </div>
+          )}
           {logoError && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{logoError}</p>}
         </fieldset>
 
