@@ -30,7 +30,7 @@ export function businessSignToSignDesign(design: BusinessSignDesign, layout: Bus
     layers.push({
       id: "logo", kind: "logoColor", materialId: design.logo.materialId, thicknessMm: 2,
       x: layout.logo.x + layout.logo.width / 2, y: layout.logo.y + layout.logo.height / 2,
-      traced: design.logo.format === "raster",
+      traced: design.logo.format !== "svg",
       bbox: { x: layout.logo.x, y: layout.logo.y, width: layout.logo.width, height: layout.logo.height },
     });
   }

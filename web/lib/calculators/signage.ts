@@ -61,6 +61,7 @@ export const ACRYLIC_PALETTE: AcrylicSheet[] = [
   sheet("mirror-rose", t("Дзеркальний рожеве золото", "Зеркальный розовое золото", "Mirror rose gold"), "#d9a196", "mirror", false),
   sheet("black", t("Чорний глянець", "Чёрный глянец", "Gloss black"), "#15171c", "gloss"),
   sheet("white", t("Білий", "Белый", "White"), "#f4f4f2", "gloss"),
+  sheet("milk-matte", t("Молочний матовий", "Молочный матовый", "Frosted milky"), "#e9ece9", "matte"),
   sheet("clear", t("Прозорий", "Прозрачный", "Clear"), "#ddebf3", "clear"),
   sheet("red", t("Червоний", "Красный", "Red"), "#c62828", "gloss"),
   sheet("orange", t("Помаранчевий", "Оранжевый", "Orange"), "#ef7d1a", "gloss"),

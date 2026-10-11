@@ -14,7 +14,8 @@ export type BusinessSignLogoPlace = "above" | "left";
 /** Logo picked by the customer: the file goes to the shop at checkout, a manager prepares the cut. */
 export interface BusinessSignLogo {
   fileName: string;
-  format: "svg" | "raster";
+  /** raster and pdf files are redrawn by a manager before cutting. */
+  format: "svg" | "raster" | "pdf";
   /** Width / height of the picture. */
   aspect: number;
   /** Share of the content area the logo takes when there is text: 0.25 … 0.75. */

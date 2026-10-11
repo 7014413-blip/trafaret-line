@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BusinessSignPreview } from "@/components/signage/BusinessSignPreview";
+import { BusinessSignPreview, type BusinessSignView } from "@/components/signage/BusinessSignPreview";
 import { PlaqueChip } from "@/components/signage/PlaqueChip";
 import { PlaqueLinesEditor } from "@/components/signage/PlaqueLinesEditor";
 import { SheetSwatches } from "@/components/signage/SheetSwatches";
@@ -19,7 +19,7 @@ import { BUSINESS_SIGN_PALETTE, findBusinessSignSheet } from "@/lib/business-sig
 import { businessSignToSignDesign } from "@/lib/business-sign/to-sign-design";
 import { checkSign, priceSign } from "@/lib/calculators/signage";
 import { nextTierHint } from "@/lib/calculators/pricing";
-import { LOGO_ACCEPT, readLogoFile } from "@/lib/client/read-logo-file";
+import { SIGN_LOGO_ACCEPT, readSignLogoFile } from "@/lib/client/read-sign-logo-file";
 import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { businessSignThumbnailSvg } from "@/lib/export/business-sign-thumbnail";
@@ -41,7 +41,7 @@ const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maxim
 const isSquare = (shape: SignShape) => shape === "circle" || shape === "square";
 const sizeName = (shape: SignShape, w: number, h: number) => (shape === "circle" ? `Ø${cm(w)} см` : `${cm(w)}×${cm(isSquare(shape) ? w : h)} см`);
 
-type LogoState = Omit<BusinessSignLogo, "fileName" | "format" | "aspect"> & { file: File; previewUrl: string; fileName: string; format: "svg" | "raster"; aspect: number; uploadKey: string | null };
+type LogoState = Omit<BusinessSignLogo, "fileName" | "format" | "aspect"> & { file: File; previewUrl: string; fileName: string; format: "svg" | "raster" | "pdf"; aspect: number; uploadKey: string | null };
 
 export function BusinessSignConstructor() {
   const [shape, setShape] = useState<SignShape>("circle");
@@ -66,6 +66,7 @@ export function BusinessSignConstructor() {
   const [adhesive, setAdhesive] = useState(true);
   const [template, setTemplate] = useState(false);
   const [qty, setQty] = useState(1);
+  const [view, setView] = useState<BusinessSignView>("close");
   const [state, setState] = useState<"idle" | "uploading" | "added" | "error">("idle");
   const [message, setMessage] = useState("");
   // Shipping date only in the browser: server and browser format weekdays differently.
@@ -152,12 +153,24 @@ export function BusinessSignConstructor() {
   const pickLogo = async (file: File | undefined) => {
     setLogoError("");
     if (!file) return;
-    const result = await readLogoFile(file);
+    const result = await readSignLogoFile(file);
     if (!result.ok) { setLogoError(result.error); return; }
     setLogo({
       file: result.file, previewUrl: result.previewUrl, fileName: file.name, format: result.format, aspect: result.aspect,
       share: 0.45, place: "above", invert: false, materialId: lineSheets[0] ?? "mirror-gold", uploadKey: null,
     });
+  };
+
+  const trySample = async () => {
+    setLogoError("");
+    try {
+      const response = await fetch("/demo/sign-sample-logo.svg");
+      if (!response.ok) throw new Error(String(response.status));
+      const blob = await response.blob();
+      await pickLogo(new File([blob], "pryklad-lohotypa.svg", { type: "image/svg+xml" }));
+    } catch {
+      setLogoError("Не вдалося завантажити приклад. Додайте свій логотип.");
+    }
   };
 
   const buy = async () => {
@@ -202,9 +215,13 @@ export function BusinessSignConstructor() {
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label="Превʼю вивіски" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
-        <BusinessSignPreview design={design} layout={layout} linePaths={linePaths} logoUrl={logo?.previewUrl ?? null}
+        <BusinessSignPreview design={design} layout={layout} linePaths={linePaths} logoUrl={logo?.previewUrl ?? null} view={view}
           label={`Превʼю вивіски ${sizeName(shape, layout.widthMm, layout.heightMm)}`} />
-        <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
+        <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
+          <PlaqueChip id="bs-view-close" on={view === "close"} onClick={() => setView("close")}>Крупно</PlaqueChip>
+          <PlaqueChip id="bs-view-wall" on={view === "wall"} onClick={() => setView("wall")}>На стіні</PlaqueChip>
+        </div>
+        <div className="flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
           <span>{sizeName(shape, layout.widthMm, layout.heightMm)}{layout.lines[0] ? ` · літери від ${cm(Math.min(...layout.lines.map((l) => l.capMm)))} см` : ""}</span>
           <span>{base.name.uk}, {thickness} мм</span>
         </div>
@@ -259,7 +276,7 @@ export function BusinessSignConstructor() {
         </fieldset>
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Логотип</legend>
-          <input ref={logoInput} id="bs-logo" type="file" accept={LOGO_ACCEPT} className="sr-only" onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ""; }} />
+          <input ref={logoInput} id="bs-logo" type="file" accept={SIGN_LOGO_ACCEPT} className="sr-only" onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ""; }} />
           {logo ? (
             <div className="grid min-w-0 gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
               <div className="flex items-center justify-between gap-2">
@@ -280,7 +297,7 @@ export function BusinessSignConstructor() {
               <span className="text-sm text-[var(--muted)]">Колір логотипа</span>
               <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={logo.materialId} onChange={(id) => setLogo({ ...logo, materialId: id })} idPrefix="bs-logo-c" label="Колір логотипа" size="sm" />
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />Світлий логотип на темному фоні</label>
-              <span className="text-[13px] text-[var(--muted)]">{logo.format === "raster"
+              <span className="text-[13px] text-[var(--muted)]">{logo.format !== "svg"
                 ? "Картинку переведемо у вектор і надішлемо макет на погодження перед порізкою. Логотип у кількох кольорах розкладемо по шарах."
                 : "Перед порізкою надішлемо макет на погодження. Логотип у кількох кольорах розкладемо по шарах."}</span>
             </div>
@@ -288,9 +305,10 @@ export function BusinessSignConstructor() {
             <button type="button" onClick={() => logoInput.current?.click()}
               className="grid justify-items-center gap-1 rounded-xl border-2 border-dashed border-[var(--line)] bg-[var(--card)] p-5 text-center">
               <b>Додати логотип</b>
-              <span className="text-[13px] text-[var(--muted)]">SVG, PNG або JPG до 10 МБ, без доплати</span>
+              <span className="text-[13px] text-[var(--muted)]">SVG, PDF, PNG або JPG до 10 МБ, без доплати</span>
             </button>
           )}
+          {!logo && <button type="button" id="bs-logo-sample" onClick={trySample} className="justify-self-start text-sm underline">Приміряти приклад логотипа</button>}
           {logoError && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{logoError}</p>}
         </fieldset>
 
