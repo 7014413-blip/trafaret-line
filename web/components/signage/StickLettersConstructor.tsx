@@ -20,11 +20,14 @@ import { formatUAH } from "@/lib/format";
 import { findJoinedWordsMaterial } from "@/lib/joined-words/find-material";
 import { JOINED_WORDS_MATERIALS } from "@/lib/joined-words/materials";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
+import { addDigits } from "@/lib/stick-letters/add-digits";
 import { checkStickLetters } from "@/lib/stick-letters/check";
 import { stickLettersConfigFor } from "@/lib/stick-letters/config-for";
+import { countDigits, DIGITS } from "@/lib/stick-letters/count-digits";
 import { computeStickLettersLayout } from "@/lib/stick-letters/layout";
 import { measureStickLine } from "@/lib/stick-letters/measure-line";
 import { priceStickLetters } from "@/lib/stick-letters/price";
+import { removeDigit } from "@/lib/stick-letters/remove-digit";
 import { useCart } from "@/store/cart-store";
 import type { StickLettersDesign, StickLettersProduct } from "@/types/stick-letters";
 import type { PlaqueTextLine } from "@/types/plaques";
@@ -120,6 +123,17 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
     next[i] = value;
     return next;
   });
+  // Digit picker: «+» adds the digit to the end of the first line, «−» takes away the last one typed.
+  const digitCounts = countDigits(fonts.lines.map((l) => l.text));
+  const plusDigits = (digits: string) => {
+    const next = addDigits(fonts.lines[0]?.text ?? "", digits, CFG.maxLineChars);
+    if (next != null) fonts.setLine(0, { text: next });
+  };
+  const minusDigit = (digit: string) => {
+    const change = removeDigit(fonts.lines.map((l) => l.text), digit);
+    if (change) fonts.setLine(change.index, { text: change.text });
+  };
+  const firstLineFull = (fonts.lines[0]?.text.length ?? 0) >= CFG.maxLineChars;
   const onLineRemoved = (i: number) => setJoined((list) => list.filter((_, k) => k !== i));
 
   const buy = () => {
@@ -164,6 +178,30 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
           <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">{ui.heading}</h1>
           <p className="mt-1.5 mb-0 text-[var(--muted)]">{ui.intro}</p>
         </header>
+
+        {product === "chars" && (
+          <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Які цифри потрібні</legend>
+            <div className="grid grid-cols-[repeat(5,minmax(0,1fr))] gap-2">
+              {DIGITS.map((d) => (
+                <div key={d} className={`grid justify-items-center gap-1 rounded-xl border-[1.5px] px-1 py-2 ${digitCounts[d] > 0 ? "border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
+                  <span className="text-2xl font-bold leading-none">{d}</span>
+                  <span id={`sl-d-${d}-count`} className="text-[12px] text-[var(--muted)] tabular-nums">{digitCounts[d]} шт.</span>
+                  <div className="flex gap-1">
+                    <button id={`sl-d-${d}-minus`} type="button" aria-label={`Прибрати цифру ${d}`} disabled={digitCounts[d] === 0} onClick={() => minusDigit(d)}
+                      className="h-8 w-8 rounded-lg border border-[var(--line)] bg-[var(--card)] disabled:opacity-30">−</button>
+                    <button id={`sl-d-${d}-plus`} type="button" aria-label={`Додати цифру ${d}`} disabled={firstLineFull} onClick={() => plusDigits(d)}
+                      className="h-8 w-8 rounded-lg border border-[var(--line)] bg-[var(--card)] disabled:opacity-30">+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <PlaqueChip id="sl-d-all" on={false} onClick={() => plusDigits(DIGITS.join(""))}>+ Повний набір 0–9</PlaqueChip>
+              <PlaqueChip id="sl-d-clear" on={false} onClick={() => fonts.lines.forEach((_, i) => fonts.setLine(i, { text: "" }))}>Очистити</PlaqueChip>
+            </div>
+            <span className="text-[13px] text-[var(--muted)]">Натисніть «+» біля потрібних цифр або впишіть номер нижче, наприклад 125. Кожна цифра вирізається окремою деталлю.</span>
+          </fieldset>
+        )}
 
         <PlaqueLinesEditor state={fonts} legend="Напис" idPrefix="sl" maxChars={CFG.maxLineChars} capByLine={capByLine} onRemove={onLineRemoved}
           renderExtra={(i) => CFG.joinable && (
