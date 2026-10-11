@@ -27,6 +27,7 @@ import { countDigits, DIGITS } from "@/lib/stick-letters/count-digits";
 import { computeStickLettersLayout } from "@/lib/stick-letters/layout";
 import { measureStickLine } from "@/lib/stick-letters/measure-line";
 import { priceStickLetters } from "@/lib/stick-letters/price";
+import { stickPiecePrices } from "@/lib/stick-letters/piece-prices";
 import { removeDigit } from "@/lib/stick-letters/remove-digit";
 import { useCart } from "@/store/cart-store";
 import type { StickLettersDesign, StickLettersProduct } from "@/types/stick-letters";
@@ -59,7 +60,8 @@ const PRODUCT_UI: Record<StickLettersProduct, {
     heightsCm: [2, 5, 10, 20, 30, 50, 80],
     startMm: 100,
     startSheet: "mirror-gold",
-    startLines: [{ text: "2026", fontId: "playfair", size: 1 }],
+    // PT Serif: digits as tall as capitals (Playfair has old-style figures of different heights).
+    startLines: [{ text: "2026", fontId: "pt-serif", size: 1 }],
     startJoined: [false],
     cartName: "Акрилові цифри і літери",
   },
@@ -108,6 +110,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
   const checks = checkStickLetters(layout, measured.map((m) => m?.missing ?? []), CFG);
   const errors = checks.filter((c) => c.level === "error");
   const price = priceStickLetters(design, layout, CFG);
+  const piecePrices = product === "chars" ? stickPiecePrices(layout, design.adhesive, CFG) : [];
   const hint = nextTierHint(qty);
   const canBuy = fonts.fontsReady && errors.length === 0;
   const capByLine = new Map(layout.lines.map((l) => [l.index, l.capMm]));
@@ -261,6 +264,22 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
         )}
 
         <div className="grid gap-2 rounded-2xl bg-[var(--surface)] p-4">
+          {piecePrices.length > 0 && (
+            <table id="sl-piece-prices" className="w-full border-collapse text-[13px] tabular-nums">
+              <caption className="pb-1 text-left text-[13px] font-bold">Ціна кожної деталі</caption>
+              <tbody>
+                {piecePrices.map((p) => (
+                  <tr key={`${p.text}|${p.widthMm}|${p.heightMm}`} className="border-b border-[var(--line)] last:border-0">
+                    <td className="py-1 pr-2 text-base font-bold">{p.text}</td>
+                    <td className="py-1 pr-2 text-[var(--muted)]">{cm(p.widthMm)} × {cm(p.heightMm)} см</td>
+                    <td className="py-1 pr-2 text-right text-[var(--muted)]">{p.count > 1 ? `${p.count} шт. × ${formatUAH(p.price)}` : ""}</td>
+                    <td className="py-1 text-right font-bold">{formatUAH(p.price * p.count)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {piecePrices.length > 0 && <p className="m-0 text-[12px] text-[var(--muted)]">Ціна кожної деталі за її розміром. Сума округлюється до 10 ₴, найменше замовлення {formatUAH(CFG.minPrice)}.</p>}
           <ul className="m-0 grid list-none gap-0.5 p-0 text-[13px] text-[var(--muted)]">
             {price.lines.map((l, i) => <li key={i}>{l}</li>)}
           </ul>

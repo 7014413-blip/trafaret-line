@@ -132,3 +132,14 @@ export interface StickLettersCheck {
   lineIndex?: number;
   message: LocalizedText;
 }
+
+/** Price of identical pieces (same character, same size), for the per-piece list the customer sees. */
+export interface StickPiecePrice {
+  text: string;
+  widthMm: number;
+  heightMm: number;
+  /** How many such pieces are in one set. */
+  count: number;
+  /** One piece: its outer box × the rate, whole UAH. */
+  price: number;
+}
