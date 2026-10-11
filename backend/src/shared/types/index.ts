@@ -19,3 +19,4 @@ export type * from "./joined-words";
 export type * from "./layered-plaque";
 export type * from "./initials";
 export type * from "./business-sign";
+export type * from "./stick-letters";

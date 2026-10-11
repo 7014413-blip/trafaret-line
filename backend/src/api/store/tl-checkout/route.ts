@@ -30,6 +30,8 @@ import { priceLayeredPlaque } from "../../../shared/lib/layered-plaque/price";
 import { readLayeredPlaqueDesign } from "../../../shared/lib/layered-plaque/read-design";
 import { priceInitialsDesign } from "../../../shared/lib/initials/price-design";
 import { readInitialsDesign } from "../../../shared/lib/initials/read-design";
+import { priceStickLettersDesign } from "../../../shared/lib/stick-letters/price-design";
+import { readStickLettersDesign } from "../../../shared/lib/stick-letters/read-design";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -146,6 +148,16 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     const letters = cleanText([design.first, INITIALS_SEPARATOR_TITLE[design.separator], design.second].filter(Boolean).join(" "));
     return {
       title: `Ініціали на торт «${letters}», літери ${cm(design.letterHeightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}${design.mode === "topper" ? ", на планці зі шпажкою" : ", окремі деталі"}`,
+      unitPrice: price.unitPrice,
+    };
+  }
+  if (line.kind === "letters") {
+    // Self-adhesive letters: re-read and measured with the server's fonts, priced by their pieces.
+    const design = readStickLettersDesign(line.letters, line.quantity);
+    const { layout, price } = priceStickLettersDesign(design, loadFontById);
+    const text = cleanText(design.lines.map((l) => l.text).join(" / "));
+    return {
+      title: `Самоклейні літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}, з картонним трафаретом`,
       unitPrice: price.unitPrice,
     };
   }
@@ -269,6 +281,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           words: line.kind === "words" ? readJoinedWordsDesign(line.words, quantity) : null,
           layered: line.kind === "layered" ? readLayeredPlaqueDesign(line.layered, quantity) : null,
           initials: line.kind === "initials" ? readInitialsDesign(line.initials, quantity) : null,
+          letters: line.kind === "letters" ? readStickLettersDesign(line.letters, quantity) : null,
           needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };
