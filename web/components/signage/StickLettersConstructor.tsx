@@ -3,7 +3,9 @@
 // Self-adhesive letters constructor (Денис 2026-10-10): words for card boxes, wedding gifts and
 // postcards cut from 3 mm acrylic with tape on the back, a cardboard stencil to glue them straight.
 // The same constructor makes single acrylic numbers and letters 2–80 cm (product "chars",
-// Денис 2026-10-11), with or without self-adhesive and without the stencil.
+// Денис 2026-10-11), with or without self-adhesive and without the stencil, and separate
+// self-adhesive letters 2–20 cm for ads and signs (product "sign-letters", Денис 2026-10-11):
+// black or white and mirror sheets at their own rates, capitals and small letters.
 // The customer types up to 6 lines, picks a font and size for every line (swap the font and see it
 // at once), joined or separate letters, the letter height and the colour. Preview on a box lid and
 // of the stencil; price at once. Layout: lib/stick-letters/layout.ts, price: lib/stick-letters/price.ts
@@ -65,10 +67,21 @@ const PRODUCT_UI: Record<StickLettersProduct, {
     startJoined: [false],
     cartName: "Акрилові цифри і літери",
   },
+  "sign-letters": {
+    kicker: "Реклама, написи, вивіски",
+    heading: "Самоклейні літери для вивісок і написів",
+    intro: "Окремі великі й малі літери з акрилу 3 мм зі скотчем на звороті, заввишки від 2 до 20 см: напис на вітрині, стіні, дверях чи стенді. Чорні, білі або дзеркальні. Ціна кожної літери за її розміром.",
+    heightsCm: [2, 3, 5, 7, 10, 15, 20],
+    startMm: 70,
+    startSheet: "black",
+    startLines: [{ text: "Кавʼярня", fontId: "pt-serif", size: 1 }],
+    startJoined: [false],
+    cartName: "Самоклейні літери для вивіски",
+  },
 };
 // Black, white and mirror first: what card boxes and wedding gifts are made with.
 const FIRST = ["black", "white", "mirror-gold", "mirror-silver"];
-const SHEETS = [...FIRST.map((id) => JOINED_WORDS_MATERIALS.find((m) => m.id === id)).filter((m) => m !== undefined), ...JOINED_WORDS_MATERIALS.filter((m) => !FIRST.includes(m.id))];
+const ALL_SHEETS = [...FIRST.map((id) => JOINED_WORDS_MATERIALS.find((m) => m.id === id)).filter((m) => m !== undefined), ...JOINED_WORDS_MATERIALS.filter((m) => !FIRST.includes(m.id))];
 
 const legend = "mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]";
 const input = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none";
@@ -78,11 +91,15 @@ const swatch = (hex: string, mirror: boolean) => (mirror ? `linear-gradient(135d
 export function StickLettersConstructor({ product = "letters" }: { product?: StickLettersProduct }) {
   const CFG = stickLettersConfigFor(product);
   const ui = PRODUCT_UI[product];
+  const sheets = CFG.materialIds
+    ? CFG.materialIds.map((id) => JOINED_WORDS_MATERIALS.find((m) => m.id === id)).filter((m) => m !== undefined)
+    : ALL_SHEETS;
   const [joined, setJoined] = useState<boolean[]>(ui.startJoined);
   const [letterMm, setLetterMm] = useState(ui.startMm);
   const [letterInput, setLetterInput] = useState(String(ui.startMm / 10));
   const [materialId, setMaterialId] = useState(ui.startSheet);
   const [adhesive, setAdhesive] = useState(true);
+  const [upper, setUpper] = useState(false);
   const [view, setView] = useState<StickLettersView>("box");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -96,12 +113,12 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
 
   const design: StickLettersDesign = {
     product, adhesive: CFG.rateNoAdhesivePerM2 == null ? true : adhesive,
-    materialId, letterHeightMm: letterMm, upper: false, quantity: qty,
+    materialId, letterHeightMm: letterMm, upper: CFG.caseChoice && upper, quantity: qty,
     lines: fonts.lines.map((line, i) => ({ ...line, joined: CFG.joinable && (joined[i] ?? false) })),
   };
   const measured = useMemo(
-    () => fonts.lines.map((line) => { const font = fontFor(line.fontId); return font ? measureStickLine(font, line.text, false) : null; }),
-    [fonts.lines, fontFor],
+    () => fonts.lines.map((line) => { const font = fontFor(line.fontId); return font ? measureStickLine(font, line.text, design.upper) : null; }),
+    [fonts.lines, fontFor, design.upper],
   );
   const layout = computeStickLettersLayout(design, measured.map((m) => m?.measure ?? null), CFG);
   const paths = new Map<number, string>();
@@ -110,7 +127,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
   const checks = checkStickLetters(layout, measured.map((m) => m?.missing ?? []), CFG);
   const errors = checks.filter((c) => c.level === "error");
   const price = priceStickLetters(design, layout, CFG);
-  const piecePrices = product === "chars" ? stickPiecePrices(layout, design.adhesive, CFG) : [];
+  const piecePrices = CFG.joinable ? [] : stickPiecePrices(layout, design.adhesive, materialId, CFG);
   const hint = nextTierHint(qty);
   const canBuy = fonts.fontsReady && errors.length === 0;
   const capByLine = new Map(layout.lines.map((l) => [l.index, l.capMm]));
@@ -145,7 +162,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `letters|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: `${ui.cartName} «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${sheet.name.uk.toLowerCase()}${design.adhesive ? "" : ", без самоклейки"}`,
+      title: `${ui.cartName} «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${sheet.name.uk.toLowerCase()}${design.adhesive ? "" : ", без самоклейки"}${design.upper ? ", усі великі" : ""}`,
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -214,6 +231,16 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
             </div>
           )} />
 
+        {CFG.caseChoice && (
+          <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Літери</legend>
+            <div className="flex flex-wrap gap-2">
+              <PlaqueChip id="sl-case-as-typed" on={!upper} onClick={() => setUpper(false)}>Великі й малі, як написано</PlaqueChip>
+              <PlaqueChip id="sl-case-upper" on={upper} onClick={() => setUpper(true)}>УСІ ВЕЛИКІ</PlaqueChip>
+            </div>
+            <span className="text-[13px] text-[var(--muted)]">Висота нижче — це висота великої літери. Малі літери нижчі, тому й дешевші.</span>
+          </fieldset>
+        )}
+
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Висота літер</legend>
           <div className="flex flex-wrap gap-2">
             {ui.heightsCm.map((v) => <PlaqueChip key={v} id={`sl-h-${v}`} on={letterMm === v * 10} onClick={() => setHeight(v * 10)}>{v} см</PlaqueChip>)}
@@ -227,7 +254,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Колір</legend>
           <div role="radiogroup" aria-label="Колір акрилу" className="flex flex-wrap gap-2.5">
-            {SHEETS.map((m) => (
+            {sheets.map((m) => (
               <button key={m.id} id={`sl-c-${m.id}`} type="button" role="radio" aria-checked={materialId === m.id} title={m.name.uk} onClick={() => setMaterialId(m.id)}
                 className={`relative h-10 w-10 rounded-full border-2 ${materialId === m.id ? "border-[var(--ink)] ring-2 ring-[var(--ink)] ring-offset-2" : "border-[var(--line)]"}`}
                 style={{ background: swatch(m.hex, m.mirror) }}>

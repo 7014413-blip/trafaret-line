@@ -10,9 +10,11 @@ import type { LocalizedText } from "./customizer";
 /**
  * letters: words for card boxes, adhesive and a cardboard stencil included (7000 UAH/m²);
  * chars: single acrylic numbers and letters 2–80 cm (Денис 2026-10-11): 7500 UAH/m² with
- * self-adhesive, 6500 UAH/m² without, every character its own piece.
+ * self-adhesive, 6500 UAH/m² without, every character its own piece;
+ * sign-letters: separate self-adhesive capital and small letters 2–20 cm for ads, inscriptions and
+ * signs (Денис 2026-10-11): black or white 6500 UAH/m², mirror silver, rose gold, gold 10 200 UAH/m².
  */
-export type StickLettersProduct = "letters" | "chars";
+export type StickLettersProduct = "letters" | "chars" | "sign-letters";
 
 export interface StickLettersLine {
   text: string;
@@ -45,6 +47,12 @@ export interface StickLettersConfig {
   ratePerM2: number;
   /** UAH per m² without self-adhesive; null = always with it (chars: 6500, Денис). */
   rateNoAdhesivePerM2: number | null;
+  /** UAH per m² by sheet id; replaces ratePerM2 for the sheets listed (sign-letters, Денис). */
+  materialRates: Record<string, number> | null;
+  /** Sheets offered, in this order; null = the whole palette. */
+  materialIds: string[] | null;
+  /** The customer may switch all letters to capitals. */
+  caseChoice: boolean;
   /** A cardboard stencil for gluing comes with the set. */
   stencil: boolean;
   /** Letters may be joined into one piece; false = every character apart. */

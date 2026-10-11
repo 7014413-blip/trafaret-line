@@ -10,6 +10,9 @@ export const DEFAULT_STICK_LETTERS_CONFIG: StickLettersConfig = {
   title: { uk: "Самоклейні літери", ru: "Самоклеящиеся буквы", en: "Self-adhesive letters" },
   ratePerM2: 7000,                     // Денис
   rateNoAdhesivePerM2: null,
+  materialRates: null,
+  materialIds: null,
+  caseChoice: false,
   stencil: true,
   joinable: true,
   minPrice: 150,                       // [default]

@@ -158,7 +158,9 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     const { layout, price } = priceStickLettersDesign(design, loadFontById);
     const text = cleanText(design.lines.map((l) => l.text).join(" / "));
     return {
-      title: design.product === "chars"
+      title: design.product === "sign-letters"
+        ? `Самоклейні літери для вивіски «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}${design.upper ? ", усі великі" : ""}`
+        : design.product === "chars"
         ? `Акрилові цифри і літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}, ${design.adhesive ? "зі скотчем" : "без скотчу"}`
         : `Самоклейні літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}, з картонним трафаретом`,
       unitPrice: price.unitPrice,

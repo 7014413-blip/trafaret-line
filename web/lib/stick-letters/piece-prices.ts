@@ -4,9 +4,12 @@
 // rounded up to 10 UAH (price.ts); this list only shows the customer what each piece costs.
 
 import type { StickLettersConfig, StickLettersLayout, StickPiecePrice } from "../../types/stick-letters";
+import { stickRateFor } from "./rate-for";
 
-export function stickPiecePrices(layout: StickLettersLayout, adhesive: boolean, cfg: StickLettersConfig): StickPiecePrice[] {
-  const rate = adhesive || cfg.rateNoAdhesivePerM2 == null ? cfg.ratePerM2 : cfg.rateNoAdhesivePerM2;
+export function stickPiecePrices(
+  layout: StickLettersLayout, adhesive: boolean, materialId: string, cfg: StickLettersConfig,
+): StickPiecePrice[] {
+  const rate = stickRateFor(cfg, materialId, adhesive);
   const groups = new Map<string, StickPiecePrice>();
   for (const piece of layout.pieces) {
     const widthMm = Math.round(piece.width);

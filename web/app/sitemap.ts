@@ -20,6 +20,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/konstruktor/inicialy-na-tort", priority: 0.7, changeFrequency: "monthly" },
   { path: "/konstruktor/samoklejni-litery", priority: 0.7, changeFrequency: "monthly" },
   { path: "/konstruktor/akrylovi-tsyfry-i-litery", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/konstruktor/samoklejni-litery-dlia-vyvisok", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/tablychky-poverkh", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/tablychky-na-dveri", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/nomerky", priority: 0.7, changeFrequency: "monthly" },

@@ -33,9 +33,10 @@ function readLine(raw: unknown, cfg: StickLettersConfig): StickLettersLine {
 
 export function readStickLettersDesign(raw: unknown, quantity: number): StickLettersDesign {
   const d = record(raw, "design");
-  const product = d.product === "chars" ? "chars" : "letters";
+  const product = d.product === "chars" || d.product === "sign-letters" ? d.product : "letters";
   const cfg: StickLettersConfig = stickLettersConfigFor(product);
   const materialId = findJoinedWordsMaterial(String(d.materialId ?? "")).id;
+  if (cfg.materialIds && !cfg.materialIds.includes(materialId)) throw new Error("stick letters: this sheet is not offered");
   const letterHeightMm = Math.round(num(d.letterHeightMm, "letter height"));
   if (letterHeightMm < Math.floor(cfg.minLetterMm / 1.6) || letterHeightMm > cfg.maxLetterMm) throw new Error("stick letters: letter height out of range");
   if (!Array.isArray(d.lines) || d.lines.length > cfg.maxLines) throw new Error("stick letters: bad lines");
@@ -43,7 +44,7 @@ export function readStickLettersDesign(raw: unknown, quantity: number): StickLet
   if (!lines.length) throw new Error("stick letters: nothing to cut");
   return {
     product, adhesive: cfg.rateNoAdhesivePerM2 == null ? true : d.adhesive !== false,
-    materialId, letterHeightMm, upper: d.upper === true, lines,
+    materialId, letterHeightMm, upper: cfg.caseChoice && d.upper === true, lines,
     quantity: Math.max(1, Math.min(9999, Math.round(quantity))),
   };
 }

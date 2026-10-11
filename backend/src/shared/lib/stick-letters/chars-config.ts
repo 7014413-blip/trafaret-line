@@ -10,6 +10,9 @@ export const ACRYLIC_CHARS_CONFIG: StickLettersConfig = {
   title: { uk: "Акрилові цифри і літери", ru: "Акриловые цифры и буквы", en: "Acrylic numbers and letters" },
   ratePerM2: 7500,                     // Денис, with self-adhesive
   rateNoAdhesivePerM2: 6500,           // Денис, without
+  materialRates: null,
+  materialIds: null,
+  caseChoice: false,
   stencil: false,
   joinable: false,
   minPrice: 150,                       // [default]
