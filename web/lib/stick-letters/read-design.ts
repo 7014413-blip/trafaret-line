@@ -4,7 +4,7 @@
 
 import type { StickLettersConfig, StickLettersDesign, StickLettersLine } from "../../types/stick-letters";
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
-import { DEFAULT_STICK_LETTERS_CONFIG } from "./config";
+import { stickLettersConfigFor } from "./config-for";
 
 const FONT_ID = /^[a-z0-9:_./-]{1,120}$/i;
 
@@ -31,15 +31,18 @@ function readLine(raw: unknown, cfg: StickLettersConfig): StickLettersLine {
   return { text, fontId, size, joined: line.joined === true };
 }
 
-export function readStickLettersDesign(raw: unknown, quantity: number, cfg: StickLettersConfig = DEFAULT_STICK_LETTERS_CONFIG): StickLettersDesign {
+export function readStickLettersDesign(raw: unknown, quantity: number): StickLettersDesign {
   const d = record(raw, "design");
+  const product = d.product === "chars" ? "chars" : "letters";
+  const cfg: StickLettersConfig = stickLettersConfigFor(product);
   const materialId = findJoinedWordsMaterial(String(d.materialId ?? "")).id;
   const letterHeightMm = Math.round(num(d.letterHeightMm, "letter height"));
   if (letterHeightMm < Math.floor(cfg.minLetterMm / 1.6) || letterHeightMm > cfg.maxLetterMm) throw new Error("stick letters: letter height out of range");
   if (!Array.isArray(d.lines) || d.lines.length > cfg.maxLines) throw new Error("stick letters: bad lines");
-  const lines = d.lines.map((line) => readLine(line, cfg)).filter((line) => line.text);
+  const lines = d.lines.map((line) => readLine(line, cfg)).filter((line) => line.text).map((line) => (cfg.joinable ? line : { ...line, joined: false }));
   if (!lines.length) throw new Error("stick letters: nothing to cut");
   return {
+    product, adhesive: cfg.rateNoAdhesivePerM2 == null ? true : d.adhesive !== false,
     materialId, letterHeightMm, upper: d.upper === true, lines,
     quantity: Math.max(1, Math.min(9999, Math.round(quantity))),
   };

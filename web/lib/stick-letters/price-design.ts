@@ -5,14 +5,14 @@
 import type { StickLettersConfig, StickLettersDesign, StickLettersLayout, StickLettersPrice } from "../../types/stick-letters";
 import type { LoadedFont } from "../../types/text";
 import { checkStickLetters } from "./check";
-import { DEFAULT_STICK_LETTERS_CONFIG } from "./config";
+import { stickLettersConfigFor } from "./config-for";
 import { computeStickLettersLayout } from "./layout";
 import { measureStickLine } from "./measure-line";
 import { priceStickLetters } from "./price";
 
 export function priceStickLettersDesign(
   design: StickLettersDesign, fontFor: (fontId: string) => LoadedFont | null | undefined,
-  cfg: StickLettersConfig = DEFAULT_STICK_LETTERS_CONFIG,
+  cfg: StickLettersConfig = stickLettersConfigFor(design.product),
 ): { layout: StickLettersLayout; price: StickLettersPrice } {
   const measured = design.lines.map((line) => {
     const font = fontFor(line.fontId);

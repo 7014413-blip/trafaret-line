@@ -6,7 +6,12 @@
 import type { StickLettersConfig } from "../../types/stick-letters";
 
 export const DEFAULT_STICK_LETTERS_CONFIG: StickLettersConfig = {
+  product: "letters",
+  title: { uk: "Самоклейні літери", ru: "Самоклеящиеся буквы", en: "Self-adhesive letters" },
   ratePerM2: 7000,                     // Денис
+  rateNoAdhesivePerM2: null,
+  stencil: true,
+  joinable: true,
   minPrice: 150,                       // [default]
   roundTo: 10,
   thicknessMm: 3,                      // Денис

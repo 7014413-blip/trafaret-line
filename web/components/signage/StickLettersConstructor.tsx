@@ -2,6 +2,8 @@
 
 // Self-adhesive letters constructor (Денис 2026-10-10): words for card boxes, wedding gifts and
 // postcards cut from 3 mm acrylic with tape on the back, a cardboard stencil to glue them straight.
+// The same constructor makes single acrylic numbers and letters 2–80 cm (product "chars",
+// Денис 2026-10-11), with or without self-adhesive and without the stencil.
 // The customer types up to 6 lines, picks a font and size for every line (swap the font and see it
 // at once), joined or separate letters, the letter height and the colour. Preview on a box lid and
 // of the stencil; price at once. Layout: lib/stick-letters/layout.ts, price: lib/stick-letters/price.ts
@@ -19,15 +21,46 @@ import { findJoinedWordsMaterial } from "@/lib/joined-words/find-material";
 import { JOINED_WORDS_MATERIALS } from "@/lib/joined-words/materials";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { checkStickLetters } from "@/lib/stick-letters/check";
-import { DEFAULT_STICK_LETTERS_CONFIG } from "@/lib/stick-letters/config";
+import { stickLettersConfigFor } from "@/lib/stick-letters/config-for";
 import { computeStickLettersLayout } from "@/lib/stick-letters/layout";
 import { measureStickLine } from "@/lib/stick-letters/measure-line";
 import { priceStickLetters } from "@/lib/stick-letters/price";
 import { useCart } from "@/store/cart-store";
-import type { StickLettersDesign } from "@/types/stick-letters";
+import type { StickLettersDesign, StickLettersProduct } from "@/types/stick-letters";
+import type { PlaqueTextLine } from "@/types/plaques";
 
-const CFG = DEFAULT_STICK_LETTERS_CONFIG;
-const HEIGHTS_CM = [2, 3, 4, 5, 7, 10];
+/** Texts, sizes and starting design of each product. */
+const PRODUCT_UI: Record<StickLettersProduct, {
+  kicker: string; heading: string; intro: string; heightsCm: number[]; startMm: number; startSheet: string;
+  startLines: PlaqueTextLine[]; startJoined: boolean[]; cartName: string;
+}> = {
+  letters: {
+    kicker: "Весільний декор і подарунки",
+    heading: "Самоклейні літери з акрилу",
+    intro: "Напис для коробки з листівками, подарунка чи столу: обʼємні літери 3 мм зі скотчем на звороті. Картонний трафарет для рівної поклейки вже в ціні.",
+    heightsCm: [2, 3, 4, 5, 7, 10],
+    startMm: 40,
+    startSheet: "black",
+    startLines: [
+      { text: "ПОДАРУНКИ", fontId: "playfair", size: 1 },
+      { text: "та", fontId: "pacifico", size: 0.8 },
+      { text: "ЛИСТІВКИ", fontId: "playfair", size: 1 },
+    ],
+    startJoined: [false, true, false],
+    cartName: "Самоклейні літери",
+  },
+  chars: {
+    kicker: "Декор і навігація",
+    heading: "Акрилові цифри і літери",
+    intro: "Окремі цифри і літери з акрилу 3 мм заввишки від 2 до 80 см: номер будинку чи квартири, дата, ініціали, декор. Будь-який колір і шрифт, зі скотчем на звороті або без.",
+    heightsCm: [2, 5, 10, 20, 30, 50, 80],
+    startMm: 100,
+    startSheet: "mirror-gold",
+    startLines: [{ text: "2026", fontId: "playfair", size: 1 }],
+    startJoined: [false],
+    cartName: "Акрилові цифри і літери",
+  },
+};
 // Black, white and mirror first: what card boxes and wedding gifts are made with.
 const FIRST = ["black", "white", "mirror-gold", "mirror-silver"];
 const SHEETS = [...FIRST.map((id) => JOINED_WORDS_MATERIALS.find((m) => m.id === id)).filter((m) => m !== undefined), ...JOINED_WORDS_MATERIALS.filter((m) => !FIRST.includes(m.id))];
@@ -37,29 +70,29 @@ const input = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--car
 const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 const swatch = (hex: string, mirror: boolean) => (mirror ? `linear-gradient(135deg, #f8fafc, ${hex} 45%, #f8fafc 60%, ${hex})` : hex);
 
-export function StickLettersConstructor() {
-  const [joined, setJoined] = useState<boolean[]>([false, true, false]);
-  const [letterMm, setLetterMm] = useState(40);
-  const [letterInput, setLetterInput] = useState("4");
-  const [materialId, setMaterialId] = useState("black");
+export function StickLettersConstructor({ product = "letters" }: { product?: StickLettersProduct }) {
+  const CFG = stickLettersConfigFor(product);
+  const ui = PRODUCT_UI[product];
+  const [joined, setJoined] = useState<boolean[]>(ui.startJoined);
+  const [letterMm, setLetterMm] = useState(ui.startMm);
+  const [letterInput, setLetterInput] = useState(String(ui.startMm / 10));
+  const [materialId, setMaterialId] = useState(ui.startSheet);
+  const [adhesive, setAdhesive] = useState(true);
   const [view, setView] = useState<StickLettersView>("box");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   // Shipping date only in the browser: server and browser format weekdays differently.
   const [dispatch, setDispatch] = useState("виготовлення 3 робочі дні");
-  const fonts = usePlaqueLines([
-    { text: "ПОДАРУНКИ", fontId: "playfair", size: 1 },
-    { text: "та", fontId: "pacifico", size: 0.8 },
-    { text: "ЛИСТІВКИ", fontId: "playfair", size: 1 },
-  ], CFG.maxLines);
+  const fonts = usePlaqueLines(ui.startLines, CFG.maxLines);
   const cart = useCart();
   const { fontFor } = fonts;
 
   useEffect(() => setDispatch(formatDispatch(estimateDispatchDate(new Date()))), []);
 
   const design: StickLettersDesign = {
+    product, adhesive: CFG.rateNoAdhesivePerM2 == null ? true : adhesive,
     materialId, letterHeightMm: letterMm, upper: false, quantity: qty,
-    lines: fonts.lines.map((line, i) => ({ ...line, joined: joined[i] ?? false })),
+    lines: fonts.lines.map((line, i) => ({ ...line, joined: CFG.joinable && (joined[i] ?? false) })),
   };
   const measured = useMemo(
     () => fonts.lines.map((line) => { const font = fontFor(line.fontId); return font ? measureStickLine(font, line.text, false) : null; }),
@@ -95,7 +128,7 @@ export function StickLettersConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `letters|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: `Самоклейні літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${sheet.name.uk.toLowerCase()}`,
+      title: `${ui.cartName} «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${sheet.name.uk.toLowerCase()}${design.adhesive ? "" : ", без самоклейки"}`,
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -112,12 +145,14 @@ export function StickLettersConstructor() {
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label="Превʼю літер" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <StickLettersPreview layout={layout} paths={paths} sheet={sheet} view={view} label={`Превʼю самоклейних літер ${cm(layout.widthMm)}×${cm(layout.heightMm)} см`} />
-        <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
-          <PlaqueChip id="sl-view-box" on={view === "box"} onClick={() => setView("box")}>На коробці</PlaqueChip>
-          <PlaqueChip id="sl-view-stencil" on={view === "stencil"} onClick={() => setView("stencil")}>Трафарет для поклейки</PlaqueChip>
-        </div>
-        <div className="flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
+        <StickLettersPreview layout={layout} paths={paths} sheet={sheet} view={CFG.stencil ? view : "box"} label={`Превʼю самоклейних літер ${cm(layout.widthMm)}×${cm(layout.heightMm)} см`} />
+        {CFG.stencil && (
+          <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
+            <PlaqueChip id="sl-view-box" on={view === "box"} onClick={() => setView("box")}>На коробці</PlaqueChip>
+            <PlaqueChip id="sl-view-stencil" on={view === "stencil"} onClick={() => setView("stencil")}>Трафарет для поклейки</PlaqueChip>
+          </div>
+        )}
+        <div className={`flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 ${CFG.stencil ? "" : "border-t border-[var(--line)]"} text-[13px] text-[var(--muted)] tabular-nums`}>
           <span>{cm(layout.widthMm)} × {cm(layout.heightMm)} см · {layout.pieces.length} дет.</span>
           <span>{sheet.name.uk}, {CFG.thicknessMm} мм</span>
         </div>
@@ -125,13 +160,13 @@ export function StickLettersConstructor() {
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
         <header>
-          <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Весільний декор і подарунки</p>
-          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">Самоклейні літери з акрилу</h1>
-          <p className="mt-1.5 mb-0 text-[var(--muted)]">Напис для коробки з листівками, подарунка чи столу: обʼємні літери 3 мм зі скотчем на звороті. Картонний трафарет для рівної поклейки вже в ціні.</p>
+          <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">{ui.kicker}</p>
+          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">{ui.heading}</h1>
+          <p className="mt-1.5 mb-0 text-[var(--muted)]">{ui.intro}</p>
         </header>
 
         <PlaqueLinesEditor state={fonts} legend="Напис" idPrefix="sl" maxChars={CFG.maxLineChars} capByLine={capByLine} onRemove={onLineRemoved}
-          renderExtra={(i) => (
+          renderExtra={(i) => CFG.joinable && (
             <div className="flex flex-wrap gap-2">
               <PlaqueChip id={`sl-line-${i}-apart`} on={!(joined[i] ?? false)} onClick={() => setLineJoined(i, false)}>Окремі літери</PlaqueChip>
               <PlaqueChip id={`sl-line-${i}-joined`} on={joined[i] ?? false} onClick={() => setLineJoined(i, true)}>Злите слово</PlaqueChip>
@@ -140,7 +175,7 @@ export function StickLettersConstructor() {
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Висота літер</legend>
           <div className="flex flex-wrap gap-2">
-            {HEIGHTS_CM.map((v) => <PlaqueChip key={v} id={`sl-h-${v}`} on={letterMm === v * 10} onClick={() => setHeight(v * 10)}>{v} см</PlaqueChip>)}
+            {ui.heightsCm.map((v) => <PlaqueChip key={v} id={`sl-h-${v}`} on={letterMm === v * 10} onClick={() => setHeight(v * 10)}>{v} см</PlaqueChip>)}
           </div>
           <label className="grid gap-1 text-sm text-[var(--muted)]">Своя висота великої літери, см
             <input id="sl-height" type="number" inputMode="decimal" step={0.5} min={1} max={CFG.maxLetterMm / 10} value={letterInput}
@@ -162,6 +197,15 @@ export function StickLettersConstructor() {
           </div>
           <span className="text-[13px] text-[var(--muted)]">{sheet.name.uk}, {CFG.thicknessMm} мм{sheet.inStock ? "" : " · під замовлення"}.</span>
         </fieldset>
+
+        {CFG.rateNoAdhesivePerM2 != null && (
+          <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Кріплення</legend>
+            <div className="flex flex-wrap gap-2">
+              <PlaqueChip id="sl-adh-on" on={adhesive} onClick={() => setAdhesive(true)}>Зі скотчем на звороті</PlaqueChip>
+              <PlaqueChip id="sl-adh-off" on={!adhesive} onClick={() => setAdhesive(false)}>Без скотчу</PlaqueChip>
+            </div>
+          </fieldset>
+        )}
 
         <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Кількість наборів</legend>
           <div className="flex items-center gap-1.5">

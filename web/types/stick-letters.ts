@@ -7,6 +7,13 @@
 
 import type { LocalizedText } from "./customizer";
 
+/**
+ * letters: words for card boxes, adhesive and a cardboard stencil included (7000 UAH/m²);
+ * chars: single acrylic numbers and letters 2–80 cm (Денис 2026-10-11): 7500 UAH/m² with
+ * self-adhesive, 6500 UAH/m² without, every character its own piece.
+ */
+export type StickLettersProduct = "letters" | "chars";
+
 export interface StickLettersLine {
   text: string;
   fontId: string;
@@ -17,6 +24,9 @@ export interface StickLettersLine {
 }
 
 export interface StickLettersDesign {
+  product: StickLettersProduct;
+  /** Double-sided tape on the back (always on for "letters"). */
+  adhesive: boolean;
   /** Acrylic sheet id (lib/joined-words/materials.ts palette). */
   materialId: string;
   /** Height of capital letters of a line with size 1, mm. */
@@ -29,8 +39,16 @@ export interface StickLettersDesign {
 
 /** Admin settings; [default] values chosen by Claude on 2026-10-10. */
 export interface StickLettersConfig {
-  /** Денис 2026-10-10: 7000 UAH per m², acrylic 3 mm. */
+  product: StickLettersProduct;
+  title: LocalizedText;
+  /** UAH per m² with self-adhesive (letters: 7000, chars: 7500, Денис). */
   ratePerM2: number;
+  /** UAH per m² without self-adhesive; null = always with it (chars: 6500, Денис). */
+  rateNoAdhesivePerM2: number | null;
+  /** A cardboard stencil for gluing comes with the set. */
+  stencil: boolean;
+  /** Letters may be joined into one piece; false = every character apart. */
+  joinable: boolean;
   minPrice: number;
   roundTo: number;
   thicknessMm: number;
