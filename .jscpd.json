@@ -1,0 +1,21 @@
+{
+  "path": ["web", "backend/src", "backend/scripts", "backend/integration-tests"],
+  "format": ["typescript", "tsx", "javascript"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/.medusa/**",
+    "backend/src/shared/**",
+    "**/*.d.ts",
+    "web/public/**",
+    "web/data/**",
+    "web/tests/**",
+    "backend/src/migrations/**"
+  ],
+  "minLines": 5,
+  "minTokens": 50,
+  "threshold": 1.5,
+  "reporters": ["console"],
+  "absolute": false,
+  "gitignore": true
+}

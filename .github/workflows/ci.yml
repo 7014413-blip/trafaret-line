@@ -1,0 +1,117 @@
+# Checks for every pull request and every push to main: the storefront (types, lint, unit
+# tests, production build, end-to-end buying paths against a mock shop), the Medusa backend
+# (types, build, HTTP integration test on PostgreSQL) and code duplication.
+# No secrets are used: payment, Nova Poshta and the shop are mocked.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Storefront
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_MEDUSA_URL: http://127.0.0.1:9100
+      NEXT_PUBLIC_MEDUSA_PK: pk_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Lint
+        run: npx eslint . --max-warnings 0
+      - name: Unit tests
+        run: npm test
+      - name: Start mock shop
+        run: |
+          node tests/e2e/mock-medusa/server.mjs > mock-medusa.log 2>&1 &
+          npx --yes wait-on@8.0.3 --timeout 30000 http://127.0.0.1:9100/health
+      - name: Build
+        run: npm run build
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: npm run test:e2e
+      - name: Keep test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+            web/mock-medusa.log
+          retention-days: 7
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install (also builds src/shared from web/)
+        run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: HTTP integration test
+        run: npm run test:integration:http
+
+  duplication:
+    name: Duplication
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Copy-paste check (fails above the threshold in .jscpd.json)
+        run: npx --yes jscpd@4.3.0 --config .jscpd.json
