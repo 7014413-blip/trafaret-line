@@ -8,10 +8,11 @@ import { findLayeredPlaqueMaterial } from "./materials";
 import { seriesValid } from "./series";
 import { resolveLayeredPlaqueSize } from "./size";
 import { createDesignReader, FONT_ID_PATTERN } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
 const KINDS = new Set<LayeredPlaqueKind>(["floor", "door", "number"]);
 
-const read = createDesignReader("plaque");
+const read: DesignReader = createDesignReader("plaque");
 
 export function readLayeredPlaqueDesign(raw: unknown, quantity: number): LayeredPlaqueDesign {
   const d = read.record(raw, "design");

@@ -8,12 +8,13 @@ import { DEFAULT_POINTER_SIGN_CONFIG } from "./config";
 import { findPointerMaterial } from "./find-material";
 import { resolvePointerSize } from "./size";
 import { createDesignReader } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
 const PLACEMENTS: ReadonlySet<PointerArrowPlacement> = new Set<PointerArrowPlacement>(["none", "start", "end"]);
 const FONT_ID = /^[a-z0-9:_-]{1,80}$/i;
 const UPLOAD_KEY = /^\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\.(svg|png|jpe?g)$/i;
 
-const read = createDesignReader("pointer sign");
+const read: DesignReader = createDesignReader("pointer sign");
 
 function readLine(raw: unknown, cfg: PointerSignConfig): PointerTextLine {
   return read.textLine(raw, { maxChars: cfg.maxLineChars, fontId: FONT_ID, minSize: 0.6, maxSize: 1.6 });

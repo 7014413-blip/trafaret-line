@@ -7,10 +7,11 @@ import { findPlaqueBase, findPlaquePlate } from "./colours";
 import { DEFAULT_OFFICE_PLAQUE_CONFIG } from "./config";
 import { resolvePlaqueSize } from "./size";
 import { createDesignReader } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
 const FONT_ID = /^[a-z0-9:_-]{1,80}$/i;
 
-const read = createDesignReader("office plaque");
+const read: DesignReader = createDesignReader("office plaque");
 
 function readLine(raw: unknown, cfg: OfficePlaqueConfig): PlaqueTextLine {
   return read.textLine(raw, { maxChars: cfg.maxLineChars, fontId: FONT_ID, minSize: 0.6, maxSize: 1.6 });

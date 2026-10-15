@@ -6,8 +6,9 @@ import type { JoinedWordsConfig, JoinedWordsDesign, JoinedWordsLine } from "../.
 import { DEFAULT_JOINED_WORDS_CONFIG } from "./config";
 import { findJoinedWordsMaterial } from "./find-material";
 import { createDesignReader, FONT_ID_PATTERN } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
-const read = createDesignReader("joined words");
+const read: DesignReader = createDesignReader("joined words");
 
 function readLine(raw: unknown, cfg: JoinedWordsConfig): JoinedWordsLine {
   const line = read.textLine(raw, { maxChars: cfg.maxLineChars, fontId: FONT_ID_PATTERN, minSize: 0.6, maxSize: 1.6 });

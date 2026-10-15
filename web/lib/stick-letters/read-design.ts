@@ -6,8 +6,9 @@ import type { StickLettersConfig, StickLettersDesign, StickLettersLine } from ".
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { stickLettersConfigFor } from "./config-for";
 import { createDesignReader, FONT_ID_PATTERN } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
-const read = createDesignReader("stick letters");
+const read: DesignReader = createDesignReader("stick letters");
 
 function readLine(raw: unknown, cfg: StickLettersConfig): StickLettersLine {
   const line = read.textLine(raw, { maxChars: cfg.maxLineChars, fontId: FONT_ID_PATTERN, minSize: 0.4, maxSize: 1.6 });

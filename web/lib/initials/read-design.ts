@@ -5,11 +5,12 @@ import type { InitialsConfig, InitialsDesign, InitialsMode, InitialsSeparator } 
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { DEFAULT_INITIALS_CONFIG } from "./config";
 import { createDesignReader, FONT_ID_PATTERN } from "../validation/design-reader";
+import type { DesignReader } from "../../types/design-reader";
 
 const SEPARATORS = new Set<InitialsSeparator>(["bar", "amp", "plus", "dot", "none"]);
 const MODES = new Set<InitialsMode>(["pieces", "topper"]);
 
-const read = createDesignReader("initials");
+const read: DesignReader = createDesignReader("initials");
 /** Letters: control characters and every space removed. */
 const clean = (value: unknown) => String(value ?? "").replace(/[\u0000-\u001f\u007f]+/g, "").replace(/\s+/g, "").trim();
 
