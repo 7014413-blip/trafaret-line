@@ -84,6 +84,11 @@ export function mapProductCard(raw: RawProduct): CatalogProductCard {
   };
 }
 
+/** Only a path on this site ("/vyvisky/vkazivnyky"): a constructor link never leaves the site. */
+function sitePath(value: string | null | undefined): string | null {
+  return value && /^\/[a-z0-9/-]+$/.test(value) ? value : null;
+}
+
 export function mapProduct(raw: RawProduct): CatalogProduct {
   const card = mapProductCard(raw);
   const variants = (raw.variants ?? []).map(mapVariant).filter((v) => v.price > 0);
@@ -105,5 +110,7 @@ export function mapProduct(raw: RawProduct): CatalogProduct {
     fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: f.uk, placeholder: f.def })),
     availability: raw.metadata?.availability === "on_order" || raw.metadata?.availability === "out_of_stock" ? raw.metadata.availability : "in_stock",
     hole: readHoleRules(raw.metadata?.hole),
+    monogram: raw.metadata?.monogram?.styles?.length ? { styles: raw.metadata.monogram.styles } : null,
+    constructorPath: sitePath(raw.metadata?.constructor_path),
   };
 }

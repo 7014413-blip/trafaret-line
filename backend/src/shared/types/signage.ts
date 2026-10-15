@@ -1,5 +1,5 @@
 // Signs, pointers and acrylic letters (research/konstruktor-vyvesok.md).
-// Approved by Денис 2026-10-08: sign = 18 000 UAH/m² of the overall bounding box,
+// Approved by Денис 2026-10-08: sign = 17 000 UAH/m² of the overall bounding box (Денис 2026-10-10, was 18 000),
 // two plastic layers (base 3 mm + overlay 1/2/3 mm), every colour and material included;
 // a base thicker than 3 mm adds the blank-sheet price difference. m² never shown to customers.
 
@@ -64,6 +64,10 @@ export interface SignOptions {
   selfAdhesive: boolean;               // double-sided tape on the back
   positioningStencil: boolean;         // carton / HDF template, laser layer 4
   whiteLabel: boolean;                 // no brand or prices in the parcel, agency as sender
+  /** Our designer draws the customer's logo (included in the price, Денис 2026-10-10). */
+  logoDevelopment?: boolean;
+  /** What the customer wants in the logo: name, style, colours (up to 500 characters). */
+  logoBrief?: string;
 }
 
 export interface SignDesign {
@@ -76,8 +80,10 @@ export interface SignDesign {
 
 /** Admin settings. Values marked [default] were set by Claude, approved in bulk by Денис 2026-10-08 23:45. */
 export interface SignPricingConfig {
-  signRatePerM2: number;               // 18 000 (Денис)
-  minSignPrice: number;                // 1 500 [default]
+  signRatePerM2: number;               // 17 000 (Денис 2026-10-10)
+  /** Round signs: fixed price per piece by diameter in mm (Денис 2026-10-10), self-adhesive included. */
+  circlePresetPrices: Record<number, number>;
+  minSignPrice: number;                // 450 [default]
   minLettersPrice: number;             // 250 [default]
   lettersFactor: number;               // 1.5 × sheet rate for words [default]
   separateLettersFactor: number;       // 2.0 × sheet rate for loose letters [default]

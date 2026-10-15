@@ -1,5 +1,7 @@
 // Copies the constructor fonts (cyrillic + latin WOFF) from @fontsource into
-// public/fonts and checks that every font has the Ukrainian letters.
+// public/fonts and checks that every font has the Ukrainian letters. The fonts of the
+// wedding monograms (lib/monogram/styles.ts) go to a separate manifest, so they do not
+// appear in the constructor's font list.
 // Run: node scripts/copy-fonts.mjs
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,6 +13,8 @@ export const FONTS = [
   { id: "rubik", pkg: "rubik", weight: 700, name: "Rubik", group: "Без засічок" },
   { id: "comfortaa", pkg: "comfortaa", weight: 700, name: "Comfortaa", group: "Без засічок" },
   { id: "playfair", pkg: "playfair-display", weight: 700, name: "Playfair Display", group: "Класичні" },
+  // Денис 2026-10-10: wedding initials «S | D» in a Times-like serif.
+  { id: "pt-serif", pkg: "pt-serif", weight: 400, name: "PT Serif", group: "Класичні" },
   { id: "lora", pkg: "lora", weight: 700, name: "Lora", group: "Класичні" },
   { id: "roboto-slab", pkg: "roboto-slab", weight: 700, name: "Roboto Slab", group: "Класичні" },
   { id: "marck", pkg: "marck-script", weight: 400, name: "Marck Script", group: "Рукописні" },
@@ -20,15 +24,23 @@ export const FONTS = [
   { id: "pacifico", pkg: "pacifico", weight: 400, name: "Pacifico", group: "Рукописні" },
 ];
 
-const MUST = "ЇїЄєҐґІіЙйЩщЮюЯяЖж0123456789";
+export const MONOGRAM_FONTS = [
+  { id: "mono-playfair", pkg: "playfair-display", weight: 400, style: "normal", name: "Playfair Display", group: "Монограма" },
+  { id: "mono-playfair-italic", pkg: "playfair-display", weight: 400, style: "italic", name: "Playfair Display Italic", group: "Монограма" },
+  { id: "mono-lora", pkg: "lora", weight: 500, style: "normal", name: "Lora", group: "Монограма" },
+  { id: "mono-marck", pkg: "marck-script", weight: 400, style: "normal", name: "Marck Script", group: "Монограма" },
+];
+
+const MUST = "ЇїЄєҐґІіЙйЩщЮюЯяЖж0123456789&";
 const out = join(process.cwd(), "public", "fonts");
 mkdirSync(out, { recursive: true });
 const manifest = [];
+const monogramManifest = [];
 
-for (const f of FONTS) {
+for (const f of [...FONTS, ...MONOGRAM_FONTS]) {
   const files = [];
   for (const subset of ["cyrillic", "latin"]) {
-    const src = join("node_modules", "@fontsource", f.pkg, "files", `${f.pkg}-${subset}-${f.weight}-normal.woff`);
+    const src = join("node_modules", "@fontsource", f.pkg, "files", `${f.pkg}-${subset}-${f.weight}-${f.style ?? "normal"}.woff`);
     const dst = `${f.id}-${subset}.woff`;
     copyFileSync(src, join(out, dst));
     files.push(dst);
@@ -39,8 +51,9 @@ for (const f of FONTS) {
   });
   const missing = [...MUST].filter((ch) => !fonts.some((ft) => ft.charToGlyphIndex(ch) > 0));
   console.log(`${f.name.padEnd(18)} ${missing.length ? "MISSING " + missing.join("") : "ok"}`);
-  if (!missing.length) manifest.push({ id: f.id, name: f.name, group: f.group, files });
+  if (!missing.length) (MONOGRAM_FONTS.includes(f) ? monogramManifest : manifest).push({ id: f.id, name: f.name, group: f.group, files });
 }
 
 writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest, null, 2));
-console.log(`fonts ok: ${manifest.length}/${FONTS.length}`);
+writeFileSync(join(out, "monogram-manifest.json"), JSON.stringify(monogramManifest, null, 2));
+console.log(`fonts ok: ${manifest.length}/${FONTS.length}, monogram fonts ok: ${monogramManifest.length}/${MONOGRAM_FONTS.length}`);
