@@ -3,12 +3,13 @@
 // Product page: gallery + buy box for a Medusa product. Size chips carry their own
 // price, material cards show the price for the chosen size, the quantity scale is the
 // same as for stencils (lib/calculators/pricing.ts priceCatalogVariant), the server
-// re-reads the variant price before the order. Named products ask for their texts.
+// re-reads the variant price before the order. Named products ask for their texts;
+// products with their own personalisation (wedding monograms) pass it in `personal`.
 // No m² anywhere.
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CatalogImage, CatalogProduct, CatalogVariant } from "@/types/catalog";
 import { DEFAULT_PRICING, priceCatalogVariant } from "@/lib/calculators/pricing";
 import { formatUAH } from "@/lib/format";
@@ -39,7 +40,24 @@ export function Gallery({ images, title }: { images: CatalogImage[]; title: stri
   );
 }
 
-export function ProductBuyBox({ p }: { p: CatalogProduct }) {
+/** Personalisation that a product page renders itself (fields, checks, what goes to production). */
+export interface BuyBoxPersonalisation {
+  /** Inputs shown in place of the plain text fields. */
+  node: ReactNode;
+  /** False while something required is missing or wrong. */
+  ready: boolean;
+  /** Short text for the cart line, e.g. «А & Д, 27.09.2026, Гілочка й дуга». */
+  summary: string;
+  /** Production data saved with the order. */
+  spec: Record<string, unknown>;
+}
+
+export function ProductBuyBox({ p, personal, onVariantChange }: {
+  p: CatalogProduct;
+  personal?: BuyBoxPersonalisation;
+  /** Called with the chosen size and material whenever they change. */
+  onVariantChange?: (variant: CatalogVariant | undefined) => void;
+}) {
   const sizes = p.sizes.filter((s) => p.variants.some((v) => v.sizeLabel === s.label));
   const [size, setSize] = useState(sizes[Math.min(1, sizes.length - 1)]?.label ?? "");
   const materials = useMemo(() => p.materials.filter((m) => p.variants.some((v) => v.materialLabel === m && v.sizeLabel === size)), [p, size]);
@@ -56,7 +74,11 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
   const tiers = [{ minQty: 1, discount: 0 }, ...DEFAULT_PRICING.stencilTiers];
   const date = formatDispatch(estimateDispatchDate(new Date()));
   const sizeDetail = sizes.find((s) => s.label === size)?.detail;
-  const missingField = p.fields.some((f) => !fields[f.key]?.trim());
+  const missingField = personal ? !personal.ready : p.fields.some((f) => !fields[f.key]?.trim());
+
+  useEffect(() => {
+    onVariantChange?.(variant);
+  }, [variant, onVariantChange]);
 
   // Products made in a constructor (pointer signs): the button opens it with the chosen size.
   const makeHref = p.constructorPath ? `${p.constructorPath}${variant?.sizeCode ? `?size=${encodeURIComponent(variant.sizeCode)}` : ""}` : null;
@@ -67,9 +89,10 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
   const add = () => {
     if (!variant || missingField || soldOut) return;
     const sheet = variant.sheetMm ?? [300, 300];
-    const texts = p.fields.map((f) => fields[f.key]?.trim()).filter(Boolean).join(" / ");
+    const texts = personal ? personal.summary : p.fields.map((f) => fields[f.key]?.trim()).filter(Boolean).join(" / ");
+    const spec = personal ? personal.spec : p.fields.length ? { fields } : undefined;
     cart.add({
-      key: `cat|${variant.id}|${JSON.stringify(fields)}`,
+      key: `cat|${variant.id}|${JSON.stringify(spec ?? {})}`,
       kind: "catalog",
       variantId: variant.id,
       basePrice: variant.price,
@@ -79,7 +102,7 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
       heightCm: sheet[1] / 10,
       quantity: qty,
       thumbnail: p.images[0]?.url,
-      spec: p.fields.length ? { fields } : undefined,
+      spec,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
@@ -93,7 +116,9 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
         {variant?.sku && <div className="mt-1 text-xs text-[var(--muted)]">Артикул {variant.sku}</div>}
       </div>
 
-      {p.fields.length > 0 && (
+      {personal?.node}
+
+      {!personal && p.fields.length > 0 && (
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-semibold">Ваш текст</legend>
           {p.fields.map((f) => (

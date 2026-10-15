@@ -12,6 +12,7 @@ export type * from "./integrations";
 export type * from "./geometry-worker";
 export type * from "./catalog";
 export type * from "./text";
+export type * from "./monogram";
 export type * from "./pointer-sign";
 export type * from "./plaques";
 export type * from "./office-plaque";

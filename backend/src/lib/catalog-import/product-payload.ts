@@ -98,6 +98,7 @@ export function productData(product: CatalogProduct, media: ProductMedia, catego
       design_files: media.designUrls,
       image_alts: media.images.map((i) => ({ url: i.url, kind: i.kind, uk: i.uk, ru: i.ru })),
       fields: product.fields,
+      monogram: product.monogram ?? null,
       constructor_path: product.constructor_path ?? null,
       features: { uk: product.uk.features, ru: product.ru.features },
       faq: resolveFaq(product, catalog.sharedFaq),

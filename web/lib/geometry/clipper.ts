@@ -173,3 +173,9 @@ export function normaliseGroups(groups: ReadonlyArray<ReadonlyArray<Polygon>>, s
   for (const group of groups) out.push(...union(group, scale, FillRule.EvenOdd));
   return out;
 }
+
+/** Drops vertices closer than toleranceMm to the outline (Ramer–Douglas–Peucker); shape stays within the tolerance. */
+export function simplify(polygons: ReadonlyArray<Polygon>, toleranceMm: number, scale: number): Vec2[][] {
+  if (!polygons.length) return [];
+  return fromPaths64(Clipper.simplifyPaths(toPaths64(polygons, scale), toleranceMm * scale, true), scale);
+}

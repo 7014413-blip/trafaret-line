@@ -108,6 +108,7 @@ export function mapProduct(raw: RawProduct): CatalogProduct {
     relatedHandles: raw.metadata?.related_handles ?? [],
     fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: f.uk, placeholder: f.def })),
     availability: raw.metadata?.availability === "on_order" || raw.metadata?.availability === "out_of_stock" ? raw.metadata.availability : "in_stock",
+    monogram: raw.metadata?.monogram?.styles?.length ? { styles: raw.metadata.monogram.styles } : null,
     constructorPath: sitePath(raw.metadata?.constructor_path),
   };
 }

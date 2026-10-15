@@ -1,0 +1,38 @@
+[
+  {
+    "id": "mono-playfair",
+    "name": "Playfair Display",
+    "group": "Монограма",
+    "files": [
+      "mono-playfair-cyrillic.woff",
+      "mono-playfair-latin.woff"
+    ]
+  },
+  {
+    "id": "mono-playfair-italic",
+    "name": "Playfair Display Italic",
+    "group": "Монограма",
+    "files": [
+      "mono-playfair-italic-cyrillic.woff",
+      "mono-playfair-italic-latin.woff"
+    ]
+  },
+  {
+    "id": "mono-lora",
+    "name": "Lora",
+    "group": "Монограма",
+    "files": [
+      "mono-lora-cyrillic.woff",
+      "mono-lora-latin.woff"
+    ]
+  },
+  {
+    "id": "mono-marck",
+    "name": "Marck Script",
+    "group": "Монограма",
+    "files": [
+      "mono-marck-cyrillic.woff",
+      "mono-marck-latin.woff"
+    ]
+  }
+]
