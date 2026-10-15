@@ -32,7 +32,6 @@
   "devDependencies": {
     "@medusajs/test-utils": "2.18.0",
     "@swc/core": "^1.7.28",
-    "@swc/core-win32-x64-msvc": "^1.7.28",
     "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.13",
     "@types/node": "^20.12.11",
@@ -49,5 +48,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "optionalDependencies": {
+    "@swc/core-win32-x64-msvc": "^1.7.28"
   }
 }
