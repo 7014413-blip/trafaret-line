@@ -61,6 +61,7 @@ export function FreeCanvasEditor() {
   const [settings, setSettings] = useState<CanvasSettings>(DEFAULT_SETTINGS);
   // Elements with undo / redo (Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y), 50 steps.
   const history = useHistory<CanvasElement[]>([]);
+  const { replace: replaceHistory } = history;
   const elements = history.value;
   const setElements = history.set;
   useEffect(() => {
@@ -90,7 +91,7 @@ export function FreeCanvasEditor() {
     const stored = readStored();
     if (stored) {
       setSettings(stored.settings);
-      history.replace(stored.elements);
+      replaceHistory(stored.elements);
     }
     setLoaded(true);
     loadFontManifest()
@@ -101,7 +102,7 @@ export function FreeCanvasEditor() {
       .catch(() => setError("Не вдалося завантажити шрифти. Оновіть сторінку."));
     // The customer's own fonts: each text element can use any of them.
     listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
-  }, []);
+  }, [replaceHistory]);
 
   useEffect(() => {
     if (!loaded) return;

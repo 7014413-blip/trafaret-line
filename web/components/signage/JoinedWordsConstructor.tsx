@@ -13,7 +13,6 @@ import { ConstructorHeader } from "@/components/signage/ConstructorHeader";
 import { DesignChecks } from "@/components/signage/DesignChecks";
 import { JoinedWordsPreview } from "@/components/signage/JoinedWordsPreview";
 import { LetterHeightField } from "@/components/signage/LetterHeightField";
-import { PlaqueChip } from "@/components/signage/PlaqueChip";
 import { PlaqueLinesEditor } from "@/components/signage/PlaqueLinesEditor";
 import { QuantityField } from "@/components/signage/QuantityField";
 import { SheetSwatches } from "@/components/signage/SheetSwatches";
