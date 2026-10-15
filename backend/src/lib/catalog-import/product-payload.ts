@@ -99,6 +99,7 @@ export function productData(product: CatalogProduct, media: ProductMedia, catego
       image_alts: media.images.map((i) => ({ url: i.url, kind: i.kind, uk: i.uk, ru: i.ru })),
       fields: product.fields,
       monogram: product.monogram ?? null,
+      constructor_path: product.constructor_path ?? null,
       features: { uk: product.uk.features, ru: product.ru.features },
       faq: resolveFaq(product, catalog.sharedFaq),
       related_handles: product.related,

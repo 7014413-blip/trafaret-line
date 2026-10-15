@@ -2,7 +2,8 @@
 // the constructor uses them for the live price and the server repeats them before the
 // order is accepted (same rule as calculators/pricing.ts). Spec: research/konstruktor-vyvesok.md.
 //
-// Approved by Денис 2026-10-08: 18 000 UAH/m² of the overall bounding box, base 3 mm and
+// Approved by Денис 2026-10-08: sign rate per m² of the overall bounding box (17 000 UAH since
+// Денис 2026-10-10, was 18 000), base 3 mm and
 // overlay 1–3 mm included, thicker base adds the blank-sheet difference to 3 mm, the
 // positioning stencil is 600 UAH/m². The customer never sees m², only sizes and UAH.
 // Values marked [default] were chosen by Claude and approved in bulk by Денис 2026-10-08 23:45;
@@ -20,8 +21,9 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
 /* ------------------------------------------------------------------ */
 
 export const DEFAULT_SIGN_PRICING: SignPricingConfig = {
-  signRatePerM2: 18_000,
-  minSignPrice: 1_500,              // [default]
+  signRatePerM2: 17_000,            // Денис 2026-10-10 (was 18 000)
+  circlePresetPrices: { 300: 1_600, 400: 2_400, 500: 4_200, 600: 5_800, 700: 7_200, 800: 8_400 }, // Денис 2026-10-10
+  minSignPrice: 450,                // [default] Claude 2026-10-10, as the smallest pointer sign (was 1 500)
   minLettersPrice: 250,             // [default]
   lettersFactor: 1.5,               // [default]
   separateLettersFactor: 2,         // [default]
@@ -60,6 +62,7 @@ export const ACRYLIC_PALETTE: AcrylicSheet[] = [
   sheet("mirror-rose", t("Дзеркальний рожеве золото", "Зеркальный розовое золото", "Mirror rose gold"), "#d9a196", "mirror", false),
   sheet("black", t("Чорний глянець", "Чёрный глянец", "Gloss black"), "#15171c", "gloss"),
   sheet("white", t("Білий", "Белый", "White"), "#f4f4f2", "gloss"),
+  sheet("milk-matte", t("Молочний матовий", "Молочный матовый", "Frosted milky"), "#e9ece9", "matte"),
   sheet("clear", t("Прозорий", "Прозрачный", "Clear"), "#ddebf3", "clear"),
   sheet("red", t("Червоний", "Красный", "Red"), "#c62828", "gloss"),
   sheet("orange", t("Помаранчевий", "Оранжевый", "Orange"), "#ef7d1a", "gloss"),
@@ -183,11 +186,13 @@ export function thicknessExtraPerM2(s: AcrylicSheet, thicknessMm: number, cfg: S
 const mm = (v: number) => String(Math.round(v));
 const sizeLabel = (b: SignBase) => {
   const { w, h } = baseSize(b);
-  return b.shape === "circle" ? `Ø${mm(w)} мм` : `${mm(w)} × ${mm(h)} мм`;
+  // Customers see centimetres (sizes in cm across the shop).
+  const cm = (v: number) => (Math.round(v) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+  return b.shape === "circle" ? `Ø${cm(w)} см` : `${cm(w)} × ${cm(h)} см`;
 };
 
 /**
- * Price of one design line. Sign: area of the overall box × 18 000 + thicker base +
+ * Price of one design line. Sign: area of the overall box × 17 000 + thicker base +
  * options, minimum, then ONE best discount (pricing.ts rules, never stacked).
  * Letters: per layer box × sheet rate × factor (1.5 word / 2.0 loose letters), minimum 250.
  */
@@ -203,14 +208,19 @@ export function priceSign(
     const baseSheet = byId(palette, d.base.materialId);
     areaM2 = (w * h) / 1e6;
     rate = cfg.signRatePerM2 + thicknessExtraPerM2(baseSheet, d.base.thicknessMm, cfg);
-    unit = areaM2 * cfg.signRatePerM2;
+    // Round signs of the ready diameters have Денис's fixed price per piece, self-adhesive
+    // backing included [default, Claude 2026-10-10]; other sizes and shapes go by the rate.
+    const preset = d.base.shape === "circle" ? cfg.circlePresetPrices[Math.round(w)] : undefined;
+    unit = preset ?? areaM2 * cfg.signRatePerM2;
     lines.push({ label: `${sizeLabel(d.base)}, ${baseSheet.name.uk.toLowerCase()} ${d.base.thicknessMm} мм`, amount: 0 });
     lines.push({ label: `Шарів: ${d.layers.length}, усі кольори й матеріали вже в ціні`, amount: 0 });
     const extra = areaM2 * (rate - cfg.signRatePerM2);
     if (extra > 0) { unit += extra; lines.push({ label: `Основа ${d.base.thicknessMm} мм замість ${cfg.includedBaseThicknessMm} мм`, amount: roundUp(extra, cfg.roundTo) }); }
     if (d.options.holes) lines.push({ label: `Отвори під кріплення: ${d.options.holes}`, amount: 0 });
+    if (d.options.logoDevelopment) lines.push({ label: "Розробка вашого логотипа, у ціні", amount: 0 });
     if (d.options.positioningStencil) { const a = areaM2 * cfg.positioningStencilPerM2; unit += a; lines.push({ label: "Монтажний трафарет", amount: roundUp(a, cfg.roundTo) }); }
-    if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: "Самоклейка на звороті", amount: roundUp(a, cfg.roundTo) }); }
+    if (d.options.selfAdhesive && preset != null) lines.push({ label: "Самоклейка на звороті, у ціні", amount: 0 });
+    else if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: "Самоклейка на звороті", amount: roundUp(a, cfg.roundTo) }); }
     if (unit < cfg.minSignPrice) { unit = cfg.minSignPrice; minApplied = true; lines.push({ label: `Мінімальна вартість вивіски ${cfg.minSignPrice} грн`, amount: 0 }); }
     const big = Math.max(w, h) > Math.max(cfg.maxSheetMm.width, cfg.maxSheetMm.height) || Math.min(w, h) > Math.min(cfg.maxSheetMm.width, cfg.maxSheetMm.height);
     needsManager = big || !baseSheet.inStock || d.layers.some((l) => !byId(palette, l.materialId).inStock || l.traced);

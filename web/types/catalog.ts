@@ -75,6 +75,8 @@ export interface RawProduct {
     blocks?: { uk?: Record<string, { title: string; html: string }> };
     related_handles?: string[];
     fields?: { key: string; uk: string; ru: string; def: string }[] | null;
+    /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */
+    constructor_path?: string | null;
     /** Set in «Простий кабінет»; missing means in stock. */
     availability?: ProductAvailability;
     /** Wedding monogram products: designs with a live preview (types/monogram.ts). */
@@ -177,4 +179,6 @@ export interface CatalogProduct extends CatalogProductCard {
   availability: ProductAvailability;
   /** Designs of a wedding monogram product; null for every other product. */
   monogram: MonogramProductConfig | null;
+  /** Site path of the constructor this product is made in, or null for a ready product. */
+  constructorPath: string | null;
 }
