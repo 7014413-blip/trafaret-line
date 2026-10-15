@@ -6,6 +6,8 @@
 // overlay colour: dark parts of the picture (or light parts when inverted) become the overlay.
 
 import { useId } from "react";
+import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import type { PointerMaterial, PointerSignLayout } from "@/types/pointer-sign";
 
 export interface PointerPreviewLogo {
@@ -46,7 +48,7 @@ export function PointerSignPreview({ layout, linePaths, base, overlay, logo, lab
   const alphaRow = logo?.invert ? "0.2126 0.7152 0.0722 1 -1" : "-0.2126 -0.7152 -0.0722 1 0";
 
   return (
-    <svg viewBox={`${-w / 2 - pad} ${-h / 2 - pad} ${w + pad * 2} ${h + pad * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label}>
+    <PreviewSvg viewBox={[-w / 2 - pad, -h / 2 - pad, w + pad * 2, h + pad * 2]} label={label}>
       <defs>
         <Fill id={`b${uid}`} sheet={base} />
         <Fill id={`o${uid}`} sheet={overlay} />
@@ -69,10 +71,7 @@ export function PointerSignPreview({ layout, linePaths, base, overlay, logo, lab
       <polygon points={points(layout.outline)} fill={baseFill} stroke="rgba(15,23,42,.25)" strokeWidth={Math.max(0.3, w / 600)} filter={`url(#s${uid})`} />
 
       <g filter={`url(#r${uid})`}>
-        {layout.lines.map((line) => {
-          const d = linePaths.get(line.index);
-          return d ? <path key={line.index} d={d} fill={overlayFill} transform={`translate(${line.x} ${line.y}) scale(${line.scale})`} /> : null;
-        })}
+        <PlacedLinePaths lines={layout.lines} paths={linePaths} fill={overlayFill} />
         {layout.arrow && <polygon points={points(layout.arrow.points)} fill={overlayFill} />}
         {layout.logo && layout.logo.ringWidth > 0 && (
           <circle cx={layout.logo.cx} cy={layout.logo.cy} r={layout.logo.ringRadius} fill="none" stroke={overlayFill} strokeWidth={layout.logo.ringWidth} />
@@ -82,6 +81,6 @@ export function PointerSignPreview({ layout, linePaths, base, overlay, logo, lab
             width={layout.logo.boxWidth} height={layout.logo.boxHeight} preserveAspectRatio="xMidYMid meet" filter={`url(#l${uid})`} />
         )}
       </g>
-    </svg>
+    </PreviewSvg>
   );
 }

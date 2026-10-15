@@ -5,9 +5,9 @@
 import type { LocalizedText } from "../../types/customizer";
 import type { JoinedWordsCheck, JoinedWordsConfig, JoinedWordsLayout, JoinedWordsMaterial } from "../../types/joined-words";
 import { DEFAULT_JOINED_WORDS_CONFIG } from "./config";
+import { cmText } from "../format";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export interface JoinedLineGlyphs {
   missing: string[];
@@ -26,21 +26,21 @@ export function checkJoinedWords(
     const once = (code: string) => { const key = `${code}|${piece.lineIndex}`; if (seen.has(key)) return false; seen.add(key); return true; };
     if (piece.capMm < minLetter - 0.05 && once("small")) {
       out.push({ level: "error", code: "letters-too-small", lineIndex: piece.lineIndex, message: t(
-        `Рядок ${n}: літери ${cm(piece.capMm)} см, з цього листа ріжемо від ${cm(minLetter)} см. Збільште висоту літер або розмір рядка.`,
-        `Строка ${n}: буквы ${cm(piece.capMm)} см, из этого листа режем от ${cm(minLetter)} см. Увеличьте высоту букв или размер строки.`,
-        `Line ${n}: letters are ${cm(piece.capMm)} cm, this sheet is cut from ${cm(minLetter)} cm. Make the letters larger.`) });
+        `Рядок ${n}: літери ${cmText(piece.capMm)} см, з цього листа ріжемо від ${cmText(minLetter)} см. Збільште висоту літер або розмір рядка.`,
+        `Строка ${n}: буквы ${cmText(piece.capMm)} см, из этого листа режем от ${cmText(minLetter)} см. Увеличьте высоту букв или размер строки.`,
+        `Line ${n}: letters are ${cmText(piece.capMm)} cm, this sheet is cut from ${cmText(minLetter)} cm. Make the letters larger.`) });
     }
     if (piece.capMm > cfg.maxLetterMm + 0.05 && once("large")) {
       out.push({ level: "error", code: "letters-too-large", lineIndex: piece.lineIndex, message: t(
-        `Рядок ${n}: літери ${cm(piece.capMm)} см, найбільше ${cm(cfg.maxLetterMm)} см. Для більших літер оберіть вивіску.`,
-        `Строка ${n}: буквы ${cm(piece.capMm)} см, максимум ${cm(cfg.maxLetterMm)} см. Для больших букв выберите вывеску.`,
-        `Line ${n}: letters are ${cm(piece.capMm)} cm, at most ${cm(cfg.maxLetterMm)} cm. Pick a sign for larger letters.`) });
+        `Рядок ${n}: літери ${cmText(piece.capMm)} см, найбільше ${cmText(cfg.maxLetterMm)} см. Для більших літер оберіть вивіску.`,
+        `Строка ${n}: буквы ${cmText(piece.capMm)} см, максимум ${cmText(cfg.maxLetterMm)} см. Для больших букв выберите вывеску.`,
+        `Line ${n}: letters are ${cmText(piece.capMm)} cm, at most ${cmText(cfg.maxLetterMm)} cm. Pick a sign for larger letters.`) });
     }
     if ((piece.widthMm > cfg.maxPieceWidthMm || piece.heightMm > cfg.maxPieceHeightMm) && once("long")) {
       out.push({ level: "error", code: "piece-too-long", lineIndex: piece.lineIndex, message: t(
-        `Рядок ${n}: деталь ${cm(piece.widthMm)} см, одним шматком ріжемо до ${cm(cfg.maxPieceWidthMm)} см. Розбийте рядок на два або зменште літери.`,
-        `Строка ${n}: деталь ${cm(piece.widthMm)} см, одним куском режем до ${cm(cfg.maxPieceWidthMm)} см. Разбейте строку на две или уменьшите буквы.`,
-        `Line ${n}: the piece is ${cm(piece.widthMm)} cm, one piece is at most ${cm(cfg.maxPieceWidthMm)} cm. Split the line or make the letters smaller.`) });
+        `Рядок ${n}: деталь ${cmText(piece.widthMm)} см, одним шматком ріжемо до ${cmText(cfg.maxPieceWidthMm)} см. Розбийте рядок на два або зменште літери.`,
+        `Строка ${n}: деталь ${cmText(piece.widthMm)} см, одним куском режем до ${cmText(cfg.maxPieceWidthMm)} см. Разбейте строку на две или уменьшите буквы.`,
+        `Line ${n}: the piece is ${cmText(piece.widthMm)} cm, one piece is at most ${cmText(cfg.maxPieceWidthMm)} cm. Split the line or make the letters smaller.`) });
     }
   }
   glyphs.forEach((line, index) => {

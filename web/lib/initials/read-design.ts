@@ -4,30 +4,31 @@
 import type { InitialsConfig, InitialsDesign, InitialsMode, InitialsSeparator } from "../../types/initials";
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { DEFAULT_INITIALS_CONFIG } from "./config";
+import { createDesignReader, FONT_ID_PATTERN } from "../validation/design-reader";
 
-const FONT_ID = /^[a-z0-9:_./-]{1,120}$/i;
 const SEPARATORS = new Set<InitialsSeparator>(["bar", "amp", "plus", "dot", "none"]);
 const MODES = new Set<InitialsMode>(["pieces", "topper"]);
 
+const read = createDesignReader("initials");
+/** Letters: control characters and every space removed. */
 const clean = (value: unknown) => String(value ?? "").replace(/[\u0000-\u001f\u007f]+/g, "").replace(/\s+/g, "").trim();
 
 export function readInitialsDesign(raw: unknown, quantity: number, cfg: InitialsConfig = DEFAULT_INITIALS_CONFIG): InitialsDesign {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("initials: design is not an object");
-  const d = raw as Record<string, unknown>;
+  const d = read.record(raw, "design");
   const first = clean(d.first);
   const second = clean(d.second);
-  if ([...first].length > cfg.maxChars || [...second].length > cfg.maxChars || (!first && !second)) throw new Error("initials: bad letters");
+  if ([...first].length > cfg.maxChars || [...second].length > cfg.maxChars || (!first && !second)) read.fail("bad letters");
   const separator = String(d.separator) as InitialsSeparator;
-  if (!SEPARATORS.has(separator)) throw new Error("initials: bad separator");
+  if (!SEPARATORS.has(separator)) read.fail("bad separator");
   const mode = String(d.mode) as InitialsMode;
-  if (!MODES.has(mode)) throw new Error("initials: bad mode");
+  if (!MODES.has(mode)) read.fail("bad mode");
   const fontId = String(d.fontId ?? "");
-  if (!FONT_ID.test(fontId)) throw new Error("initials: bad font id");
+  if (!FONT_ID_PATTERN.test(fontId)) read.fail("bad font id");
   const letterHeightMm = Math.round(Number(d.letterHeightMm));
-  if (!Number.isFinite(letterHeightMm) || letterHeightMm < cfg.minLetterMm || letterHeightMm > cfg.maxLetterMm) throw new Error("initials: letter height out of range");
+  if (!Number.isFinite(letterHeightMm) || letterHeightMm < cfg.minLetterMm || letterHeightMm > cfg.maxLetterMm) read.fail("letter height out of range");
   return {
     first, second, separator, fontId, letterHeightMm, mode,
     materialId: findJoinedWordsMaterial(String(d.materialId ?? "")).id,
-    quantity: Math.max(1, Math.min(9999, Math.round(quantity))),
+    quantity: read.quantity(quantity),
   };
 }

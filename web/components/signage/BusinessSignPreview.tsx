@@ -9,6 +9,8 @@
 // to a person 1.75 m tall, so the size reads at a glance.
 
 import { useId } from "react";
+import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import { findBusinessSignSheet } from "@/lib/business-sign/palette";
 import { shadeHex } from "@/lib/business-sign/shade-hex";
 import type { BusinessSignDesign, BusinessSignLayout } from "@/types/business-sign";
@@ -78,11 +80,7 @@ function SignGraphic({ design, layout, linePaths, logoUrl, uid }: {
               fill="none" stroke={fill(design.frameMaterialId)} strokeWidth={layout.frame.stroke} />)}
         {layout.innerRing && <circle cx={0} cy={0} r={layout.innerRing.r} fill="none" stroke={arcFill} strokeWidth={layout.innerRing.stroke} />}
         {layout.arcs.map((arc) => <path key={arc.position} d={arc.pathData} fill={arcFill} />)}
-        {layout.lines.map((line) => {
-          const d = linePaths.get(line.index);
-          const source = design.lines[line.index];
-          return d && source ? <path key={line.index} d={d} fill={fill(source.materialId)} transform={`translate(${line.x} ${line.y}) scale(${line.scale})`} /> : null;
-        })}
+        <PlacedLinePaths lines={layout.lines} paths={linePaths} fill={(line) => { const source = design.lines[line.index]; return source ? fill(source.materialId) : null; }} />
         {layout.logo && logoUrl && (
           <image href={logoUrl} x={layout.logo.x} y={layout.logo.y} width={layout.logo.width} height={layout.logo.height}
             preserveAspectRatio="xMidYMid meet" filter={`url(#l${uid})`} />
@@ -190,9 +188,9 @@ export function BusinessSignPreview({ design, layout, linePaths, logoUrl, label,
 
   const pad = Math.max(w, h) * 0.08;
   return (
-    <svg viewBox={`${-w / 2 - pad} ${-h / 2 - pad} ${w + pad * 2} ${h + pad * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label}>
+    <PreviewSvg viewBox={[-w / 2 - pad, -h / 2 - pad, w + pad * 2, h + pad * 2]} label={label}>
       {defs}
       {graphic}
-    </svg>
+    </PreviewSvg>
   );
 }

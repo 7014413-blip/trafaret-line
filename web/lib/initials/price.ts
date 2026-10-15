@@ -8,8 +8,7 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { pluralUk } from "../text/plural-uk";
 import { DEFAULT_INITIALS_CONFIG } from "./config";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+import { cmText } from "../format";
 
 export function initialsBasePrice(layout: InitialsLayout, cfg: InitialsConfig = DEFAULT_INITIALS_CONFIG): number {
   const areaM2 = (layout.widthMm * layout.heightMm) / 1e6;
@@ -25,7 +24,7 @@ export function priceInitials(
   const discount = bestLineDiscount(quantity, 0, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
   const lines = [
-    `Уся композиція ${cm(layout.widthMm)} × ${cm(layout.heightMm)} см, літери ${cm(design.letterHeightMm)} см`,
+    `Уся композиція ${cmText(layout.widthMm)} × ${cmText(layout.heightMm)} см, літери ${cmText(design.letterHeightMm)} см`,
     design.mode === "topper" ? "Одним топпером на планці зі шпажкою" : `${layout.pieces} ${pluralUk(layout.pieces, ["деталь", "деталі", "деталей"])}, кладуться на торт`,
     `${sheet.name.uk}, ${sheet.thicknessMm} мм`,
   ];

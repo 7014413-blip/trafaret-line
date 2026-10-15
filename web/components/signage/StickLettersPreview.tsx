@@ -7,17 +7,15 @@
 // the letters straight. A 10 cm ruler under the set shows the real size.
 
 import { useId } from "react";
+import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
+import { PreviewRuler } from "@/components/signage/PreviewRuler";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
+import { WallMirrorGradient } from "@/components/signage/WallMirrorGradient";
+import { isLightColour } from "@/lib/client/is-light-colour";
 import type { JoinedWordsMaterial } from "@/types/joined-words";
 import type { StickLettersLayout } from "@/types/stick-letters";
 
 export type StickLettersView = "box" | "stencil";
-
-/** Light sheets (white, clear, milky) need a darker surface. */
-function isLight(hex: string): boolean {
-  const n = parseInt(hex.replace("#", ""), 16);
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.75;
-}
 
 export function StickLettersPreview({ layout, paths, sheet, view, label }: {
   layout: StickLettersLayout;
@@ -35,7 +33,7 @@ export function StickLettersPreview({ layout, paths, sheet, view, label }: {
   const ruler = 100;
   const rulerGap = Math.max(12, h * 0.16);
   const total = h + Math.max(0, layout.stencil.y + layout.stencil.height - h) + rulerGap + 14;
-  const light = isLight(sheet.hex);
+  const light = isLightColour(sheet.hex);
   const fill = sheet.mirror ? `url(#m${uid})` : sheet.hex;
   const cap = layout.lines[0]?.capMm ?? 30;
   const shadow = Math.max(0.3, Math.min(2.5, cap * 0.035));
@@ -43,24 +41,12 @@ export function StickLettersPreview({ layout, paths, sheet, view, label }: {
   // The stencil reaches past the letters by its margin; the ruler goes under it.
   const below = view === "stencil" ? layout.stencil.y + layout.stencil.height - h : 0;
   const surface = view === "stencil" ? "#f4f1ec" : light ? "#9aa1a8" : "#f7f5f1";
-  const letters = (paint: string) => layout.lines.map((line) => {
-    const d = paths.get(line.index);
-    return d ? <path key={line.index} d={d} fill={paint} transform={`translate(${line.x} ${line.y}) scale(${line.scale})`} /> : null;
-  });
+  const letters = (paint: string) => <PlacedLinePaths lines={layout.lines} paths={paths} fill={paint} />;
 
   return (
-    <svg viewBox={`${-padX} ${-padY} ${w + padX * 2} ${total + padY * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label}
-      style={{ background: surface }}>
+    <PreviewSvg viewBox={[-padX, -padY, w + padX * 2, total + padY * 2]} label={label} style={{ background: surface }}>
       <defs>
-        {sheet.mirror && (
-          <linearGradient id={`m${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={w} y2={h}>
-            <stop offset="0" stopColor={sheet.hex} />
-            <stop offset=".3" stopColor="#f8fafc" />
-            <stop offset=".5" stopColor={sheet.hex} />
-            <stop offset=".75" stopColor="#f8fafc" />
-            <stop offset="1" stopColor={sheet.hex} />
-          </linearGradient>
-        )}
+        {sheet.mirror && <WallMirrorGradient id={`m${uid}`} hex={sheet.hex} width={w} height={h} />}
         <filter id={`s${uid}`} x="-5%" y="-10%" width="110%" height="130%">
           <feDropShadow dx={shadow * 0.6} dy={shadow} stdDeviation={shadow * 0.7} floodColor="#000" floodOpacity=".38" />
         </filter>
@@ -88,12 +74,7 @@ export function StickLettersPreview({ layout, paths, sheet, view, label }: {
         </g>
       )}
 
-      <g transform={`translate(0 ${h + below + rulerGap})`} fill={ink} stroke={ink}>
-        <line x1="0" y1="0" x2={ruler} y2="0" strokeWidth={Math.max(0.4, w / 600)} />
-        <line x1="0" y1="-3" x2="0" y2="3" strokeWidth={Math.max(0.4, w / 600)} />
-        <line x1={ruler} y1="-3" x2={ruler} y2="3" strokeWidth={Math.max(0.4, w / 600)} />
-        <text x={ruler / 2} y="12" textAnchor="middle" fontSize={Math.max(8, w / 60)} stroke="none">10 см</text>
-      </g>
-    </svg>
+      <PreviewRuler y={h + below + rulerGap} lengthMm={ruler} ink={ink} stroke={Math.max(0.4, w / 600)} tick={3} fontSize={Math.max(8, w / 60)} textY={12} />
+    </PreviewSvg>
   );
 }

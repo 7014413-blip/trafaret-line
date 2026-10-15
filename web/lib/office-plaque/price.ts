@@ -8,8 +8,7 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { findPlaqueBase, findPlaquePlate } from "./colours";
 import { DEFAULT_OFFICE_PLAQUE_CONFIG } from "./config";
 import { resolvePlaqueSize } from "./size";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+import { cmText } from "../format";
 
 /** Price of one plaque of this size before discounts. */
 export function plaqueBasePrice(widthMm: number, heightMm: number, cfg: OfficePlaqueConfig = DEFAULT_OFFICE_PLAQUE_CONFIG): number {
@@ -28,7 +27,7 @@ export function priceOfficePlaque(
   const discount = bestLineDiscount(quantity, (size.widthMm * size.heightMm) / 1e6, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
   const lines = [
-    `Розмір ${cm(size.widthMm)} × ${cm(size.heightMm)} см${size.preset ? "" : " (свій)"}`,
+    `Розмір ${cmText(size.widthMm)} × ${cmText(size.heightMm)} см${size.preset ? "" : " (свій)"}`,
     `Основа ${base.name.uk.toLowerCase()}, пластина ${plate.name.uk.toLowerCase()} з гравіюванням`,
     "Клейова основа 3M уже в ціні",
   ];

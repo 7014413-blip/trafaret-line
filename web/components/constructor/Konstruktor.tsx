@@ -8,6 +8,8 @@
 // Prices come from lib/calculators/pricing.ts (the server repeats them); m² is never shown.
 
 import Link from "next/link";
+import { LEGEND_CLASS } from "@/components/ui/form-classes";
+import { FontOptions } from "@/components/constructor/FontOptions";
 import { useEffect, useMemo, useState } from "react";
 import { cutRequestFor, useCustomizer } from "@/store/customizer-store";
 import { useCart } from "@/store/cart-store";
@@ -18,6 +20,7 @@ import { SQUARE_STENCIL_MATERIAL, SQUARE_STENCIL_PRESETS } from "@/lib/calculato
 import { formatUAH } from "@/lib/format";
 import { loadFont, loadFontManifest, registerLoadedFont, type FontEntry, type LoadedFont } from "@/lib/text/font-loader";
 import { listCustomFonts } from "@/lib/client/custom-fonts";
+import { fontEntry } from "@/lib/text/font-entry";
 import { textToDesign, type Align, type TextDesignResult } from "@/lib/text/text-layout";
 import { DEFAULT_WELD } from "@/lib/geometry/weld";
 import { computeStencilCut, computeWeld } from "@/lib/client/geometry-client";
@@ -47,7 +50,6 @@ const MODES: [Mode, string, string][] = [
 ];
 
 const chip = (on: boolean) => `rounded-full border-[1.5px] px-3 py-1.5 ${on ? "border-[var(--ink)] font-bold" : "border-[var(--line)]"}`;
-const legend = "mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]";
 
 export function Konstruktor() {
   const s = useCustomizer();
@@ -78,7 +80,7 @@ export function Konstruktor() {
   useEffect(() => {
     listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
   }, []);
-  const allFonts = useMemo<FontEntry[]>(() => [...fonts, ...customFonts.map(({ faces: _faces, ...entry }) => entry)], [fonts, customFonts]);
+  const allFonts = useMemo<FontEntry[]>(() => [...fonts, ...customFonts.map(fontEntry)], [fonts, customFonts]);
 
   // A different font per line (Денис 10.10): empty entry = the main font.
   const [perLine, setPerLine] = useState(false);
@@ -271,7 +273,7 @@ export function Konstruktor() {
         </header>
 
         <fieldset role="radiogroup" aria-labelledby="k-mode-legend" className="grid gap-2 sm:grid-cols-2">
-          <legend id="k-mode-legend" className={legend}>Що робимо</legend>
+          <legend id="k-mode-legend" className={LEGEND_CLASS}>Що робимо</legend>
           {MODES.map(([m, title, hint]) => (
             <label key={m} className={`grid cursor-pointer gap-0.5 rounded-xl border-[1.5px] px-3.5 py-3 ${mode === m ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
               <span className="flex items-center gap-2">
@@ -285,7 +287,7 @@ export function Konstruktor() {
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Текст</legend>
+          <legend className={LEGEND_CLASS}>Текст</legend>
           <textarea id="k-text" rows={3} value={s.text} placeholder="КАВА І ДОБРІ&#10;ЛЮДИ" maxLength={120}
             onChange={(e) => s.set({ text: e.target.value.split("\n").slice(0, 4).join("\n") })}
             className="w-full resize-y rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3.5 py-3 text-lg focus:border-[var(--ink)] focus:outline-none" />
@@ -305,7 +307,7 @@ export function Konstruktor() {
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Шрифт</legend>
+          <legend className={LEGEND_CLASS}>Шрифт</legend>
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
             {allFonts.map((f) => <FontChip key={f.id} entry={f} text={text} active={(font?.id ?? allFonts[0]?.id) === f.id} onPick={() => s.set({ fontFamily: f.id })} />)}
           </div>
@@ -323,7 +325,7 @@ export function Konstruktor() {
                   <select id={`k-line-font-${i}`} value={lineFontIds[i] ?? ""} onChange={(e) => setLineFont(i, e.target.value)}
                     className="h-10 rounded-lg border border-[var(--line)] bg-[var(--card)] px-2">
                     <option value="">Як основний ({font?.name ?? "—"})</option>
-                    {allFonts.map((f) => <option key={f.id} value={f.id}>{f.custom ? `Ваш: ${f.name}` : f.name}</option>)}
+                    <FontOptions fonts={allFonts} />
                   </select>
                 </label>
               ))}
@@ -341,7 +343,7 @@ export function Konstruktor() {
         {mode === "stencil" ? (
           <>
             <fieldset className="grid gap-2">
-              <legend className={legend}>Розмір</legend>
+              <legend className={LEGEND_CLASS}>Розмір</legend>
               <div className="flex flex-wrap gap-2 text-sm">
                 <button id="k-size-width" type="button" aria-pressed={s.shape !== "square" && !byLetter} onClick={() => { setByLetter(false); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && !byLetter)}>За шириною трафарету</button>
                 <button id="k-size-letter" type="button" aria-pressed={s.shape !== "square" && byLetter} onClick={() => { setByLetter(true); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && byLetter)}>За висотою літер</button>
@@ -386,7 +388,7 @@ export function Konstruktor() {
             </fieldset>
 
             <fieldset className="grid gap-2">
-              <legend className={legend}>Матеріал</legend>
+              <legend className={LEGEND_CLASS}>Матеріал</legend>
               {STENCIL_MATS.map((id) => {
                 const m = MATERIALS[id];
                 return (
@@ -400,7 +402,7 @@ export function Konstruktor() {
             </fieldset>
 
             <fieldset role="radiogroup" aria-labelledby="k-bridges-legend" className="grid gap-2">
-              <legend id="k-bridges-legend" className={legend}>Перемички</legend>
+              <legend id="k-bridges-legend" className={LEGEND_CLASS}>Перемички</legend>
               <div className="flex flex-wrap gap-2 text-sm">
                 {BRIDGE_STRENGTHS.map(([value, label]) => (
                   <label key={value} className={`${chip(s.bridgeStrength === value)} flex cursor-pointer items-center gap-1.5`}>
@@ -415,7 +417,7 @@ export function Konstruktor() {
         ) : (
           <>
             <fieldset className="grid gap-2">
-              <legend className={legend}>Ширина виробу</legend>
+              <legend className={LEGEND_CLASS}>Ширина виробу</legend>
               <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
                 <input id="k-weld-width" type="number" min={5} max={100} value={Math.round(weldWidthMm / 10)}
                   onChange={(e) => setWeldWidthMm(Math.max(50, Math.min(1000, Number(e.target.value) * 10)))}
@@ -432,7 +434,7 @@ export function Konstruktor() {
             <WeldOptionsPanel value={weldOptions} onChange={setWeldOptions} />
 
             <fieldset className="grid gap-2">
-              <legend className={legend}>Матеріал і колір</legend>
+              <legend className={LEGEND_CLASS}>Матеріал і колір</legend>
               {weldMaterials.map((id) => {
                 const m = MATERIALS[id];
                 return (
@@ -457,7 +459,7 @@ export function Konstruktor() {
         )}
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Кількість і опт</legend>
+          <legend className={LEGEND_CLASS}>Кількість і опт</legend>
           <div className="grid grid-cols-4 gap-1.5 text-center text-xs tabular-nums">
             {tiers.map((t) => {
               const on = s.quantity >= t.minQty && !tiers.some((x) => x.minQty > t.minQty && s.quantity >= x.minQty);

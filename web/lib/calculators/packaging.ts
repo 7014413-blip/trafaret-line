@@ -17,6 +17,7 @@ import type { MaterialType } from "../../types/customizer";
 import type { PackKind, Parcel, ParcelConfig, ParcelItem } from "../../types/packaging";
 import { MATERIALS } from "../materials";
 import { round3, weightBreakdown } from "./weight";
+import { cmText } from "../format";
 
 export const DEFAULT_PARCEL: ParcelConfig = {
   marginXYmm: 40,
@@ -123,10 +124,9 @@ export function parcelFor(items: ParcelItem[], prefer: PackKind = "tube", cfg: P
 
 /** "Коробка 52 × 32 × 3 см, 0,9 кг" for the cart and checkout. */
 export function describeParcel(parcel: Parcel): string {
-  const cm = (mm: number) => (mm / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
   const kg = parcel.billingKg.toLocaleString("uk-UA", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   // The carrier bills the larger of actual and volumetric weight; say which one it is (QA m12).
   const weight = parcel.volumetricKg > parcel.actualKg ? `${kg} кг обʼємної ваги` : `${kg} кг`;
-  if (parcel.kind === "tube") return `Тубус ${cm(parcel.lengthMm)} см, Ø ${cm(parcel.widthMm)} см, ${weight}`;
-  return `Коробка ${cm(parcel.lengthMm)} × ${cm(parcel.widthMm)} × ${cm(parcel.heightMm)} см, ${weight}`;
+  if (parcel.kind === "tube") return `Тубус ${cmText(parcel.lengthMm)} см, Ø ${cmText(parcel.widthMm)} см, ${weight}`;
+  return `Коробка ${cmText(parcel.lengthMm)} × ${cmText(parcel.widthMm)} × ${cmText(parcel.heightMm)} см, ${weight}`;
 }

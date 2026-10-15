@@ -5,6 +5,8 @@
 // get a soft brushed gradient, glossy ones a bright diagonal highlight.
 
 import { useId } from "react";
+import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import type { OfficePlaqueLayout, PlaqueBaseColour, PlaquePlateColour } from "@/types/office-plaque";
 
 export function OfficePlaquePreview({ layout, linePaths, base, plate, label }: {
@@ -24,7 +26,7 @@ export function OfficePlaquePreview({ layout, linePaths, base, plate, label }: {
     : [[0, plate.hex], [0.38, plate.highlight], [0.5, plate.hex], [0.78, plate.highlight], [1, plate.hex]];
 
   return (
-    <svg viewBox={`${-w / 2 - pad} ${-h / 2 - pad} ${w + pad * 2} ${h + pad * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label}>
+    <PreviewSvg viewBox={[-w / 2 - pad, -h / 2 - pad, w + pad * 2, h + pad * 2]} label={label}>
       <defs>
         <linearGradient id={`p${uid}`} x1="0" y1="0" x2="1" y2={plate.satin ? 0 : 1}>
           {stops.map(([o, c]) => <stop key={String(o)} offset={Number(o)} stopColor={String(c)} />)}
@@ -38,10 +40,7 @@ export function OfficePlaquePreview({ layout, linePaths, base, plate, label }: {
       </defs>
       <rect x={-w / 2} y={-h / 2} width={w} height={h} rx={Math.min(w, h) * 0.015} fill={base.hex} stroke="rgba(15,23,42,.25)" strokeWidth={Math.max(0.2, w / 800)} filter={`url(#s${uid})`} />
       <rect x={p.x} y={p.y} width={p.width} height={p.height} fill={`url(#p${uid})`} filter={`url(#r${uid})`} />
-      {layout.lines.map((line) => {
-        const d = linePaths.get(line.index);
-        return d ? <path key={line.index} d={d} fill={plate.engraveHex} transform={`translate(${line.x} ${line.y}) scale(${line.scale})`} /> : null;
-      })}
-    </svg>
+      <PlacedLinePaths lines={layout.lines} paths={linePaths} fill={plate.engraveHex} />
+    </PreviewSvg>
   );
 }

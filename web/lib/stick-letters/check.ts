@@ -5,9 +5,9 @@
 import type { LocalizedText } from "../../types/customizer";
 import type { StickLettersCheck, StickLettersConfig, StickLettersLayout } from "../../types/stick-letters";
 import { DEFAULT_STICK_LETTERS_CONFIG } from "./config";
+import { cmText } from "../format";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function checkStickLetters(
   layout: StickLettersLayout, missing: string[][] = [], cfg: StickLettersConfig = DEFAULT_STICK_LETTERS_CONFIG,
@@ -18,15 +18,15 @@ export function checkStickLetters(
     const n = line.index + 1;
     if (line.capMm < cfg.minLetterMm - 0.05) {
       out.push({ level: "error", code: "letters-too-small", lineIndex: line.index, message: t(
-        `Рядок ${n}: літери ${cm(line.capMm)} см, ріжемо від ${cm(cfg.minLetterMm)} см. Збільште висоту літер або розмір рядка.`,
-        `Строка ${n}: буквы ${cm(line.capMm)} см, режем от ${cm(cfg.minLetterMm)} см. Увеличьте высоту букв или размер строки.`,
-        `Line ${n}: letters are ${cm(line.capMm)} cm, we cut from ${cm(cfg.minLetterMm)} cm. Make the letters larger.`) });
+        `Рядок ${n}: літери ${cmText(line.capMm)} см, ріжемо від ${cmText(cfg.minLetterMm)} см. Збільште висоту літер або розмір рядка.`,
+        `Строка ${n}: буквы ${cmText(line.capMm)} см, режем от ${cmText(cfg.minLetterMm)} см. Увеличьте высоту букв или размер строки.`,
+        `Line ${n}: letters are ${cmText(line.capMm)} cm, we cut from ${cmText(cfg.minLetterMm)} cm. Make the letters larger.`) });
     }
     if (line.capMm > cfg.maxLetterMm + 0.05) {
       out.push({ level: "error", code: "letters-too-large", lineIndex: line.index, message: t(
-        `Рядок ${n}: літери ${cm(line.capMm)} см, найбільше ${cm(cfg.maxLetterMm)} см.`,
-        `Строка ${n}: буквы ${cm(line.capMm)} см, максимум ${cm(cfg.maxLetterMm)} см.`,
-        `Line ${n}: letters are ${cm(line.capMm)} cm, at most ${cm(cfg.maxLetterMm)} cm.`) });
+        `Рядок ${n}: літери ${cmText(line.capMm)} см, найбільше ${cmText(cfg.maxLetterMm)} см.`,
+        `Строка ${n}: буквы ${cmText(line.capMm)} см, максимум ${cmText(cfg.maxLetterMm)} см.`,
+        `Line ${n}: letters are ${cmText(line.capMm)} cm, at most ${cmText(cfg.maxLetterMm)} cm.`) });
     }
     if (line.apart) {
       out.push({ level: "warning", code: "not-joined", lineIndex: line.index, message: t(
@@ -45,9 +45,9 @@ export function checkStickLetters(
   const long = layout.pieces.find((p) => p.width > cfg.maxPieceWidthMm || p.height > cfg.maxPieceHeightMm);
   if (long) {
     out.push({ level: "error", code: "piece-too-long", lineIndex: long.lineIndex, message: t(
-      `Рядок ${long.lineIndex + 1}: деталь ${cm(long.width)} см, одним шматком ріжемо до ${cm(cfg.maxPieceWidthMm)} см. Зменште літери.`,
-      `Строка ${long.lineIndex + 1}: деталь ${cm(long.width)} см, одним куском режем до ${cm(cfg.maxPieceWidthMm)} см. Уменьшите буквы.`,
-      `Line ${long.lineIndex + 1}: the piece is ${cm(long.width)} cm, at most ${cm(cfg.maxPieceWidthMm)} cm. Make the letters smaller.`) });
+      `Рядок ${long.lineIndex + 1}: деталь ${cmText(long.width)} см, одним шматком ріжемо до ${cmText(cfg.maxPieceWidthMm)} см. Зменште літери.`,
+      `Строка ${long.lineIndex + 1}: деталь ${cmText(long.width)} см, одним куском режем до ${cmText(cfg.maxPieceWidthMm)} см. Уменьшите буквы.`,
+      `Line ${long.lineIndex + 1}: the piece is ${cmText(long.width)} cm, at most ${cmText(cfg.maxPieceWidthMm)} cm. Make the letters smaller.`) });
   }
   return out;
 }

@@ -5,6 +5,8 @@
 // A 5 cm ruler under the composition shows the real size.
 
 import { useId } from "react";
+import { PreviewRuler } from "@/components/signage/PreviewRuler";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import type { InitialsLayout } from "@/types/initials";
 import type { JoinedWordsMaterial } from "@/types/joined-words";
 
@@ -25,7 +27,7 @@ export function InitialsPreview({ layout, paths, sheet, label }: {
   const total = h + Math.max(8, h * 0.1) + 12;
 
   return (
-    <svg viewBox={`${-pad} ${-pad} ${w + pad * 2} ${total + pad * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label} style={{ background: "radial-gradient(circle at 50% 45%, #fbf8f2, #ece4d6)" }}>
+    <PreviewSvg viewBox={[-pad, -pad, w + pad * 2, total + pad * 2]} label={label} style={{ background: "radial-gradient(circle at 50% 45%, #fbf8f2, #ece4d6)" }}>
       <defs>
         {sheet.mirror && (
           <linearGradient id={`m${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={w} y2={h}>
@@ -48,12 +50,7 @@ export function InitialsPreview({ layout, paths, sheet, label }: {
           return <polygon key={i} points={s.points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ")} />;
         })}
       </g>
-      <g transform={`translate(0 ${h + Math.max(8, h * 0.1)})`} fill="#64748b" stroke="#64748b">
-        <line x1="0" y1="0" x2={ruler} y2="0" strokeWidth={Math.max(0.3, w / 500)} />
-        <line x1="0" y1="-2" x2="0" y2="2" strokeWidth={Math.max(0.3, w / 500)} />
-        <line x1={ruler} y1="-2" x2={ruler} y2="2" strokeWidth={Math.max(0.3, w / 500)} />
-        <text x={ruler / 2} y="9" textAnchor="middle" fontSize={Math.max(5, w / 40)} stroke="none">5 см</text>
-      </g>
-    </svg>
+      <PreviewRuler y={h + Math.max(8, h * 0.1)} lengthMm={ruler} ink="#64748b" stroke={Math.max(0.3, w / 500)} tick={2} fontSize={Math.max(5, w / 40)} textY={9} />
+    </PreviewSvg>
   );
 }

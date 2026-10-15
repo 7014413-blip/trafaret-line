@@ -5,6 +5,8 @@
 // problems) and the price are recomputed after every change.
 
 import { useEffect, useMemo, useState } from "react";
+import { LEGEND_CLASS } from "@/components/ui/form-classes";
+import { FontOptions } from "@/components/constructor/FontOptions";
 import { useCart } from "@/store/cart-store";
 import { MATERIALS, stencilMaterials, WELD_MATERIALS } from "@/lib/materials";
 import { priceStencil, priceWelded } from "@/lib/calculators/pricing";
@@ -15,6 +17,7 @@ import { shapeOutline } from "@/lib/geometry/shapes";
 import { stencilThumbnailSvg } from "@/lib/export/cart-thumbnail";
 import { loadFont, loadFontManifest, registerLoadedFont, type FontEntry, type LoadedFont } from "@/lib/text/font-loader";
 import { listCustomFonts } from "@/lib/client/custom-fonts";
+import { fontEntry } from "@/lib/text/font-entry";
 import { useHistory } from "@/lib/client/use-history";
 import { CustomFontPanel } from "./CustomFontPanel";
 import { textToDesign } from "@/lib/text/text-layout";
@@ -36,7 +39,6 @@ const RESULT_MODES: [CanvasResultMode, string, string][] = [
 
 const newId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `e${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`);
 const field = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-base text-[var(--ink)]";
-const legend = "mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]";
 
 interface Stored {
   settings: CanvasSettings;
@@ -76,7 +78,7 @@ export function FreeCanvasEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [shopFonts, setFonts] = useState<FontEntry[]>([]);
   const [customFonts, setCustomFonts] = useState<LoadedFont[]>([]);
-  const fonts = useMemo<FontEntry[]>(() => [...shopFonts, ...customFonts.map(({ faces: _faces, ...entry }) => entry)], [shopFonts, customFonts]);
+  const fonts = useMemo<FontEntry[]>(() => [...shopFonts, ...customFonts.map(fontEntry)], [shopFonts, customFonts]);
   const [fontId, setFontId] = useState("");
   const [text, setText] = useState("Кава");
   const [quantity, setQuantity] = useState(1);
@@ -285,11 +287,11 @@ export function FreeCanvasEditor() {
         </header>
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Додати напис</legend>
+          <legend className={LEGEND_CLASS}>Додати напис</legend>
           <input id="fc-text" value={text} maxLength={60} onChange={(e) => setText(e.target.value)} className={field} aria-label="Текст напису" />
           <div className="flex gap-2">
             <select id="fc-font" value={fontId} onChange={(e) => setFontId(e.target.value)} className={`${field} min-w-0 flex-1`} aria-label="Шрифт">
-              {fonts.map((f) => <option key={f.id} value={f.id}>{f.custom ? `Ваш: ${f.name}` : f.name}</option>)}
+              <FontOptions fonts={fonts} current={fontId} />
             </select>
             <button type="button" onClick={addText} disabled={busy || !fonts.length || !text.trim()} className="h-11 rounded-full bg-[var(--buy)] px-5 font-bold text-[var(--buy-fg)] disabled:opacity-50">Додати</button>
           </div>
@@ -299,7 +301,7 @@ export function FreeCanvasEditor() {
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Додати фігуру</legend>
+          <legend className={LEGEND_CLASS}>Додати фігуру</legend>
           <div className="flex flex-wrap gap-2">
             {SHAPES.map(([kind, label]) => (
               <button key={kind} type="button" onClick={() => addShape(kind)} className="rounded-full border-[1.5px] border-[var(--line)] px-3 py-1.5 text-sm">{label}</button>
@@ -308,7 +310,7 @@ export function FreeCanvasEditor() {
         </fieldset>
 
         <fieldset className="grid grid-cols-2 gap-2">
-          <legend className={legend}>Аркуш</legend>
+          <legend className={LEGEND_CLASS}>Аркуш</legend>
           <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
             <input id="fc-w" type="number" min={10} max={140} value={settings.sheetWidthMm / 10} onChange={(e) => setSheet({ sheetWidthMm: Math.max(100, Math.min(1400, Number(e.target.value) * 10)) })} className={field} />
           </label>
@@ -328,7 +330,7 @@ export function FreeCanvasEditor() {
         </fieldset>
 
         <fieldset role="radiogroup" aria-labelledby="fc-result-legend" className="grid gap-2 sm:grid-cols-2">
-          <legend id="fc-result-legend" className={legend}>Що робимо</legend>
+          <legend id="fc-result-legend" className={LEGEND_CLASS}>Що робимо</legend>
           {RESULT_MODES.map(([mode, title, hint]) => (
             <label key={mode} className={`grid cursor-pointer gap-0.5 rounded-xl border-[1.5px] px-3.5 py-3 ${(settings.result ?? "stencil") === mode ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
               <span className="flex items-center gap-2">
@@ -347,7 +349,7 @@ export function FreeCanvasEditor() {
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={legend}>Матеріал</legend>
+          <legend className={LEGEND_CLASS}>Матеріал</legend>
           {materialChoices.map((m) => (
             <label key={m.id} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-3 ${settings.materialId === m.id ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
               <input type="radio" name="fc-mat" id={`fc-mat-${m.id}`} checked={settings.materialId === m.id} onChange={() => setSheet({ materialId: m.id as MaterialType })} className="h-[18px] w-[18px] accent-[var(--ink)]" />

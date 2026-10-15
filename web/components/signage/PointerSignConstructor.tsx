@@ -7,26 +7,33 @@
 // Layout: lib/pointer-sign/layout.ts, price: lib/pointer-sign/price.ts (repeated on the server).
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { BuyPanel } from "@/components/signage/BuyPanel";
+import { ConstructorHeader } from "@/components/signage/ConstructorHeader";
+import { DesignChecks } from "@/components/signage/DesignChecks";
+import { LogoFileField } from "@/components/signage/LogoFileField";
 import { PlaqueChip } from "@/components/signage/PlaqueChip";
 import { PlaqueLinesEditor } from "@/components/signage/PlaqueLinesEditor";
 import { PointerMaterialPicker } from "@/components/signage/PointerMaterialPicker";
 import { PointerSignPreview } from "@/components/signage/PointerSignPreview";
-import { nextTierHint } from "@/lib/calculators/pricing";
-import { readPlaqueSizeParam } from "@/lib/client/plaque-size-param";
+import { QuantityField } from "@/components/signage/QuantityField";
+import { SizePresetPicker } from "@/components/signage/SizePresetPicker";
+import { FIELDSET_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
+import { ensureLogoUploaded } from "@/lib/client/ensure-logo-uploaded";
 import { readPointerShapeParam } from "@/lib/client/pointer-shape-param";
 import { LOGO_ACCEPT, readLogoFile } from "@/lib/client/read-logo-file";
-import { uploadLayoutFile } from "@/lib/client/upload-layout-file";
+import { useBuyState } from "@/lib/client/use-buy-state";
+import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
+import { usePresetSize } from "@/lib/client/use-preset-size";
 import { pointerThumbnailSvg } from "@/lib/export/pointer-thumbnail";
-import { formatUAH } from "@/lib/format";
+import { cmText } from "@/lib/format";
 import { checkPointerSign } from "@/lib/pointer-sign/check";
 import { clampPointerSizeMm } from "@/lib/pointer-sign/clamp-size";
 import { DEFAULT_POINTER_SIGN_CONFIG } from "@/lib/pointer-sign/config";
 import { findPointerMaterial } from "@/lib/pointer-sign/find-material";
 import { computePointerLayout } from "@/lib/pointer-sign/layout";
 import { pricePointerSign } from "@/lib/pointer-sign/price";
-import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { useCart } from "@/store/cart-store";
 import type {
   PointerArrowPlacement, PointerDirection, PointerLogo, PointerShape, PointerSignDesign, PointerTextLine,
@@ -41,14 +48,11 @@ const ARROWS: [PointerArrowPlacement, string][] = [["start", "Перед тек�
 
 type LogoState = Omit<PointerLogo, "uploadKey"> & { file: File; previewUrl: string; uploadKey: string | null };
 
-const legend = "mb-1 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]";
-const input = "h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+const clampSize = (widthMm: number, heightMm: number) => clampPointerSizeMm(widthMm, heightMm, CFG);
 
 export function PointerSignConstructor() {
-  const [sizeCode, setSizeCode] = useState(CFG.presets[0].code);
-  const [customCm, setCustomCm] = useState({ w: 40, h: 15 });
+  const sizeState = usePresetSize(CFG.presets, { w: 40, h: 15 }, clampSize);
+  const { sizeCode, size } = sizeState;
   const [direction, setDirection] = useState<PointerDirection>(-1);
   const [shape, setShape] = useState<PointerShape>("pointer");
   const [baseId, setBaseId] = useState("black");
@@ -60,17 +64,11 @@ export function PointerSignConstructor() {
   const [logo, setLogo] = useState<LogoState | null>(null);
   const [logoError, setLogoError] = useState("");
   const [qty, setQty] = useState(1);
-  const [state, setState] = useState<"idle" | "uploading" | "added" | "error">("idle");
-  const [message, setMessage] = useState("");
-  // Shipping date only in the browser: server and browser format weekdays differently.
-  const [dispatch, setDispatch] = useState("виготовлення 3 робочі дні");
-  const logoInput = useRef<HTMLInputElement>(null);
+  const buyState = useBuyState();
+  const dispatch = useDispatchLabel();
   const cart = useCart();
 
   useEffect(() => {
-    setDispatch(formatDispatch(estimateDispatchDate(new Date())));
-    const fromLink = readPlaqueSizeParam(CFG.presets.map((p) => p.code));
-    if (fromLink) setSizeCode(fromLink);
     const shapeFromLink = readPointerShapeParam();
     if (shapeFromLink === "arrow") { setShape("arrow"); setArrowPlacement("none"); }
   }, []);
@@ -78,12 +76,6 @@ export function PointerSignConstructor() {
   // Revoke the preview URL of a replaced or removed logo.
   const logoUrl = logo?.previewUrl ?? null;
   useEffect(() => () => { if (logoUrl) URL.revokeObjectURL(logoUrl); }, [logoUrl]);
-
-  const size = useMemo(() => {
-    const preset = CFG.presets.find((p) => p.code === sizeCode);
-    if (preset) return { widthMm: preset.widthMm, heightMm: preset.heightMm };
-    return clampPointerSizeMm(customCm.w * 10, customCm.h * 10, CFG);
-  }, [sizeCode, customCm]);
 
   const measured = text.measured;
 
@@ -105,7 +97,7 @@ export function PointerSignConstructor() {
   const price = pricePointerSign(design);
   const base = findPointerMaterial(baseId);
   const overlay = findPointerMaterial(overlayId);
-  const hint = nextTierHint(qty);
+  const canBuy = errors.length === 0 && fontsReady;
 
   const onLineRemoved = (i: number) => setArrowLine((a) => (a > i ? a - 1 : a === i ? 0 : a));
 
@@ -118,26 +110,16 @@ export function PointerSignConstructor() {
   };
 
   const buy = async () => {
-    if (errors.length || !fontsReady || state === "uploading") return;
-    setMessage("");
-    let uploadKey = logo?.uploadKey ?? null;
-    if (logo && !uploadKey) {
-      setState("uploading");
-      try {
-        uploadKey = await uploadLayoutFile(logo.file);
-        setLogo((current) => (current && current.previewUrl === logo.previewUrl ? { ...current, uploadKey } : current));
-      } catch (e) {
-        setState("error");
-        setMessage((e as Error).message || "Не вдалося завантажити логотип. Спробуйте ще раз.");
-        return;
-      }
-    }
+    if (!canBuy || buyState.state === "uploading") return;
+    const upload = await ensureLogoUploaded(logo, setLogo, buyState);
+    if (!upload.ok) return;
+    const { uploadKey } = upload;
     const final: PointerSignDesign = { ...design, logo: design.logo ? { ...design.logo, uploadKey } : null };
     const texts = final.lines.map((l) => l.text).filter(Boolean).join(" / ");
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `pointer|${JSON.stringify({ ...final, quantity: 0 })}`,
-      title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cm(final.widthMm)}×${cm(final.heightMm)} см`,
+      title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cmText(final.widthMm)}×${cmText(final.heightMm)} см`,
       materialId: "acrylic_5",
       widthCm: final.widthMm / 10,
       heightCm: final.heightMm / 10,
@@ -147,64 +129,28 @@ export function PointerSignConstructor() {
       basePrice: price.internal.basePrice,
       vectorSvg: pointerThumbnailSvg(layout, linePaths, base.hex, overlay.hex),
     });
-    setState("added");
-    setTimeout(() => setState("idle"), 1500);
+    buyState.added();
   };
 
-  const buyLabel = state === "uploading" ? "Завантажуємо логотип…" : state === "added" ? "✓ Додано в кошик" : "В кошик";
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label="Превʼю таблички" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
         <PointerSignPreview layout={layout} linePaths={linePaths} base={base} overlay={overlay}
-          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={`Превʼю таблички-вказівника ${cm(size.widthMm)}×${cm(size.heightMm)} см`} />
+          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={`Превʼю таблички-вказівника ${cmText(size.widthMm)}×${cmText(size.heightMm)} см`} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cm(size.widthMm)} × {cm(size.heightMm)} см · вістря {direction === -1 ? "вліво" : "вправо"}</span>
+          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см · вістря {direction === -1 ? "вліво" : "вправо"}</span>
           <span>{base.name.uk} {base.baseThicknessMm} мм + {overlay.name.uk.toLowerCase()} {overlay.overlayThicknessMm} мм</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <header>
-          <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Конструктор вказівників</p>
-          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">Табличка-стрілка обʼємна, у два шари</h1>
-          <p className="mt-1.5 mb-0 text-[var(--muted)]">Напишіть свій текст, оберіть шрифт, кольори й напрямок. Усі матеріали й кольори вже в ціні.</p>
-        </header>
+        <ConstructorHeader kicker="Конструктор вказівників" title="Табличка-стрілка обʼємна, у два шари"
+          lead="Напишіть свій текст, оберіть шрифт, кольори й напрямок. Усі матеріали й кольори вже в ціні." />
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Розмір</legend>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {CFG.presets.map((p) => (
-              <button key={p.code} id={`ps-size-${p.code}`} type="button" aria-pressed={sizeCode === p.code} onClick={() => setSizeCode(p.code)}
-                className={`grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${sizeCode === p.code ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
-                <b className="text-[15px]">{cm(p.widthMm)}×{cm(p.heightMm)} см</b>
-                <span className="text-[13px] text-[var(--muted)]">{formatUAH(p.price)}</span>
-              </button>
-            ))}
-            <button id="ps-size-custom" type="button" aria-pressed={sizeCode === "custom"} onClick={() => setSizeCode("custom")}
-              className={`grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 ${sizeCode === "custom" ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
-              <b className="text-[15px]">Свій розмір</b>
-              <span className="text-[13px] text-[var(--muted)]">ціна одразу</span>
-            </button>
-          </div>
-          {sizeCode === "custom" && (
-            <div className="grid grid-cols-2 gap-2">
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
-                <input id="ps-w" type="number" inputMode="decimal" step={0.5} min={CFG.minWidthMm / 10} max={CFG.maxWidthMm / 10} value={customCm.w}
-                  onChange={(e) => setCustomCm((c) => ({ ...c, w: Number(e.target.value) || 0 }))}
-                  onBlur={() => setCustomCm({ w: size.widthMm / 10, h: size.heightMm / 10 })} className={input} />
-              </label>
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Висота, см
-                <input id="ps-h" type="number" inputMode="decimal" step={0.5} min={CFG.minHeightMm / 10} max={CFG.maxHeightMm / 10} value={customCm.h}
-                  onChange={(e) => setCustomCm((c) => ({ ...c, h: Number(e.target.value) || 0 }))}
-                  onBlur={() => setCustomCm({ w: size.widthMm / 10, h: size.heightMm / 10 })} className={input} />
-              </label>
-              <span className="col-span-2 text-[13px] text-[var(--muted)]">
-                Від {cm(CFG.minWidthMm)} до {cm(CFG.maxWidthMm)} см завширшки, висота не більше {Math.round(CFG.maxHeightToWidth * 100)}% ширини. Більша вивіска: <Link href="/vyvisky" className="underline">конструктор вивісок</Link>.
-              </span>
-            </div>
-          )}
-        </fieldset>
+        <SizePresetPicker idPrefix="ps" presets={CFG.presets} priceOf={(p) => p.price} state={sizeState} limits={CFG}
+          note={<>Від {cmText(CFG.minWidthMm)} до {cmText(CFG.maxWidthMm)} см завширшки, висота не більше {Math.round(CFG.maxHeightToWidth * 100)}% ширини. Більша вивіска: <Link href="/vyvisky" className="underline">конструктор вивісок</Link>.</>} />
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Форма</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Форма</legend>
           <div className="flex flex-wrap gap-2">
             <PlaqueChip id="ps-shape-pointer" on={shape === "pointer"} onClick={() => setShape("pointer")}>Табличка з вістрям</PlaqueChip>
             <PlaqueChip id="ps-shape-arrow" on={shape === "arrow"} onClick={() => { setShape("arrow"); setArrowPlacement("none"); }}>Стрілка</PlaqueChip>
@@ -212,7 +158,7 @@ export function PointerSignConstructor() {
           <span className="text-[13px] text-[var(--muted)]">{shape === "arrow" ? "Класична стрілка: напис на корпусі, логотип у голові стрілки." : "Прямокутна табличка з гострим краєм, як на наших фото."} Ціна однакова.</span>
         </fieldset>
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Куди показує стрілка</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Куди показує стрілка</legend>
           <div className="flex flex-wrap gap-2">
             <PlaqueChip id="ps-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>← Вліво</PlaqueChip>
             <PlaqueChip id="ps-dir-right" on={direction === 1} onClick={() => setDirection(1)}>Вправо →</PlaqueChip>
@@ -223,7 +169,7 @@ export function PointerSignConstructor() {
         <PlaqueLinesEditor state={text} legend="Напис" idPrefix="ps" maxChars={CFG.maxLineChars} onRemove={onLineRemoved}
           capByLine={new Map(layout.lines.map((l) => [l.index, l.capMm]))} />
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Маленька стрілка в тексті</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Маленька стрілка в тексті</legend>
           <div className="flex flex-wrap gap-2">{ARROWS.map(([v, name]) => <PlaqueChip key={v} id={`ps-arrow-${v}`} on={arrowPlacement === v} onClick={() => setArrowPlacement(v)}>{name}</PlaqueChip>)}</div>
           {arrowPlacement !== "none" && lines.length > 1 && (
             <div className="flex flex-wrap gap-2">
@@ -232,67 +178,29 @@ export function PointerSignConstructor() {
           )}
         </fieldset>
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Логотип</legend>
-          <input ref={logoInput} id="ps-logo" type="file" accept={LOGO_ACCEPT} className="sr-only" onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ""; }} />
-          {logo ? (
-            <div className="grid gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
-              <div className="flex items-center justify-between gap-2">
-                <b className="min-w-0 truncate text-sm">{logo.fileName}</b>
-                <div className="flex shrink-0 gap-2">
-                  <button type="button" onClick={() => logoInput.current?.click()} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm">Замінити</button>
-                  <button type="button" onClick={() => setLogo(null)} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm">Прибрати</button>
-                </div>
-              </div>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-ring" checked={logo.ring} onChange={(e) => setLogo({ ...logo, ring: e.target.checked })} className="accent-[var(--ink)]" />Коло навколо логотипа</label>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />Світлий логотип на темному фоні</label>
-              <span className="text-[13px] text-[var(--muted)]">Логотип виріжемо з того ж матеріалу, що й напис. Перед порізкою надішлемо макет на погодження.</span>
-            </div>
-          ) : (
-            <button type="button" onClick={() => logoInput.current?.click()}
-              className="grid justify-items-center gap-1 rounded-xl border-2 border-dashed border-[var(--line)] bg-[var(--card)] p-5 text-center">
-              <b>Додати логотип</b>
-              <span className="text-[13px] text-[var(--muted)]">SVG, PNG або JPG до 10 МБ, без доплати</span>
-            </button>
-          )}
-          {logoError && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{logoError}</p>}
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Логотип</legend>
+          <LogoFileField inputId="ps-logo" accept={LOGO_ACCEPT} fileName={logo?.fileName ?? null} onPick={pickLogo} onRemove={() => setLogo(null)}
+            emptyHint="SVG, PNG або JPG до 10 МБ, без доплати" error={logoError}>
+            {logo && (
+              <>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-ring" checked={logo.ring} onChange={(e) => setLogo({ ...logo, ring: e.target.checked })} className="accent-[var(--ink)]" />Коло навколо логотипа</label>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />Світлий логотип на темному фоні</label>
+                <span className="text-[13px] text-[var(--muted)]">Логотип виріжемо з того ж матеріалу, що й напис. Перед порізкою надішлемо макет на погодження.</span>
+              </>
+            )}
+          </LogoFileField>
         </fieldset>
 
         <PointerMaterialPicker legend="Основа" value={baseId} onChange={setBaseId} idPrefix="ps-base" />
         <PointerMaterialPicker legend="Колір напису і логотипа" value={overlayId} onChange={setOverlayId} idPrefix="ps-over" />
 
-        <fieldset className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><legend className={legend}>Кількість</legend>
-          <div className="flex items-center gap-1.5">
-            <button type="button" aria-label="Менше" onClick={() => setQty(Math.max(1, qty - 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">−</button>
-            <input id="ps-qty" type="number" min={1} max={9999} value={qty} onChange={(e) => setQty(Math.max(1, Math.min(9999, Math.round(Number(e.target.value)) || 1)))} aria-label="Кількість" className="h-10 w-16 rounded-lg border border-[var(--line)] bg-[var(--card)] text-center" />
-            <button type="button" aria-label="Більше" onClick={() => setQty(Math.min(9999, qty + 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">+</button>
-          </div>
-          <span className="text-[13px] text-[var(--muted)]">Від 10 шт −5%, від 50 шт −10%, від 100 шт −15%.{hint ? ` Додайте ще ${hint.addQty} шт., щоб отримати −${Math.round(hint.nextDiscount * 100)}%.` : ""}</span>
-        </fieldset>
+        <QuantityField idPrefix="ps" value={qty} onChange={setQty} />
 
-        {checks.length > 0 && (
-          <ul className="m-0 grid list-none gap-1 rounded-xl bg-[var(--surface)] p-3 text-sm">
-            {checks.map((c, i) => <li key={i} className={c.level === "error" ? "text-[var(--danger)]" : "text-[var(--muted)]"}>{c.message.uk}</li>)}
-          </ul>
-        )}
+        <DesignChecks checks={checks} />
 
-        <div className="grid gap-2 rounded-2xl bg-[var(--surface)] p-4">
-          <ul className="m-0 grid list-none gap-0.5 p-0 text-[13px] text-[var(--muted)]">
-            {price.lines.map((l, i) => <li key={i}>{l.label}</li>)}
-          </ul>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(price.total)}
-              <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{qty > 1 ? `${formatUAH(price.unitPrice)} × ${qty} шт. · ` : ""}{price.needsManager ? "менеджер підтвердить строк" : dispatch}</small>
-            </div>
-            <button type="button" onClick={buy} disabled={errors.length > 0 || !fontsReady || state === "uploading"} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-40">{buyLabel}</button>
-          </div>
-          {message && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{message}</p>}
-        </div>
+        <BuyPanel lines={price.lines.map(({ label }) => ({ label }))} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? "менеджер підтвердить строк" : dispatch}
+          state={buyState.state} message={buyState.message} canBuy={canBuy} onBuy={buy} />
       </form>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] lg:hidden">
-        <b className="text-xl tabular-nums">{formatUAH(price.total)}</b>
-        <button type="button" onClick={buy} disabled={errors.length > 0 || !fontsReady || state === "uploading"} className="h-12 rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] disabled:opacity-40">{buyLabel}</button>
-      </div>
     </div>
   );
 }

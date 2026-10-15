@@ -9,8 +9,7 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { pluralUk } from "../text/plural-uk";
 import { DEFAULT_JOINED_WORDS_CONFIG } from "./config";
 import { findJoinedWordsMaterial } from "./find-material";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+import { cmText } from "../format";
 
 /** Price of one set before discounts. */
 export function joinedWordsBasePrice(layout: JoinedWordsLayout, cfg: JoinedWordsConfig = DEFAULT_JOINED_WORDS_CONFIG): number {
@@ -32,7 +31,7 @@ export function priceJoinedWords(
   const rows = new Set(layout.pieces.map((p) => p.lineIndex)).size;
   const lines = [
     `${rows} ${pluralUk(rows, ["рядок", "рядки", "рядків"])}, ${layout.pieces.length} ${pluralUk(layout.pieces.length, ["деталь", "деталі", "деталей"])}`,
-    `Найдовша деталь ${cm(longest)} см, весь набір ${cm(layout.widthMm)} × ${cm(layout.heightMm)} см`,
+    `Найдовша деталь ${cmText(longest)} см, весь набір ${cmText(layout.widthMm)} × ${cmText(layout.heightMm)} см`,
     `${sheet.name.uk}, ${sheet.thicknessMm} мм`,
   ];
   if (discount.value) lines.push(`${discount.label}: −${Math.round(discount.value * 100)}%`);

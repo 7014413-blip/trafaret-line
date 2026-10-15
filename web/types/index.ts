@@ -22,3 +22,5 @@ export type * from "./layered-plaque";
 export type * from "./initials";
 export type * from "./business-sign";
 export type * from "./stick-letters";
+export type * from "./constructor-ui";
+export type * from "./design-reader";
