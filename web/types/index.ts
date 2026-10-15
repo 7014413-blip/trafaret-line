@@ -11,6 +11,7 @@ export type * from "./invoice";
 export type * from "./integrations";
 export type * from "./geometry-worker";
 export type * from "./catalog";
+export type * from "./hole";
 export type * from "./text";
 export type * from "./monogram";
 export type * from "./pointer-sign";

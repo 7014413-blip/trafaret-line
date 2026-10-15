@@ -3,6 +3,8 @@
  * import bookkeeping stored in Medusa metadata.
  */
 
+import type { RawHoleRules } from "../shared/types/hole"
+
 export type Lang = "uk" | "ru"
 export type Localized<T> = Record<Lang, T>
 
@@ -97,6 +99,8 @@ export interface CatalogProduct {
   options: { size: CatalogSizeOption[]; material: CatalogMaterialOption[] }
   variants: CatalogVariant[]
   fields: { key: string; uk: string; ru: string; def: string }[] | null
+  /** Blanks with a hanging hole the buyer places and sizes (shared/types/hole.ts). */
+  hole?: RawHoleRules | null
   /** Wedding monogram products: designs with a live preview on the site (web/types/monogram.ts). */
   monogram?: { styles: string[] } | null
   /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */

@@ -2,6 +2,7 @@
 // what /store/product-categories and /store/products return with our metadata
 // (backend/src/scripts/import-catalog.ts); the normalised shapes are what pages use.
 
+import type { HoleRules, RawHoleRules } from "./hole";
 import type { MonogramProductConfig } from "./monogram";
 
 export interface FaqEntry {
@@ -79,6 +80,8 @@ export interface RawProduct {
     constructor_path?: string | null;
     /** Set in «Простий кабінет»; missing means in stock. */
     availability?: ProductAvailability;
+    /** Blanks with a hanging hole the buyer places and sizes (types/hole.ts). */
+    hole?: RawHoleRules | null;
     /** Wedding monogram products: designs with a live preview (types/monogram.ts). */
     monogram?: MonogramProductConfig | null;
   } | null;
@@ -177,6 +180,8 @@ export interface CatalogProduct extends CatalogProductCard {
   /** Fields the customer fills in for named products (word, date …). */
   fields: { key: string; label: string; placeholder: string }[];
   availability: ProductAvailability;
+  /** Hole choice of a blank with a hanging hole; null for every other product. */
+  hole: HoleRules | null;
   /** Designs of a wedding monogram product; null for every other product. */
   monogram: MonogramProductConfig | null;
   /** Site path of the constructor this product is made in, or null for a ready product. */
