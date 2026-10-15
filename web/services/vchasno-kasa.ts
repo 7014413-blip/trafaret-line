@@ -2,7 +2,8 @@
 // header "Authorization: <cash register token>" (cabinet → cash register settings → Token).
 // The fiscal key must be added in the cabinet (tab «Ключі») before receipts can be issued.
 //
-// The seller is ФОП 2nd group without VAT: tax group VCHASNO_TAXGRP (default 2 = «Без ПДВ»).
+// The seller is ФОП 2nd group without VAT: tax group VCHASNO_TAXGRP, by default the receipt tax
+// group of data/knowledge_base/rules_fop.json ("2" = «Без ПДВ»).
 // Online card payments use pay type 16 (internet acquiring), LiqPay / Privat24 type 17.
 // Cash on delivery is fiscalised by the carrier (NovaPay), not here.
 // Every request carries a unique tag: repeating the same tag never creates a second
@@ -12,6 +13,7 @@ import "server-only";
 import type {
   FiscalReceiptResult, ReceiptRequestBody, ShiftAction, VchasnoPayType, VchasnoReceipt, VchasnoRequest, VchasnoResponse, VchasnoTask,
 } from "../types/integrations";
+import { SELLER } from "../lib/knowledge-base/seller-rules";
 import { envNumber, envOr, requireEnv, UpstreamError } from "./config";
 import { fetchJson } from "./http";
 
@@ -87,7 +89,7 @@ export function buildSaleReceipt(input: ReceiptRequestBody, taxgrp: number | str
 
 /** Issues the sale receipt for a paid order. The tag is derived from the order number, so a repeat call returns the same receipt. */
 export async function issueSaleReceipt(input: ReceiptRequestBody): Promise<FiscalReceiptResult> {
-  const taxgrp = envOr("VCHASNO_TAXGRP", "2");
+  const taxgrp = envOr("VCHASNO_TAXGRP", SELLER.receiptTaxGroup);
   const tag = `tl-${input.orderNumber}-sale`;
   const response = await execute({
     tag,

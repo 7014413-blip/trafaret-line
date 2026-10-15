@@ -1,4 +1,8 @@
 // Company data (from topperok.com.ua, 2026-10-09). Edited here until the CMS settings page exists.
+// The seller and tax status come from data/knowledge_base/rules_fop.json.
+
+import { SELLER } from "../lib/knowledge-base/seller-rules";
+
 export const SITE = {
   name: "Trafaret Line",
   domain: "trafaret-line.com.ua",
@@ -17,6 +21,6 @@ export const SITE = {
     tiktok: "https://tiktok.com/@topperok",
     youtube: "https://youtube.com/@topperok",
   },
-  legal: "ФОП Берчук Наталя Леонідівна", // Денис 2026-10-09; РНОКПП — to add
-  tax: "2 група, без ПДВ",
+  legal: SELLER.legalName,
+  tax: SELLER.taxNote,
 };

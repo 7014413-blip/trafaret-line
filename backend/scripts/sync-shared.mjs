@@ -7,6 +7,9 @@
 // that names the source file. backend/src/shared is generated and ignored by git: edit the file
 // in web/, then run `npm run sync-shared` (it also runs on install, build, dev and tests).
 //
+// The knowledge base (web/data/knowledge_base/*.json: material rates, packaging, seller) is
+// shared the same way when a shared file imports it.
+//
 // The script stops with an error when a shared web file imports something the backend cannot
 // resolve: an "@/…" alias or a package that is not a backend dependency.
 
@@ -19,7 +22,8 @@ const WEB_DIR = path.resolve(BACKEND_DIR, "..", "web");
 const SHARED_DIR = path.join(BACKEND_DIR, "src", "shared");
 const SCAN_DIRS = [path.join(BACKEND_DIR, "src"), path.join(BACKEND_DIR, "integration-tests")];
 const SOURCE_EXTENSIONS = [".ts", ".tsx"];
-const SHARED_ROOTS = ["lib", "types"];
+const SHARED_ROOTS = ["lib", "types", "data/knowledge_base"];
+const DATA_EXTENSION = ".json";
 const NODE_BUILTIN = /^node:/;
 
 const SPECIFIER = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,$]+\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
@@ -51,6 +55,7 @@ function specifiersOf(source) {
 }
 
 function resolveWebFile(withoutExtension) {
+  if (withoutExtension.endsWith(DATA_EXTENSION)) return fs.existsSync(withoutExtension) ? withoutExtension : null;
   const candidates = [
     ...SOURCE_EXTENSIONS.map((ext) => withoutExtension + ext),
     ...SOURCE_EXTENSIONS.map((ext) => path.join(withoutExtension, "index" + ext)),
@@ -92,9 +97,11 @@ function collectClosure(entries, dependencies) {
     if (seen.has(file)) continue;
     seen.add(file);
     const relFromWeb = path.relative(WEB_DIR, file);
-    if (!SHARED_ROOTS.includes(relFromWeb.split(path.sep)[0])) {
-      throw new Error(`web/${relFromWeb} is outside web/lib and web/types and cannot be shared`);
+    const relPosix = relFromWeb.split(path.sep).join("/");
+    if (!SHARED_ROOTS.some((root) => relPosix.startsWith(`${root}/`))) {
+      throw new Error(`web/${relPosix} is outside ${SHARED_ROOTS.map((r) => `web/${r}`).join(", ")} and cannot be shared`);
     }
+    if (file.endsWith(DATA_EXTENSION)) continue;
     for (const specifier of specifiersOf(fs.readFileSync(file, "utf8"))) {
       if (specifier.startsWith(".")) {
         const target = resolveWebFile(path.resolve(path.dirname(file), specifier));
@@ -116,7 +123,9 @@ function writeShared(files) {
     const relFromWeb = path.relative(WEB_DIR, file);
     const target = path.join(SHARED_DIR, relFromWeb);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, header(relFromWeb.split(path.sep).join("/")) + fs.readFileSync(file, "utf8"));
+    const source = fs.readFileSync(file, "utf8");
+    // JSON has no comments: data files are copied as they are.
+    fs.writeFileSync(target, file.endsWith(DATA_EXTENSION) ? source : header(relFromWeb.split(path.sep).join("/")) + source);
   }
 }
 

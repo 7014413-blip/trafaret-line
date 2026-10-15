@@ -1,6 +1,7 @@
 // End-to-end tests of the main buying paths (tests/e2e). The storefront runs as a production
 // build against a mock Medusa (tests/e2e/mock-medusa/server.mjs), so no real keys, shop or
-// payment are touched. Nova Poshta answers and the WayForPay page are mocked in the tests.
+// payment are touched. The same mock answers as the Nova Poshta API (NP_API_URL) with
+// data/knowledge_base/mock_novaposhta.json; the WayForPay page is mocked in the tests.
 //
 // Build once with the mock address (the mock must be running, the home page reads the
 // catalogue while it is built), then run:
@@ -12,8 +13,17 @@ import { defineConfig, devices } from "@playwright/test";
 
 const MOCK_PORT = 9100;
 const SITE_PORT = 3100;
-/** The same backend address at build and at start: next.config.ts reads it for product photos. */
-const SITE_ENV = { NEXT_PUBLIC_MEDUSA_URL: `http://127.0.0.1:${MOCK_PORT}`, NEXT_PUBLIC_MEDUSA_PK: "pk_e2e" };
+/**
+ * The same backend address at build and at start (next.config.ts reads it for product photos);
+ * Nova Poshta goes to the mock too, with a test key, so the site's own /api/novaposhta routes run.
+ */
+const SITE_ENV = {
+  NEXT_PUBLIC_MEDUSA_URL: `http://127.0.0.1:${MOCK_PORT}`,
+  NEXT_PUBLIC_MEDUSA_PK: "pk_e2e",
+  NP_API_KEY: "e2e",
+  NP_API_URL: `http://127.0.0.1:${MOCK_PORT}/novaposhta/`,
+  NP_SENDER_CITY_REF: "e2e-sender-boryspil",
+};
 
 export default defineConfig({
   testDir: "tests/e2e",

@@ -1,7 +1,8 @@
 // Mock of the Medusa backend for end-to-end tests. It answers the Store API calls the
 // storefront makes (regions, categories, products, product photos), takes orders at
 // POST /store/tl-checkout and signs a WayForPay form at POST /store/tl-pay/wayforpay without
-// real keys. Orders it received are listed at GET /__e2e/orders, so a test can check what the
+// real keys. It also stands in for the Nova Poshta API at POST /novaposhta/ with the answers
+// of data/knowledge_base/mock_novaposhta.json (the site's server calls it via NP_API_URL). Orders it received are listed at GET /__e2e/orders, so a test can check what the
 // browser sent; DELETE /__e2e/orders clears the list.
 //
 // Usage: node tests/e2e/mock-medusa/server.mjs (port from MOCK_MEDUSA_PORT, default 9100).
@@ -14,7 +15,9 @@ import { CATEGORIES, REGION, products } from "./catalog.mjs";
 
 const PORT = Number(process.env.MOCK_MEDUSA_PORT ?? 9100);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
-const PHOTO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../public/demo/cake-stencil.jpg");
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const PHOTO = path.resolve(HERE, "../../../public/demo/cake-stencil.jpg");
+const NOVA_POSHTA = JSON.parse(fs.readFileSync(path.resolve(HERE, "../../../data/knowledge_base/mock_novaposhta.json"), "utf8"));
 const WAYFORPAY_URL = "https://secure.wayforpay.com/pay";
 
 const orders = [];
@@ -81,6 +84,11 @@ const server = http.createServer(async (req, res) => {
           productName: placed.body.lines.map((l) => l.title), productCount: placed.body.lines.map((l) => l.quantity), merchantSignature: "e2e-signature",
         },
       });
+    }
+    if (req.method === "POST" && url.pathname === "/novaposhta/") {
+      const { calledMethod, apiKey } = await readJson(req);
+      if (!apiKey) return send(res, 200, NOVA_POSHTA.error);
+      return send(res, 200, NOVA_POSHTA[calledMethod] ?? NOVA_POSHTA.error);
     }
     if (url.pathname === "/__e2e/orders") {
       if (req.method === "DELETE") orders.length = 0;

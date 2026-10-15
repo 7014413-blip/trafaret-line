@@ -1,0 +1,301 @@
+{
+  "about": "Ставки і фізика матеріалів Trafaret Line. Єдине джерело: web/lib/materials.ts і web/lib/calculators/weight.ts читають цей файл, backend отримує його через sync-shared. Ставки в грн за м² листа, покупцю м² не показуються.",
+  "updated": "2026-10-15",
+  "sources": {
+    "stencilRates": "Денис 2026-10-08: PET 0,5 — 2200, полістирол 1 мм — 2300, акрил 3 мм — 4000",
+    "acrylicBlankRates": "Денис 2026-10-10: роздріб / опт за м²",
+    "mirrorRates": "ТЗ §21: дзеркальний акрил 2/3 мм — 5600/8200, дзеркальний полістирол 1 мм — 3600, PET-підкладка 0,5 — 1800",
+    "acrylicWeight": "Денис 2026-10-10: зважені кола, 1,5 мм — 0,205 г/см², 3 мм — 0,351 г/см²"
+  },
+  "currency": "UAH",
+  "machineSheetMm": {
+    "width": 1400,
+    "height": 2000
+  },
+  "acrylicWeight": {
+    "points": [
+      {
+        "thicknessMm": 1.5,
+        "gramsPerCm2": 0.205
+      },
+      {
+        "thicknessMm": 3,
+        "gramsPerCm2": 0.351
+      }
+    ],
+    "nominalDensityGcm3": 1.19,
+    "nominalFromMm": 4
+  },
+  "materials": {
+    "pet_thin": {
+      "use": "stencil",
+      "thicknessMm": 0.5,
+      "densityGcm3": 1.38,
+      "retailPerM2": 2200,
+      "wholesalePerM2": null,
+      "minPrice": 150,
+      "costPerM2": null,
+      "available": true
+    },
+    "pet_thick": {
+      "use": "stencil",
+      "thicknessMm": 1,
+      "densityGcm3": 1.38,
+      "retailPerM2": null,
+      "wholesalePerM2": null,
+      "minPrice": 150,
+      "costPerM2": null,
+      "available": false
+    },
+    "polystyrene": {
+      "use": "stencil",
+      "thicknessMm": 1,
+      "densityGcm3": 1.05,
+      "retailPerM2": 2300,
+      "wholesalePerM2": null,
+      "minPrice": 150,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic": {
+      "use": "stencil",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 4000,
+      "wholesalePerM2": null,
+      "minPrice": 250,
+      "costPerM2": null,
+      "available": true
+    },
+    "magnetic": {
+      "use": "stencil",
+      "thicknessMm": 0.9,
+      "densityGcm3": 3.6,
+      "retailPerM2": null,
+      "wholesalePerM2": null,
+      "minPrice": 150,
+      "costPerM2": null,
+      "available": false
+    },
+    "plywood": {
+      "use": "stencil",
+      "thicknessMm": 3,
+      "densityGcm3": 0.65,
+      "retailPerM2": null,
+      "wholesalePerM2": null,
+      "minPrice": 150,
+      "costPerM2": null,
+      "available": false
+    },
+    "stainless_steel": {
+      "use": "stencil",
+      "thicknessMm": 0.5,
+      "densityGcm3": 7.9,
+      "retailPerM2": null,
+      "wholesalePerM2": null,
+      "minPrice": 500,
+      "costPerM2": null,
+      "available": false
+    },
+    "acrylic_1_5": {
+      "use": "blank",
+      "thicknessMm": 1.5,
+      "densityGcm3": 1.19,
+      "retailPerM2": 1950,
+      "wholesalePerM2": 1700,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_2": {
+      "use": "blank",
+      "thicknessMm": 2,
+      "densityGcm3": 1.19,
+      "retailPerM2": 2300,
+      "wholesalePerM2": 2100,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_3": {
+      "use": "blank",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 2990,
+      "wholesalePerM2": 2830,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_4": {
+      "use": "blank",
+      "thicknessMm": 4,
+      "densityGcm3": 1.19,
+      "retailPerM2": 4300,
+      "wholesalePerM2": 4100,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_5": {
+      "use": "blank",
+      "thicknessMm": 5,
+      "densityGcm3": 1.19,
+      "retailPerM2": 5200,
+      "wholesalePerM2": 4900,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_6": {
+      "use": "blank",
+      "thicknessMm": 6,
+      "densityGcm3": 1.19,
+      "retailPerM2": 6500,
+      "wholesalePerM2": 6240,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_8": {
+      "use": "blank",
+      "thicknessMm": 8,
+      "densityGcm3": 1.19,
+      "retailPerM2": 8800,
+      "wholesalePerM2": 8410,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_10": {
+      "use": "blank",
+      "thicknessMm": 10,
+      "densityGcm3": 1.19,
+      "retailPerM2": 12000,
+      "wholesalePerM2": 11000,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_15": {
+      "use": "blank",
+      "thicknessMm": 15,
+      "densityGcm3": 1.19,
+      "retailPerM2": 20000,
+      "wholesalePerM2": 18400,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_black_2": {
+      "use": "blank",
+      "thicknessMm": 2,
+      "densityGcm3": 1.19,
+      "retailPerM2": 3300,
+      "wholesalePerM2": 3000,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_black_3": {
+      "use": "blank",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 4700,
+      "wholesalePerM2": 4000,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_black_10": {
+      "use": "blank",
+      "thicknessMm": 10,
+      "densityGcm3": 1.19,
+      "retailPerM2": 14000,
+      "wholesalePerM2": 12890,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_white_2": {
+      "use": "blank",
+      "thicknessMm": 2,
+      "densityGcm3": 1.19,
+      "retailPerM2": 3200,
+      "wholesalePerM2": 3000,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_white_3": {
+      "use": "blank",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 4450,
+      "wholesalePerM2": 4000,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_white_5": {
+      "use": "blank",
+      "thicknessMm": 5,
+      "densityGcm3": 1.19,
+      "retailPerM2": 6000,
+      "wholesalePerM2": 5670,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_color": {
+      "use": "blank",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 4000,
+      "wholesalePerM2": 3500,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_mirror_2": {
+      "use": "blank",
+      "thicknessMm": 2,
+      "densityGcm3": 1.19,
+      "retailPerM2": 5600,
+      "wholesalePerM2": null,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "acrylic_mirror_3": {
+      "use": "blank",
+      "thicknessMm": 3,
+      "densityGcm3": 1.19,
+      "retailPerM2": 8200,
+      "wholesalePerM2": null,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "polystyrene_mirror_1": {
+      "use": "blank",
+      "thicknessMm": 1,
+      "densityGcm3": 1.05,
+      "retailPerM2": 3600,
+      "wholesalePerM2": null,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    },
+    "pet_food_board": {
+      "use": "blank",
+      "thicknessMm": 0.5,
+      "densityGcm3": 1.38,
+      "retailPerM2": 1800,
+      "wholesalePerM2": null,
+      "minPrice": 0,
+      "costPerM2": null,
+      "available": true
+    }
+  }
+}

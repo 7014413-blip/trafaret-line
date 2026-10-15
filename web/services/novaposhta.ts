@@ -1,5 +1,6 @@
 // Nova Poshta API 2.0 client (https://api.novaposhta.ua/v2.0/json/).
-// Needs NP_API_KEY (personal cabinet → Settings → Security → API key).
+// Needs NP_API_KEY (personal cabinet → Settings → Security → API key); NP_API_URL overrides
+// the address for tests.
 // The sender city is Бориспіль (production); NP_SENDER_CITY_REF overrides the lookup.
 
 import "server-only";
@@ -10,12 +11,13 @@ import type {
 import { envOr, requireEnv, UpstreamError } from "./config";
 import { fetchJson } from "./http";
 
+/** Real API; NP_API_URL points the site at a test copy (end-to-end tests). */
 const ENDPOINT = "https://api.novaposhta.ua/v2.0/json/";
 
 /** One API call. Nova Poshta answers HTTP 200 with success=false on errors. */
 export async function npCall<T>(modelName: string, calledMethod: string, methodProperties: Record<string, unknown>): Promise<T[]> {
   const { NP_API_KEY } = requireEnv("novaposhta", ["NP_API_KEY"]);
-  const { data } = await fetchJson<NpEnvelope<T>>("novaposhta", ENDPOINT, {
+  const { data } = await fetchJson<NpEnvelope<T>>("novaposhta", envOr("NP_API_URL", ENDPOINT), {
     body: { apiKey: NP_API_KEY, modelName, calledMethod, methodProperties },
     timeoutMs: 12_000,
   });

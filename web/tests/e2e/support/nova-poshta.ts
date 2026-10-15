@@ -1,34 +1,17 @@
-// Nova Poshta answers for the checkout tests: the site's own /api/novaposhta routes are
-// answered in the browser, so the city search, the branch list and the delivery price work
-// without the Nova Poshta key.
+// What the checkout shows for the Nova Poshta answers in data/knowledge_base/mock_novaposhta.json:
+// the mock shop answers the site's server in their place (NP_API_URL in playwright.config.ts),
+// so the site's own /api/novaposhta routes and their mapping run in the tests.
 
-import type { Page } from "@playwright/test";
-import type { NpCity, NpPriceResult, NpWarehouse } from "../../../types/integrations";
+import mocks from "../../../data/knowledge_base/mock_novaposhta.json";
+import type { NovaPoshtaMocks } from "../../../types/system";
 
-export const KYIV: NpCity = {
-  cityRef: "city-kyiv", settlementRef: "settlement-kyiv", label: "м. Київ, Київська обл.", name: "Київ", area: "Київська", warehouses: 2,
-};
+const NP = mocks as NovaPoshtaMocks;
+const city = NP.searchSettlements.data[0].Addresses[0];
+const [branch, locker] = NP.getWarehouses.data;
+const price = NP.getDocumentPrice.data[0];
 
-export const BRANCH_5: NpWarehouse = {
-  ref: "wh-kyiv-5", number: "5", label: "Відділення №5: вул. Хрещатик, 22", shortAddress: "вул. Хрещатик, 22",
-  category: "branch", maxWeightKg: 30, maxDimensionsMm: null, fits: true,
-};
-
-const POSTOMAT: NpWarehouse = {
-  ref: "wh-kyiv-pm", number: "1001", label: "Поштомат №1001: вул. Велика Васильківська, 1", shortAddress: "вул. Велика Васильківська, 1",
-  category: "postomat", maxWeightKg: 20, maxDimensionsMm: { length: 600, width: 400, height: 400 }, fits: true,
-};
-
-export const DELIVERY_QUOTE: NpPriceResult = { deliveryCost: 80, codFee: 0, deliveryDate: "2026-10-22" };
-
-/** Answers city search, branches and price; returns the price requests the page made. */
-export async function mockNovaPoshta(page: Page): Promise<{ priceRequests: unknown[] }> {
-  const priceRequests: unknown[] = [];
-  await page.route("**/api/novaposhta/cities**", (route) => route.fulfill({ json: { cities: [KYIV] } }));
-  await page.route("**/api/novaposhta/warehouses**", (route) => route.fulfill({ json: { warehouses: [BRANCH_5, POSTOMAT] } }));
-  await page.route("**/api/novaposhta/price", (route) => {
-    priceRequests.push(route.request().postDataJSON());
-    return route.fulfill({ json: DELIVERY_QUOTE });
-  });
-  return { priceRequests };
-}
+export const KYIV = { label: city.Present, cityRef: city.DeliveryCity };
+export const BRANCH = { ref: branch.Ref, option: `Відділення №${branch.Number}: ${branch.ShortAddress}`, label: branch.Description };
+export const LOCKER = { option: `Поштомат №${locker.Number}: ${locker.ShortAddress}` };
+/** Delivery cost and the cash-on-delivery fee, UAH. */
+export const DELIVERY = { cost: price.Cost, codFee: price.CostRedelivery ?? 0 };

@@ -1,0 +1,28 @@
+{
+  "about": "Правила упаковки і доставки. Єдине джерело для web/lib/calculators/packaging.ts (тубус чи коробка, вага, обʼємна вага, поштомат).",
+  "updated": "2026-10-15",
+  "sources": {
+    "packaging": "Денис 2026-10-08 і узгодження з каталогом 2026-10-10: 2 листи гофрокартону 450 г/м², +2 см з кожного боку, +10 %, мінімум 30 г",
+    "postomat": "Нова Пошта, найбільша комірка поштомата 40 × 30 × 60 см, до 20 кг"
+  },
+  "parcel": {
+    "marginXYmm": 40,
+    "paddingZmm": 10,
+    "tubeDiameterMm": 100,
+    "tubeExtraMm": 20,
+    "flexibleMaxMm": 0.8,
+    "cardboardGm2": 450,
+    "cardboardMarginMm": 20,
+    "cardboardExtra": 0.1,
+    "cardboardMinG": 30,
+    "flatMinHeightMm": 20,
+    "tubeGcm2": 0.07,
+    "volumetricDivisor": 4000,
+    "postomatMaxMm": {
+      "length": 600,
+      "width": 400,
+      "height": 300
+    },
+    "postomatMaxKg": 20
+  }
+}

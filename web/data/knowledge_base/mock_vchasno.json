@@ -1,0 +1,42 @@
+{
+  "about": "Відповіді Вчасно.Каса (POST https://kasa.vchasno.ua/api/v3/fiscal/execute) для тестів без токена: успішний чек, колізія з повтором того ж тега і відмова, яку треба перевірити людині. Читають юніт-тести services/vchasno-kasa.ts. Фіскальні номери вигадані.",
+  "updated": "2026-10-15",
+  "saleOk": {
+    "task": 1,
+    "tag": "tl-TL-1001-sale",
+    "dt": "2026-10-15 12:00:00",
+    "res": 0,
+    "res_action": 0,
+    "errortxt": "",
+    "warnings": [],
+    "error_extra": null,
+    "info": {
+      "doccode": "TEST0000000001",
+      "docno": 1,
+      "qr": "https://kasa.vchasno.ua/c/TEST0000000001",
+      "fisid": "4000000001",
+      "shift_link": 1,
+      "isoffline": false
+    }
+  },
+  "collision": {
+    "task": 1,
+    "tag": "tl-TL-1001-sale",
+    "dt": "2026-10-15 12:00:00",
+    "res": 1001,
+    "res_action": 2,
+    "errortxt": "Колізія: попередній запит з цим тегом ще обробляється",
+    "warnings": [],
+    "error_extra": null
+  },
+  "stop": {
+    "task": 1,
+    "tag": "tl-TL-1001-sale",
+    "dt": "2026-10-15 12:00:00",
+    "res": 1102,
+    "res_action": 3,
+    "errortxt": "Зміна не відкрита",
+    "warnings": [],
+    "error_extra": null
+  }
+}

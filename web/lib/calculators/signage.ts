@@ -13,7 +13,7 @@ import type { BuyerContext, LocalizedText } from "../../types/customizer";
 import type {
   AcrylicSheet, SignBase, SignCheck, SignDesign, SignLayer, SignPrice, SignPriceLine, SignPricingConfig,
 } from "../../types/signage";
-import type { Hole } from "../export/layers";
+import type { Hole } from "../../types/vector";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
 import { cmText } from "../format";
 

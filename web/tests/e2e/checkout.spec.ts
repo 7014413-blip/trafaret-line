@@ -1,9 +1,10 @@
-// Cart and checkout: required fields, Nova Poshta city, branch and delivery price, then the
-// order goes to the shop. Cash on delivery ends on «Дякуємо», card payment hands the signed
-// form to WayForPay (answered here by a test page, no money moves).
+// Cart and checkout: required fields, Nova Poshta city, branch and delivery price (answered by
+// the mock shop with data/knowledge_base/mock_novaposhta.json), then the order goes to the
+// shop. Cash on delivery ends on «Дякуємо», card payment hands the signed form to WayForPay
+// (answered here by a test page, no money moves).
 
 import { expect, test } from "@playwright/test";
-import { BRANCH_5, KYIV, mockNovaPoshta } from "./support/nova-poshta";
+import { BRANCH, DELIVERY, KYIV, LOCKER } from "./support/nova-poshta";
 import { addRoseStencil, clearOrders, receivedOrders } from "./support/shop";
 
 test.beforeEach(async ({ request }) => {
@@ -15,7 +16,8 @@ async function fillContactsAndDelivery(page: import("@playwright/test").Page): P
   await page.locator("#c-name").fill("Олена Коваленко");
   await page.locator("#c-city").fill("Киї");
   await page.getByRole("option", { name: KYIV.label }).click();
-  await page.locator("#c-wh").selectOption(BRANCH_5.ref);
+  await expect(page.locator("#c-wh").getByRole("option", { name: LOCKER.option })).toBeAttached();
+  await page.locator("#c-wh").selectOption(BRANCH.ref);
 }
 
 test("cart opens checkout with the same lines", async ({ page }) => {
@@ -37,13 +39,12 @@ test("empty required fields are shown before the order is sent", async ({ page, 
 });
 
 test("cash on delivery: Nova Poshta branch, delivery price, thank-you page", async ({ page, request }) => {
-  const np = await mockNovaPoshta(page);
   await addRoseStencil(page);
   await page.goto("/checkout");
   await fillContactsAndDelivery(page);
   await page.getByRole("radio", { name: "Накладений платіж при отриманні" }).check();
-  await expect(page.getByRole("complementary", { name: "Ваше замовлення" })).toContainText("80 ₴");
-  expect(np.priceRequests.length).toBeGreaterThan(0);
+  // Delivery and the cash-on-delivery fee, as Nova Poshta quoted them.
+  await expect(page.getByRole("complementary", { name: "Ваше замовлення" })).toContainText(`${DELIVERY.cost + DELIVERY.codFee} ₴`);
 
   await page.getByRole("button", { name: /Підтвердити замовлення · 180 ₴/ }).click();
   await expect(page.getByRole("heading", { name: /Дякуємо! Замовлення TL-1001/ })).toBeVisible();
@@ -52,7 +53,7 @@ test("cash on delivery: Nova Poshta branch, delivery price, thank-you page", asy
   const [order] = await receivedOrders(request);
   expect(order.body.payment).toBe("cod");
   expect(order.body.contact).toEqual({ phone: "+380 67 123 45 67", name: "Олена Коваленко" });
-  expect(order.body.delivery).toMatchObject({ method: "np_branch", city: KYIV.label, cityRef: KYIV.cityRef, warehouseRef: BRANCH_5.ref });
+  expect(order.body.delivery).toMatchObject({ method: "np_branch", city: KYIV.label, cityRef: KYIV.cityRef, warehouse: BRANCH.label, warehouseRef: BRANCH.ref });
   expect(order.body.lines).toEqual([expect.objectContaining({ kind: "catalog", variantId: "variant_1_0", quantity: 1 })]);
 
   // The cart is empty after the order, so a reload cannot send it twice.
@@ -61,7 +62,6 @@ test("cash on delivery: Nova Poshta branch, delivery price, thank-you page", asy
 });
 
 test("card payment hands the signed order to WayForPay", async ({ page, request }) => {
-  await mockNovaPoshta(page);
   let posted = "";
   await page.route("https://secure.wayforpay.com/pay", (route) => {
     posted = route.request().postData() ?? "";
@@ -84,7 +84,6 @@ test("card payment hands the signed order to WayForPay", async ({ page, request 
 });
 
 test("payment that cannot start keeps the order and offers a retry", async ({ page }) => {
-  await mockNovaPoshta(page);
   await page.route("**/store/tl-pay/wayforpay", (route) => route.fulfill({ status: 502, json: { error: "upstream" } }));
   await addRoseStencil(page);
   await page.goto("/checkout");
