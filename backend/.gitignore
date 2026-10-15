@@ -24,3 +24,5 @@ build
 !.yarn/versions
 
 .medusa
+# Generated from web/lib and web/types by scripts/sync-shared.mjs (edit the web files)
+/src/shared

@@ -4,13 +4,13 @@
 // with the same code as the storefront (lib/text, lib/geometry) and returns the size it
 // will produce and charge for. The browser's numbers are only compared, never trusted.
 
-import type { TextAlign, WeldOptions } from "../../types/geometry";
-import { sheetForDesign } from "../calculators/geometry";
-import { DEFAULT_WELD } from "../geometry/weld";
-import { weldAtWidth } from "../geometry/weld-sizing";
-import { textToDesign } from "../text/text-layout";
+import type { TextAlign, WeldOptions } from "../../shared/types/geometry";
+import { sheetForDesign } from "../../shared/lib/calculators/geometry";
+import { DEFAULT_WELD } from "../../shared/lib/geometry/weld";
+import { weldAtWidth } from "../../shared/lib/geometry/weld-sizing";
+import { textToDesign } from "../../shared/lib/text/text-layout";
 import { loadFontById } from "../text/node-fonts";
-import type { LoadedFont } from "../../types/text";
+import type { LoadedFont } from "../../shared/types/text";
 
 /** Largest difference between the browser's and the server's size that is accepted, mm. */
 export const SIZE_TOLERANCE_MM = 3;

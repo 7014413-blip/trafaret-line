@@ -12,7 +12,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { checkFontBuffer, MAX_FONT_BYTES } from "../../../shared/lib/text/font-check"
 import { customFontId } from "../../../shared/lib/text/custom-font-id"
-import { customFontsDir } from "../../../shared/lib/text/node-fonts"
+import { customFontsDir } from "../../../lib/text/node-fonts"
 
 interface FontUploadBody {
   name?: string

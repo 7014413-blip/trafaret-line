@@ -6,8 +6,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as opentype from "opentype.js";
-import type { FontEntry, LoadedFont } from "../../types/text";
-import { customFontKey, isCustomFontId } from "./custom-font-id";
+import type { FontEntry, LoadedFont } from "../../shared/types/text";
+import { customFontKey, isCustomFontId } from "../../shared/lib/text/custom-font-id";
 
 const cache = new Map<string, LoadedFont>();
 let manifest: FontEntry[] | null = null;
