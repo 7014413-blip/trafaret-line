@@ -46,7 +46,7 @@ jobs:
       - name: Start mock shop
         run: |
           node tests/e2e/mock-medusa/server.mjs > mock-medusa.log 2>&1 &
-          npx --yes wait-on@8.0.3 --timeout 30000 http://127.0.0.1:9100/health
+          npx --yes wait-on@8.0.3 --timeout 30000 http-get://127.0.0.1:9100/health
       - name: Build
         run: npm run build
       - name: Install browser
