@@ -7,6 +7,7 @@
 // No m² anywhere.
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CatalogImage, CatalogProduct, CatalogVariant } from "@/types/catalog";
 import { DEFAULT_PRICING, priceCatalogVariant } from "@/lib/calculators/pricing";
@@ -56,6 +57,9 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
   const date = formatDispatch(estimateDispatchDate(new Date()));
   const sizeDetail = sizes.find((s) => s.label === size)?.detail;
   const missingField = p.fields.some((f) => !fields[f.key]?.trim());
+
+  // Products made in a constructor (pointer signs): the button opens it with the chosen size.
+  const makeHref = p.constructorPath ? `${p.constructorPath}${variant?.sizeCode ? `?size=${encodeURIComponent(variant.sizeCode)}` : ""}` : null;
 
   const cart = useCart();
   // «Немає в наявності» from the admin cabinet: shown, but not sold.
@@ -166,7 +170,11 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
           {soldOut ? "Зараз немає в наявності. Напишіть нам у Viber, повідомимо, коли зʼявиться." : "Під замовлення: строк виготовлення уточнить менеджер."}
         </p>
       )}
-      <button type="button" onClick={add} disabled={!variant || missingField || soldOut} className="h-[52px] rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.97] disabled:opacity-50">{soldOut ? "Немає в наявності" : added ? "✓ Додано" : "Купити"}</button>
+      {makeHref && !soldOut ? (
+        <Link href={makeHref} className="grid h-[52px] place-items-center rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)]">Створити зі своїм написом</Link>
+      ) : (
+        <button type="button" onClick={add} disabled={!variant || missingField || soldOut} className="h-[52px] rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.97] disabled:opacity-50">{soldOut ? "Немає в наявності" : added ? "✓ Додано" : "Купити"}</button>
+      )}
 
       <ul className="m-0 grid list-none gap-1.5 p-0 text-sm">
         <li>✓ <b>{date}</b> · Нова пошта, Укрпошта</li>
@@ -176,7 +184,11 @@ export function ProductBuyBox({ p }: { p: CatalogProduct }) {
 
       <div className="fixed inset-x-0 bottom-[calc(58px+env(safe-area-inset-bottom,0px))] z-30 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 py-2 lg:hidden">
         <b className="tabular-nums">{formatUAH(unit * qty)} · {size}</b>
-        <button type="button" onClick={add} disabled={!variant || missingField || soldOut} className="h-11 rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] disabled:opacity-50">{soldOut ? "Немає" : added ? "✓" : "Купити"}</button>
+        {makeHref && !soldOut ? (
+          <Link href={makeHref} className="grid h-11 place-items-center rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)]">Створити</Link>
+        ) : (
+          <button type="button" onClick={add} disabled={!variant || missingField || soldOut} className="h-11 rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] disabled:opacity-50">{soldOut ? "Немає" : added ? "✓" : "Купити"}</button>
+        )}
       </div>
     </div>
   );

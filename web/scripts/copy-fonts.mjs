@@ -11,6 +11,8 @@ export const FONTS = [
   { id: "rubik", pkg: "rubik", weight: 700, name: "Rubik", group: "Без засічок" },
   { id: "comfortaa", pkg: "comfortaa", weight: 700, name: "Comfortaa", group: "Без засічок" },
   { id: "playfair", pkg: "playfair-display", weight: 700, name: "Playfair Display", group: "Класичні" },
+  // Денис 2026-10-10: wedding initials «S | D» in a Times-like serif.
+  { id: "pt-serif", pkg: "pt-serif", weight: 400, name: "PT Serif", group: "Класичні" },
   { id: "lora", pkg: "lora", weight: 700, name: "Lora", group: "Класичні" },
   { id: "roboto-slab", pkg: "roboto-slab", weight: 700, name: "Roboto Slab", group: "Класичні" },
   { id: "marck", pkg: "marck-script", weight: 400, name: "Marck Script", group: "Рукописні" },

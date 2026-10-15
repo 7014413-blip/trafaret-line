@@ -73,6 +73,8 @@ export interface RawProduct {
     blocks?: { uk?: Record<string, { title: string; html: string }> };
     related_handles?: string[];
     fields?: { key: string; uk: string; ru: string; def: string }[] | null;
+    /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */
+    constructor_path?: string | null;
     /** Set in «Простий кабінет»; missing means in stock. */
     availability?: ProductAvailability;
   } | null;
@@ -171,4 +173,6 @@ export interface CatalogProduct extends CatalogProductCard {
   /** Fields the customer fills in for named products (word, date …). */
   fields: { key: string; label: string; placeholder: string }[];
   availability: ProductAvailability;
+  /** Site path of the constructor this product is made in, or null for a ready product. */
+  constructorPath: string | null;
 }

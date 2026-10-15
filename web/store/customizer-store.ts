@@ -8,6 +8,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { MATERIALS } from "../lib/materials";
 import { sheetForDesign } from "../lib/calculators/geometry";
+import { designPlacement } from "../lib/calculators/design-fit";
 import { DEFAULT_PRICING, calculateStencilPrice, type StencilPriceResult } from "../lib/calculators/pricing";
 import { computeMetrics } from "../lib/calculators/cut-metrics";
 import { checkDesign } from "../lib/calculators/design-check";
@@ -98,16 +99,19 @@ const DEFAULT_INPUT: CustomizerInput = {
   bridgeStrength: "normal",
 };
 
-/** Design contours (layout units) grouped per glyph, scaled to the sheet and moved inside the margin. */
-export function designGroupsMm(design: VectorDesign, widthMm: number, marginMm: number): Polygon[][] {
-  const scale = (widthMm - 2 * marginMm) / Math.max(1, design.bboxMm.w);
+/**
+ * Design contours (layout units) grouped per glyph, scaled to the sheet and moved inside the
+ * margin; on a square sheet the design is fitted and centred (lib/calculators/design-fit.ts).
+ */
+export function designGroupsMm(design: VectorDesign, widthMm: number, marginMm: number, square = false): Polygon[][] {
+  const { scale, dx, dy } = designPlacement(design, widthMm, marginMm, square);
   const groups = new Map<number, Polygon[]>();
   // Contours without a group (uploaded files, layouts saved before groups existed) form one
   // even-odd group, so their holes still come out right.
   design.contours.forEach((contour) => {
     const key = contour.group ?? -1;
     const list = groups.get(key) ?? [];
-    list.push(contour.points.map(([x, y]) => [x * scale + marginMm, y * scale + marginMm] as Vec2));
+    list.push(contour.points.map(([x, y]) => [x * scale + dx, y * scale + dy] as Vec2));
     groups.set(key, list);
   });
   return [...groups.values()];
@@ -127,14 +131,14 @@ function designKey(design: VectorDesign): number {
 
 /** Sheet of the current input. */
 export function sheetFor(input: CustomizerInput): SheetSize {
-  return input.shape === "circle"
-    ? { shape: "circle", widthMm: input.widthMm, heightMm: input.widthMm }
-    : sheetForDesign(input.design, input.widthMm, input.marginMm);
+  if (input.shape === "circle") return { shape: "circle", widthMm: input.widthMm, heightMm: input.widthMm };
+  if (input.shape === "square") return { shape: "square", widthMm: input.widthMm, heightMm: input.widthMm };
+  return sheetForDesign(input.design, input.widthMm, input.marginMm);
 }
 
 /** Identifies the geometry a cut was computed for (outline, width, margin, cap height). */
 export function cutKeyFor(input: CustomizerInput): string {
-  return `${designKey(input.design)}|${input.widthMm}|${input.marginMm}|${(input.capHeightMm ?? 0).toFixed(2)}|${input.bridgeStrength}|${minMaterialMm(input.materialId)}`;
+  return `${designKey(input.design)}|${input.shape}|${input.widthMm}|${input.marginMm}|${(input.capHeightMm ?? 0).toFixed(2)}|${input.bridgeStrength}|${minMaterialMm(input.materialId)}`;
 }
 
 /** What the geometry worker needs to build the cut of this input; null without a design. */
@@ -144,7 +148,7 @@ export function cutRequestFor(input: CustomizerInput): { key: string; groups: Po
   const outline: Polygon = [[0, 0], [sheet.widthMm, 0], [sheet.widthMm, sheet.heightMm], [0, sheet.heightMm]];
   return {
     key: cutKeyFor(input),
-    groups: designGroupsMm(input.design, input.widthMm, input.marginMm),
+    groups: designGroupsMm(input.design, input.widthMm, input.marginMm, input.shape === "square"),
     options: {
       bridgeWidthMm: bridgeWidthFor(input.capHeightMm ?? 0, DEFAULT_LASER, input.bridgeStrength ?? "normal"),
       skipBridges: input.design.stencilFont,

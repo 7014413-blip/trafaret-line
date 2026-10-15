@@ -16,6 +16,22 @@ import {
 import { MATERIALS } from "../../../shared/lib/materials";
 import { priceCatalogVariant, priceStencil, priceWelded } from "../../../shared/lib/calculators/pricing";
 import { priceSign } from "../../../shared/lib/calculators/signage";
+import { pricePointerSign } from "../../../shared/lib/pointer-sign/price";
+import { readPointerSignDesign } from "../../../shared/lib/pointer-sign/read-design";
+import { findPlaquePlate } from "../../../shared/lib/office-plaque/colours";
+import { priceOfficePlaque } from "../../../shared/lib/office-plaque/price";
+import { readOfficePlaqueDesign } from "../../../shared/lib/office-plaque/read-design";
+import { findJoinedWordsMaterial } from "../../../shared/lib/joined-words/find-material";
+import { priceJoinedWordsDesign } from "../../../shared/lib/joined-words/price-design";
+import { readJoinedWordsDesign } from "../../../shared/lib/joined-words/read-design";
+import { loadFontById } from "../../../shared/lib/text/node-fonts";
+import { LAYERED_PLAQUE_CONFIGS } from "../../../shared/lib/layered-plaque/configs";
+import { priceLayeredPlaque } from "../../../shared/lib/layered-plaque/price";
+import { readLayeredPlaqueDesign } from "../../../shared/lib/layered-plaque/read-design";
+import { priceInitialsDesign } from "../../../shared/lib/initials/price-design";
+import { readInitialsDesign } from "../../../shared/lib/initials/read-design";
+import { priceStickLettersDesign } from "../../../shared/lib/stick-letters/price-design";
+import { readStickLettersDesign } from "../../../shared/lib/stick-letters/read-design";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -81,7 +97,74 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
   if (line.kind === "sign") {
     if (!line.sign) throw new Error("sign design missing");
     const label = cleanText(line.title);
-    return { title: label ? `Вивіска: ${label}` : "Вивіска з акрилу", unitPrice: priceSign({ ...line.sign, quantity: line.quantity }).unitPrice };
+    return { title: label ? (label.startsWith("Вивіска") ? label : `Вивіска: ${label}`) : "Вивіска з акрилу", unitPrice: priceSign({ ...line.sign, quantity: line.quantity }).unitPrice };
+  }
+  if (line.kind === "pointer") {
+    // Pointer sign: the design is re-read field by field and priced here (fixed sizes at
+    // Денис's prices, custom sizes by the sign rate); the logo goes to the manager for a check.
+    const design = readPointerSignDesign(line.pointer, line.quantity);
+    const texts = cleanText(design.lines.map((l) => l.text).filter(Boolean).join(" / "));
+    return {
+      title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cm(design.widthMm)}×${cm(design.heightMm)} см`,
+      unitPrice: pricePointerSign(design).unitPrice,
+    };
+  }
+  if (line.kind === "plaque") {
+    // Office plaque: the design is re-read field by field and priced here by its size.
+    const design = readOfficePlaqueDesign(line.plaque, line.quantity);
+    const texts = cleanText(design.lines.map((l) => l.text).filter(Boolean).join(" / "));
+    return {
+      title: `Офісна табличка «${texts}», ${cm(design.widthMm)}×${cm(design.heightMm)} см, ${findPlaquePlate(design.plateColourId).name.uk.toLowerCase()}`,
+      unitPrice: priceOfficePlaque(design).unitPrice,
+    };
+  }
+  if (line.kind === "layered") {
+    // Two-layer floor, door and number plaques: re-read and priced here by size and series.
+    const design = readLayeredPlaqueDesign(line.layered, line.quantity);
+    const cfg = LAYERED_PLAQUE_CONFIGS[design.kind];
+    const price = priceLayeredPlaque(design, cfg);
+    const texts = cleanText(design.lines.map((l, i) => (design.series && i === cfg.seriesLine ? `${design.series.from}–${design.series.to}` : l.text)).filter(Boolean).join(" "));
+    return {
+      title: `${cfg.title.uk} «${texts}», ${cm(design.widthMm)}×${cm(design.heightMm)} см${price.count > 1 ? `, набір ${price.count} шт.` : ""}`,
+      unitPrice: price.unitPrice,
+    };
+  }
+  if (line.kind === "words") {
+    // «Написи на планці»: the design is re-read and every piece measured with the server's
+    // fonts (the customer's own fonts are on the server too), then priced by its pieces.
+    const design = readJoinedWordsDesign(line.words, line.quantity);
+    const { price } = priceJoinedWordsDesign(design, loadFontById);
+    const words = cleanText(design.lines.map((l) => l.text || l.tail).join(" / "));
+    return {
+      title: `Напис на планці «${words}», літери ${cm(design.letterHeightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}`,
+      unitPrice: price.unitPrice,
+    };
+  }
+  if (line.kind === "initials") {
+    const INITIALS_SEPARATOR_TITLE = { bar: "|", amp: "&", plus: "+", dot: "·", none: "" } as const;
+    // Wedding cake initials: re-read and measured with the server's fonts, priced by the composition.
+    const design = readInitialsDesign(line.initials, line.quantity);
+    const price = priceInitialsDesign(design, loadFontById);
+    const letters = cleanText([design.first, INITIALS_SEPARATOR_TITLE[design.separator], design.second].filter(Boolean).join(" "));
+    return {
+      title: `Ініціали на торт «${letters}», літери ${cm(design.letterHeightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}${design.mode === "topper" ? ", на планці зі шпажкою" : ", окремі деталі"}`,
+      unitPrice: price.unitPrice,
+    };
+  }
+  if (line.kind === "letters") {
+    // Self-adhesive letters and single acrylic characters: re-read and measured with the server's
+    // fonts, priced by their pieces.
+    const design = readStickLettersDesign(line.letters, line.quantity);
+    const { layout, price } = priceStickLettersDesign(design, loadFontById);
+    const text = cleanText(design.lines.map((l) => l.text).join(" / "));
+    return {
+      title: design.product === "sign-letters"
+        ? `Самоклейні літери для вивіски «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}${design.upper ? ", усі великі" : ""}`
+        : design.product === "chars"
+        ? `Акрилові цифри і літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}, ${design.adhesive ? "зі скотчем" : "без скотчу"}`
+        : `Самоклейні літери «${text}», ${cm(layout.widthMm)}×${cm(layout.heightMm)} см, ${findJoinedWordsMaterial(design.materialId).name.uk.toLowerCase()}, з картонним трафаретом`,
+      unitPrice: price.unitPrice,
+    };
   }
   const material = line.materialId && MATERIALS[line.materialId];
   if (!material || !material.available || !line.widthCm || !line.heightCm) throw new Error(`bad ${line.kind} line`);
@@ -125,6 +208,15 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     if (!sheet || Math.abs((sheet.widthMm ?? 0) - widthMm) > 1 || Math.abs((sheet.heightMm ?? 0) - clientHeightMm) > 1) throw new SpecError("canvas sheet mismatch");
     heightMm = clientHeightMm;
     label = "Трафарет з полотна";
+  } else if (spec && typeof spec.text === "string" && spec.square === true) {
+    // «Свій напис» on a square sheet (Денис 2026-10-10): the text is fitted inside the square;
+    // the layout is rebuilt only to check the font and characters.
+    const margin = typeof spec.marginMm === "number" ? Math.min(50, Math.max(5, spec.marginMm)) : 15;
+    const textSpec = readTextSpec(spec);
+    stencilHeightMm(textSpec, widthMm, margin);
+    if (Math.abs(clientHeightMm - widthMm) > SIZE_TOLERANCE_MM) throw new SpecError("square stencil is not square");
+    heightMm = widthMm;
+    label = `Квадратний трафарет «${cleanText(textSpec.text)}»`;
   } else if (spec && typeof spec.text === "string") {
     // «Свій напис»: the sheet height follows the text proportions at the paid width.
     const margin = typeof spec.marginMm === "number" ? Math.min(50, Math.max(5, spec.marginMm)) : 15;
@@ -188,7 +280,14 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           kind: line.kind, key: String(line.key ?? "").slice(0, 300), variantId: line.variantId ?? null,
           sku: line.variantId ? variants.get(line.variantId)?.sku ?? null : null, materialId: line.materialId ?? null,
           widthCm: line.widthCm ?? null, heightCm: line.heightCm ?? null,
-          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas"), spec: safeSpec(line.spec),
+          sign: line.sign ?? null, uploadKey: line.uploadKey ?? null, spec: safeSpec(line.spec),
+          pointer: line.kind === "pointer" ? readPointerSignDesign(line.pointer, quantity) : null,
+          plaque: line.kind === "plaque" ? readOfficePlaqueDesign(line.plaque, quantity) : null,
+          words: line.kind === "words" ? readJoinedWordsDesign(line.words, quantity) : null,
+          layered: line.kind === "layered" ? readLayeredPlaqueDesign(line.layered, quantity) : null,
+          initials: line.kind === "initials" ? readInitialsDesign(line.initials, quantity) : null,
+          letters: line.kind === "letters" ? readStickLettersDesign(line.letters, quantity) : null,
+          needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };
     });
