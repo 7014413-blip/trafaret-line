@@ -9,7 +9,7 @@ import type { LoadedFont } from "./text";
 import type { LayeredPart } from "./vector";
 
 /** Constructor that made the line; the second part of the production file name. */
-export type ProductionConstructor = "stencil" | "square-stencil" | "canvas-stencil" | "word" | "canvas-piece";
+export type ProductionConstructor = "stencil" | "square-stencil" | "canvas-stencil" | "word" | "canvas-piece" | "catalog";
 
 /** Everything the production file name is made of. */
 export interface ProductionNameInput {

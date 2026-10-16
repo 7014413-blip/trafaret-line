@@ -88,4 +88,26 @@ describe("writeOrderFiles", () => {
     expect(result.problems).toEqual([expect.stringContaining("Позиція 1: файл для станка не зібрано")])
     expect(result.files.map((f) => f.name)).toEqual(["TL-43_approval.png", "TL-43_params.json"])
   })
+
+  it("asks the manager for a catalogue line whose master is missing or cannot be read", async () => {
+    const catalog = { handle: "trafaret-troiandy", sizeCode: "q20", sizeLabel: "20 × 20 см", sheetMm: [230, 230] as [number, number], detail: "", materialCode: "pet05", sku: "TL-TRAFARET-TROIANDY-Q20-PET05" }
+    const savedCache = process.env.MASTERS_CACHE_DIR
+    process.env.MASTERS_CACHE_DIR = path.join(root, "masters")
+    try {
+      const result = await writeOrderFiles({
+        id: "order_3", displayId: 44, approvedAt: null,
+        items: [
+          { title: "Трафарет троянди", quantity: 1, metadata: { kind: "catalog", variantId: "variant_1" }, catalog: { ...catalog, designUrls: [] } },
+          { title: "Трафарет троянди", quantity: 1, metadata: { kind: "catalog", variantId: "variant_1" }, catalog: { ...catalog, designUrls: ["ftp://example.test/rose.svg"] } },
+        ],
+      })
+      expect(result.problems).toEqual([
+        expect.stringContaining("Позиція 1: у товару немає мастер-макета"),
+        expect.stringContaining("Позиція 2: мастер-макет не перетворено"),
+      ])
+      expect(result.files.map((f) => f.name)).toEqual(["TL-44_params.json"])
+    } finally {
+      process.env.MASTERS_CACHE_DIR = savedCache
+    }
+  })
 })

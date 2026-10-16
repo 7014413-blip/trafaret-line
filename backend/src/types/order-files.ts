@@ -1,6 +1,8 @@
 // Production files of an order (ТЗ §7): what the server writes into the order folder, what the
 // admin page lists, and the note kept next to every customer font.
 
+import type { CatalogLineSource } from "./masters";
+
 export type OrderFileKind = "svg" | "dxf" | "png" | "json" | "font";
 
 export interface OrderFile {
@@ -15,6 +17,8 @@ export interface OrderLineForFiles {
   title: string;
   quantity: number;
   metadata: Record<string, unknown> | null;
+  /** Catalogue stencil: its master layouts and sheet (lib/masters/catalog-line-sources.ts). */
+  catalog?: CatalogLineSource | null;
 }
 
 export interface OrderForFiles {
