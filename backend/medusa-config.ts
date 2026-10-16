@@ -31,5 +31,7 @@ module.exports = defineConfig({
         ],
       },
     },
+    // Customer reviews with moderation in «Простий кабінет» (src/modules/review).
+    { resolve: "./src/modules/review" },
   ],
 })

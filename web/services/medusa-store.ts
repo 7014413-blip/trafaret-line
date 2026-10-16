@@ -34,7 +34,7 @@ function base(): { url: string; key: string } {
  * 5 minutes; "no-store" is for big product pages whose mapped result is cached instead
  * (the data cache refuses entries over 2 MB and would refetch on every request).
  */
-async function storeGet<T>(path: string, params: Record<string, string | string[] | number | undefined>, cache: "revalidate" | "no-store" = "revalidate"): Promise<T> {
+export async function storeGet<T>(path: string, params: Record<string, string | string[] | number | undefined>, cache: "revalidate" | "no-store" = "revalidate"): Promise<T> {
   const { url, key } = base();
   const query = new URLSearchParams();
   for (const [name, value] of Object.entries(params)) {
