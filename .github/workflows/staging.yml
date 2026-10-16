@@ -1,0 +1,149 @@
+# Staging copy on our own server: after every green CI run on main (and on demand from the
+# Actions tab) the site and the shop are built here and copied to the server, where
+# deploy/staging/server/deploy.sh switches to the new build. The copy is closed with a
+# password and from search engines. Setup steps for the server: deploy/staging/README.md.
+#
+# Secrets (Settings -> Secrets and variables -> Actions -> Secrets):
+#   STAGING_SSH_HOST, STAGING_SSH_USER                         the site's own server user
+#   STAGING_SSH_KEY (private key, preferred) or STAGING_SSH_PASSWORD
+#   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD     its PostgreSQL database
+#   STAGING_PASSWORD                                          site login "trafaret" and shop admin
+# Variables (same page -> Variables), all optional:
+#   STAGING_SITE_DOMAIN (test.trafaret-line.com.ua), STAGING_API_DOMAIN (api-test.trafaret-line.com.ua),
+#   STAGING_SSH_PORT (22), STAGING_WEB_PORT (3110), STAGING_API_PORT (9110)
+
+name: Staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to staging
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SITE_DOMAIN: ${{ vars.STAGING_SITE_DOMAIN || 'test.trafaret-line.com.ua' }}
+      API_DOMAIN: ${{ vars.STAGING_API_DOMAIN || 'api-test.trafaret-line.com.ua' }}
+      SSH_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
+      SSHPASS: ${{ secrets.STAGING_SSH_PASSWORD }}
+      SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      SSH_TARGET: ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check that the server is set up
+        env:
+          HOST: ${{ secrets.STAGING_SSH_HOST }}
+          USER_NAME: ${{ secrets.STAGING_SSH_USER }}
+          DB_NAME: ${{ secrets.STAGING_DB_NAME }}
+          DB_USER: ${{ secrets.STAGING_DB_USER }}
+          DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
+        run: |
+          missing=""
+          for name in HOST USER_NAME DB_NAME DB_USER DB_PASSWORD STAGING_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          [ -n "$SSH_KEY" ] || [ -n "$SSHPASS" ] || missing="$missing SSH_KEY(or SSH_PASSWORD)"
+          if [ -n "$missing" ]; then
+            echo "::error::Staging secrets are not set yet:$missing. See deploy/staging/README.md."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            backend/package-lock.json
+
+      - name: Install the copy tools
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends sshpass rsync
+
+      - name: Set up the SSH login
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" -H "${SSH_TARGET#*@}" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -n "$SSH_KEY" ]; then
+            printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
+            chmod 600 ~/.ssh/staging_key
+            echo "SSH_CMD=ssh -i $HOME/.ssh/staging_key -o IdentitiesOnly=yes -o BatchMode=yes -p $SSH_PORT" >> "$GITHUB_ENV"
+          else
+            echo "SSH_CMD=sshpass -e ssh -p $SSH_PORT" >> "$GITHUB_ENV"
+          fi
+
+      - name: Prepare the server and read the storefront key
+        run: |
+          key_line="$($SSH_CMD "$SSH_TARGET" 'bash -s' < deploy/staging/server/ensure-secrets.sh)"
+          key="${key_line#STAGING_PUBLISHABLE_KEY=}"
+          [[ "$key" =~ ^pk_[0-9a-f]{64}$ ]] || { echo "::error::The server did not return a storefront key"; exit 1; }
+          echo "NEXT_PUBLIC_MEDUSA_PK=$key" >> "$GITHUB_ENV"
+
+      - name: Build the shop
+        working-directory: backend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Build the site
+        working-directory: web
+        env:
+          NEXT_OUTPUT_STANDALONE: "1"
+          NEXT_PUBLIC_MEDUSA_URL: https://${{ env.API_DOMAIN }}
+          NEXT_PUBLIC_SITE_URL: https://${{ env.SITE_DOMAIN }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
+
+      - name: Copy the build to the server
+        run: |
+          remote="$SSH_TARGET:trafaret-staging/incoming"
+          $SSH_CMD "$SSH_TARGET" 'rm -rf ~/trafaret-staging/incoming && mkdir -p ~/trafaret-staging/incoming'
+          rsync -az --delete -e "$SSH_CMD" --exclude node_modules backend/.medusa/server/ "$remote/backend/"
+          rsync -az --delete -e "$SSH_CMD" web/.next/standalone/ "$remote/web/"
+          rsync -az --delete -e "$SSH_CMD" deploy/staging/server/ "$remote/deploy/"
+
+      - name: Switch the server to the new build
+        env:
+          DB_NAME: ${{ secrets.STAGING_DB_NAME }}
+          DB_USER: ${{ secrets.STAGING_DB_USER }}
+          DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
+          WEB_PORT: ${{ vars.STAGING_WEB_PORT || '3110' }}
+          API_PORT: ${{ vars.STAGING_API_PORT || '9110' }}
+        run: |
+          # Settings travel over SSH stdin into a file only the site user can read.
+          {
+            for name in STAGING_PASSWORD DB_NAME DB_USER DB_PASSWORD SITE_DOMAIN API_DOMAIN WEB_PORT API_PORT; do
+              printf '%s=%q\n' "$name" "${!name}"
+            done
+          } | $SSH_CMD "$SSH_TARGET" 'umask 077 && cat > ~/trafaret-staging/shared/deploy.env'
+          $SSH_CMD "$SSH_TARGET" 'bash ~/trafaret-staging/incoming/deploy/deploy.sh'
+
+      - name: Check the public address
+        run: |
+          code="$(curl -s -o /dev/null -w '%{http_code}' "https://$SITE_DOMAIN/")"
+          echo "https://$SITE_DOMAIN/ answers $code (401 = closed with the password, as it should be)"
+          [ "$code" = "401" ] || echo "::warning::Expected 401 from https://$SITE_DOMAIN/, got $code. Check the domain and the proxy in FastPanel."

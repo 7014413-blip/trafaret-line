@@ -56,3 +56,7 @@ CI: `.github/workflows/ci.yml` на каждый PR и push в main. Прове�
 | 5. Конструктор | «Вільне полотно» на Fabric.js, конструкторы табличек и надписей | Лист согласования макета с галочкой клиента; 3D-превью после запуска |
 
 Что ждёт только Денис: ключи WayForPay, Нова Пошта, Вчасно.Каса; РНОКПП ФОП; «да» на сервер и домен (список в `PROEKT-SAYTU.md`, раздел 12).
+
+## Тестовая версия на своём сервере (16.10.2026)
+
+Денис выбрал свой сервер (FastPanel, отдельный пользователь `trafaret`, CRM не трогаем). Автовыкладка после каждого зелёного CI в `main`: `.github/workflows/staging.yml` → `deploy/staging/server/deploy.sh`. Адреса `test.trafaret-line.com.ua` (пароль, noindex) и `api-test.trafaret-line.com.ua/app`. Шаги Дениса и устройство: [deploy/staging/README.md](deploy/staging/README.md). Дальше: загрузка полного каталога с фото на тестовый сервер.

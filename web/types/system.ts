@@ -37,3 +37,9 @@ export interface OpendatabotMocks {
 
 /** Which program reads an environment variable. */
 export type EnvScope = "web" | "backend" | "bot";
+
+/** Login and password of a closed staging copy (STAGING_BASIC_AUTH="login:password"). */
+export interface BasicAuthCredentials {
+  user: string;
+  password: string;
+}

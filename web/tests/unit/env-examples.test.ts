@@ -13,7 +13,7 @@ const SOURCE = /\.(ts|tsx|mjs)$/;
 const RUNTIME = new Set(["NODE_ENV"]);
 
 const APPS: Record<EnvScope, { roots: string[]; example: string; skip: string[] }> = {
-  web: { roots: ["web/app", "web/lib", "web/services", "web/data", "web/store", "web/components"], example: "web/.env.example", skip: [] },
+  web: { roots: ["web/app", "web/lib", "web/services", "web/data", "web/store", "web/components", "web/middleware.ts"], example: "web/.env.example", skip: [] },
   backend: { roots: ["backend/src", "backend/medusa-config.ts"], example: "backend/.env.template", skip: ["backend/src/shared"] },
   bot: { roots: ["bot/src"], example: "bot/.env.example", skip: [] },
 };

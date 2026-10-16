@@ -7,6 +7,9 @@ const medusa = new URL(process.env.NEXT_PUBLIC_MEDUSA_URL ?? "http://localhost:9
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // A server copy (deploy/staging) ships the self-contained build: server.js with only the
+  // packages it uses. Local runs and CI keep the usual `next start`.
+  output: process.env.NEXT_OUTPUT_STANDALONE === "1" ? "standalone" : undefined,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders(medusa.origin, process.env.NODE_ENV === "production") }];
   },
