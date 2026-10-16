@@ -14,6 +14,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/konstruktor/polotno", priority: 0.7, changeFrequency: "monthly" },
   { path: "/na-zamovlennia", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/zahotovky", priority: 0.8, changeFrequency: "monthly" },
   { path: "/vyvisky/vkazivnyky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/ofisni-tablychky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/napysy-na-plantsi", priority: 0.7, changeFrequency: "monthly" },

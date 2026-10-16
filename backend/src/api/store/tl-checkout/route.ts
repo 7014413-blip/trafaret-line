@@ -32,6 +32,9 @@ import { priceInitialsDesign } from "../../../shared/lib/initials/price-design";
 import { readInitialsDesign } from "../../../shared/lib/initials/read-design";
 import { priceStickLettersDesign } from "../../../shared/lib/stick-letters/price-design";
 import { readStickLettersDesign } from "../../../shared/lib/stick-letters/read-design";
+import { priceBlankDesign } from "../../../shared/lib/blanks/price";
+import { readBlankDesign } from "../../../shared/lib/blanks/read-design";
+import { blankTitle } from "../../../shared/lib/blanks/title";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
@@ -198,6 +201,11 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
       unitPrice: price.unitPrice,
     };
   }
+  if (line.kind === "blank") {
+    // Blank of «/zahotovky»: shape, size and sheet re-read and priced here by the blank formula.
+    const design = readBlankDesign(line.blank, line.quantity);
+    return { title: blankTitle(design), unitPrice: priceBlankDesign(design).unitPrice };
+  }
   const material = line.materialId && MATERIALS[line.materialId];
   if (!material || !material.available || !line.widthCm || !line.heightCm) throw new Error(`bad ${line.kind} line`);
   if (line.widthCm < 2 || line.heightCm < 2 || line.widthCm > 1000 || line.heightCm > 1000) throw new Error("size out of range");
@@ -319,6 +327,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           layered: line.kind === "layered" ? readLayeredPlaqueDesign(line.layered, quantity) : null,
           initials: line.kind === "initials" ? readInitialsDesign(line.initials, quantity) : null,
           letters: line.kind === "letters" ? readStickLettersDesign(line.letters, quantity) : null,
+          blank: line.kind === "blank" ? readBlankDesign(line.blank, quantity) : null,
           needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };

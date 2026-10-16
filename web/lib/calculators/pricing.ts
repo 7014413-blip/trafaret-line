@@ -6,8 +6,10 @@
 //                  +5 % when the stencil is split into several machine sheets,
 //                  then ONE best discount (never stacked) from that price, rounded down
 //                  to 1 ₴, never below the cost floor.
-//   blank unit   = max(min price, round1(area × rate)), then the quantity discount the same
-//                  way; order minimum 200 ₴.
+//   blank unit   = max(min price, round1(cutting fee + area × rate)), then the quantity
+//                  discount the same way; order minimum 200 ₴. The fee per piece and the rates
+//                  are in data/knowledge_base/materials.json; catalogue blank cards are priced
+//                  by the same function (blankUnitPrice), so the card and /zahotovky agree.
 // m² is used inside the formula only and never shown to the customer.
 
 import type {
@@ -41,9 +43,12 @@ export const DEFAULT_PRICING: PricingConfig = {
   compositeSurcharge: 0.05,
 };
 
-/** Rounds up to the next multiple of step (10 ₴ for stencils, 1 ₴ for blanks). */
+/**
+ * Rounds up to the next multiple of step (10 ₴ for stencils, 1 ₴ for blanks). A whole result
+ * spoiled by binary fractions (0.01 m² × 2300 = 23.000000000000004) stays whole.
+ */
 export function roundUp(value: number, step: number): number {
-  return Math.ceil(value / step) * step;
+  return Math.ceil(value / step - 1e-9) * step;
 }
 
 /** Largest discount among the entries that match. */
@@ -149,7 +154,12 @@ export function priceStencil(
   return { ...common, discounts, unitPrice: unit, total: unit * quantity, priceOnRequest: false };
 }
 
-/** Blank price (ТЗ §3.3): round1(area × rate) per piece, quantity tiers, order minimum. */
+/** Price of one blank before discounts: cutting fee + sheet area × rate (retail or wholesale), rounded up to 1 ₴. */
+export function blankUnitPrice(areaM2: number, material: MaterialOption, rate: number, cfg: PricingConfig = DEFAULT_PRICING): number {
+  return Math.max(priceFloor(material, areaM2, cfg.roundBlankTo, cfg), roundUp(material.cutFeeUah + areaM2 * rate, cfg.roundBlankTo));
+}
+
+/** Blank price (ТЗ §3.3): blankUnitPrice per piece, quantity tiers, order minimum. */
 export function priceBlank(
   sheet: SheetSize, material: MaterialOption, quantity: number, cfg: PricingConfig = DEFAULT_PRICING, buyer?: BuyerContext,
 ): PriceBreakdown & { belowOrderMin: boolean } {
@@ -160,7 +170,7 @@ export function priceBlank(
   }
   const wholesale = wholesaleRate(material, buyer, cfg);
   if (wholesale != null) {
-    const unitWholesale = Math.max(priceFloor(material, areaM2, cfg.roundBlankTo, cfg), roundUp(areaM2 * wholesale, cfg.roundBlankTo));
+    const unitWholesale = blankUnitPrice(areaM2, material, wholesale, cfg);
     const totalWholesale = unitWholesale * quantity;
     return {
       ...common, discounts: [{ label: "Оптова ціна", percent: 0 }], unitPrice: unitWholesale, total: totalWholesale,
@@ -168,7 +178,7 @@ export function priceBlank(
     };
   }
   const discount = bestLineDiscount(quantity, 0, cfg.blankTiers, cfg, buyer);
-  const fullUnit = Math.max(priceFloor(material, areaM2, cfg.roundBlankTo, cfg), roundUp(areaM2 * material.baseSquareMeterPrice, cfg.roundBlankTo));
+  const fullUnit = blankUnitPrice(areaM2, material, material.baseSquareMeterPrice, cfg);
   const unit = Math.max(costFloor(material, areaM2, cfg.roundBlankTo, cfg), applyDiscount(fullUnit, discount.value));
   const total = unit * quantity;
   return {

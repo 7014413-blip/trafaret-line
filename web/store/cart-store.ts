@@ -17,6 +17,8 @@ import type { JoinedWordsDesign } from "../types/joined-words";
 import type { LayeredPlaqueDesign } from "../types/layered-plaque";
 import type { InitialsDesign } from "../types/initials";
 import type { StickLettersDesign } from "../types/stick-letters";
+import type { BlankDesign } from "../types/blank";
+import { priceBlankDesign } from "../lib/blanks/price";
 import { LAYERED_PLAQUE_CONFIGS } from "../lib/layered-plaque/configs";
 import { priceLayeredPlaque } from "../lib/layered-plaque/price";
 
@@ -50,6 +52,8 @@ export type NewLine = {
   initials?: InitialsDesign;
   /** Self-adhesive letters (kind "letters"); priced like "words" from the stored base price. */
   letters?: StickLettersDesign;
+  /** Blank of the «/zahotovky» configurator (kind "blank"): priced by shape, size and sheet at the line quantity. */
+  blank?: BlankDesign;
   /** Customer layout file key (tl-upload). */
   uploadKey?: string;
   /** Catalogue product: Medusa variant id and its 1-piece price (the server re-reads it from the database). */
@@ -61,7 +65,7 @@ export type NewLine = {
 
 type Stored = NewLine & { id: string };
 
-const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer" | "plaque" | "layered">) => {
+const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity" | "fixedPrice" | "kind" | "basePrice" | "pointer" | "plaque" | "layered" | "blank">) => {
   if (l.fixedPrice != null) return l.fixedPrice;
   if (l.kind === "pointer" && l.pointer) {
     try {
@@ -85,6 +89,14 @@ const unit = (l: Pick<NewLine, "widthCm" | "heightCm" | "materialId" | "quantity
       return priceLayeredPlaque({ ...l.layered, quantity: l.quantity }, LAYERED_PLAQUE_CONFIGS[l.layered.kind]).unitPrice;
     } catch {
       // Saved before the size list changed: keep the price it was added with (see above).
+      return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
+    }
+  }
+  if (l.kind === "blank" && l.blank) {
+    try {
+      return priceBlankDesign({ ...l.blank, quantity: l.quantity }).unitPrice;
+    } catch {
+      // A sheet taken off sale after the line was added: keep the price it was added with (see above).
       return priceCatalogVariant(l.basePrice ?? 0, l.quantity);
     }
   }

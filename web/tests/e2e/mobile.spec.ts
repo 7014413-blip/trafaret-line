@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 test.use({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
 
-for (const path of ["/", "/catalog", "/konstruktor", "/vyvisky/vkazivnyky", "/checkout"]) {
+for (const path of ["/", "/catalog", "/konstruktor", "/vyvisky/vkazivnyky", "/zahotovky", "/checkout"]) {
   test(`no horizontal scroll at 360 px: ${path}`, async ({ page }) => {
     await page.goto(path);
     await page.waitForLoadState("networkidle");

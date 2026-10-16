@@ -27,7 +27,7 @@ const MAP: Record<string, MaterialType> = {
   "bl-ps-1-gold": "polystyrene_mirror_1",
   "bl-ps-1-silver": "polystyrene_mirror_1",
   "bl-pet-05": "pet_food_board",
-  "bl-ps-1-white": "polystyrene",
+  "bl-ps-1-white": "polystyrene_white_1",
   // confectionery tools, signs and thick acrylic (catalog section w3-konditer, 2026-10-10)
   "bl-mir-3-rose": "acrylic_mirror_3",
   "bl-acr-15mm-clear": "acrylic_15",

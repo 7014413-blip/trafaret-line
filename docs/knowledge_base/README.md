@@ -4,7 +4,7 @@
 
 | Файл | Что в нём | Кто читает |
 | --- | --- | --- |
-| [materials.json](../../web/data/knowledge_base/materials.json) | Ставки ₴/м² (розница и опт), минимальные цены, толщина, плотность (акрил 1,19, PET 1,38, полистирол 1,05 г/см³), поле станка 1400 × 2000 мм, замеры веса акрила Дениса | `web/lib/materials.ts`, `web/lib/calculators/weight.ts`, расчёт цены на сайте и сервере |
+| [materials.json](../../web/data/knowledge_base/materials.json) | Ставки ₴/м² (розница и опт), минимальные цены, толщина, плотность (акрил 1,19, PET 1,38, полистирол 1,05 г/см³), плата за вырезание одной заготовки (`cutFeeUah`), поле станка 1400 × 2000 мм, замеры веса акрила Дениса | `web/lib/materials.ts`, `web/lib/calculators/weight.ts`, расчёт цены на сайте и сервере |
 | [rules_logistics.json](../../web/data/knowledge_base/rules_logistics.json) | Тубус или коробка, гофрокартон, объёмный вес, поштомат 40 × 30 × 60 см до 20 кг | `web/lib/calculators/packaging.ts` |
 | [rules_fop.json](../../web/data/knowledge_base/rules_fop.json) | Один продавец: ФОП Берчук Наталя Леонідівна, 2 группа, без НДС; какие переменные сервера хранят реквизиты | подвал и оферта, счёт для бизнеса, чек Вчасно.Каса |
 | [mock_novaposhta.json](../../web/data/knowledge_base/mock_novaposhta.json) | Ответы API Новой Почты: город, отделение и поштомат, цена, дата, ошибка | юнит-тесты и сквозные тесты оформления |
