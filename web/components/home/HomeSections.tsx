@@ -70,7 +70,7 @@ export function ProductRail({ tabs }: { tabs: RailTab[] }) {
   const current = visible.find((t) => t.title === tab) ?? visible[0];
   if (!current) return null;
   return (
-    <section className="mb-11 grid gap-4">
+    <section className="mb-11 grid grid-cols-[minmax(0,1fr)] gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h2 className="m-0 text-[clamp(22px,2.4vw,32px)] font-bold tracking-tight">Обирайте за задачею</h2>
         <Link href={current.href} className="border-b-[1.5px] border-[var(--ink)] text-[15px] font-bold">Увесь розділ</Link>

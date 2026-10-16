@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { MATERIALS } from "../../lib/materials";
 import { nextTierHint } from "../../lib/calculators/pricing";
-import { formatUAH } from "../../lib/format";
+import { cmText, formatUAH } from "../../lib/format";
 import { isFlexible, parcelFor } from "../../lib/calculators/packaging";
 import type { PackKind } from "../../types/packaging";
 import type { CartLine, Locale, Upsell } from "../../types/customizer";
@@ -116,7 +116,7 @@ export function CartDrawer({
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold leading-snug">{l.title}</h3>
-                        <p className="font-mono text-xs text-[var(--muted)]">{l.widthCm}×{l.heightCm} {t.cm} · {MATERIALS[l.materialId].name[locale]}</p>
+                        <p className="font-mono text-xs text-[var(--muted)]">{cmText(l.widthCm * 10)}×{cmText(l.heightCm * 10)} {t.cm} · {MATERIALS[l.materialId].name[locale]}</p>
                         <div className="mt-1.5 flex items-center gap-3">
                           <div className="inline-flex items-center rounded-full border-[1.5px] border-[var(--line)]">
                             <button type="button" aria-label={t.less} className="h-9 w-9" onClick={() => (l.quantity > 1 ? onQuantity(l.id, l.quantity - 1) : onRemove(l.id))}>−</button>

@@ -23,13 +23,19 @@ export interface RouteLimit {
   maxBytes?: number;
 }
 
-/** Client address behind FastPanel nginx (x-forwarded-for / x-real-ip) or the socket. */
+/**
+ * Client address behind FastPanel nginx, or the socket. nginx sets x-real-ip to the address it
+ * saw and appends that address to x-forwarded-for, so only x-real-ip and the last
+ * x-forwarded-for entry come from our proxy; earlier entries are whatever the client sent and
+ * would let one client pass as many addresses (QA 2026-10-16).
+ */
 export function clientAddress(req: MedusaRequest): string {
-  const forwarded = req.headers["x-forwarded-for"];
-  const first = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  if (first) return first.split(",")[0].trim();
   const real = req.headers["x-real-ip"];
-  if (typeof real === "string" && real) return real;
+  if (typeof real === "string" && real.trim()) return real.trim();
+  const forwarded = req.headers["x-forwarded-for"];
+  const header = Array.isArray(forwarded) ? forwarded.join(",") : forwarded;
+  const last = header?.split(",").map((part) => part.trim()).filter(Boolean).pop();
+  if (last) return last;
   return req.socket?.remoteAddress ?? "unknown";
 }
 

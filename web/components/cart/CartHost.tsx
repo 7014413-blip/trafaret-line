@@ -1,10 +1,13 @@
 "use client";
 
 // Connects the floating CartDrawer to the local cart store. When Medusa is wired in,
-// the store actions call the Store API; the drawer stays the same.
+// the store actions call the Store API; the drawer stays the same. The drawer is rendered
+// into <body>: inside the sticky header it would stay under the constructors' sticky buy
+// bars (the header's z-index caps it) and move with the header when it hides on scroll.
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CartDrawer } from "./CartDrawer";
 import { cartTotals, useCart } from "@/store/cart-store";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
@@ -22,7 +25,7 @@ export function CartHost() {
   if (!ready) return null;
   const { lines } = cartTotals(items);
 
-  return (
+  return createPortal(
     <CartDrawer
       lines={lines}
       upsells={UPSELLS}
@@ -33,7 +36,8 @@ export function CartHost() {
       onAddUpsell={(u) => add({ key: `upsell-${u.id}`, title: u.title, materialId: "pet_thin", widthCm: 0, heightCm: 0, quantity: 1, fixedPrice: u.price, kind: "accessory" })}
       onCheckout={() => { setOpen(false); router.push("/checkout"); }}
       dispatchText={formatDispatch(estimateDispatchDate(new Date()))}
-    />
+    />,
+    document.body,
   );
 }
 

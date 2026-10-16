@@ -2,7 +2,11 @@
 
 // First-screen animation: a PET stencil on a wall is sprayed, then lifted off to
 // reveal the pattern. Stands in for the production video until it is filmed.
-// Pauses when hidden, shows the finished state for prefers-reduced-motion.
+// Shows the finished state first and starts moving only when the page is idle after load,
+// so the animation never delays the first screen; pauses when hidden or scrolled away,
+// and stays on the finished state for prefers-reduced-motion. The wall, the sheet and its
+// shadow are drawn once per size, so a frame only sprays and copies a few layers and stays
+// short on slow phones.
 
 import { useEffect, useRef } from "react";
 
@@ -43,10 +47,11 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
     const ctx = cv.getContext("2d");
     if (!ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     let W = 0, H = 0, raf = 0, t0 = performance.now(), ci = 0;
     let geo: Geo;
-    let mask: HTMLCanvasElement, paint: HTMLCanvasElement, sheet: HTMLCanvasElement;
+    let mask: HTMLCanvasElement, paint: HTMLCanvasElement, sheet: HTMLCanvasElement, shadow: HTMLCanvasElement, layer: HTMLCanvasElement, bg: HTMLCanvasElement;
+    let idle = false, visible = true, inView = true;
 
     const make = () => Object.assign(document.createElement("canvas"), { width: W, height: H });
 
@@ -71,16 +76,24 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
       s.strokeRect(geo.sx, geo.sy, geo.sw, geo.sw);
       s.globalCompositeOperation = "destination-out";
       s.drawImage(mask, 0, 0);
+      shadow = make();
+      const sh = shadow.getContext("2d")!;
+      sh.shadowColor = "rgba(15,23,42,.2)";
+      sh.shadowBlur = 24 * dpr;
+      sh.shadowOffsetY = 10 * dpr;
+      sh.drawImage(sheet, 0, 0);
       paint = make();
-    };
-
-    const wall = () => {
-      const g = ctx.createLinearGradient(0, 0, 0, H);
+      layer = make();
+      bg = make();
+      const b = bg.getContext("2d")!;
+      const g = b.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "#f4f1ec");
       g.addColorStop(1, "#e9e4dc");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      b.fillStyle = g;
+      b.fillRect(0, 0, W, H);
     };
+
+    const wall = () => ctx.drawImage(bg, 0, 0);
 
     const sprayAt = (x: number, y: number, col: string) => {
       const p = paint.getContext("2d")!;
@@ -95,7 +108,7 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
       p.arc(x, y, rr, 0, Math.PI * 2);
       p.fill();
       p.fillStyle = col;
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < 40; i++) {
         const a = Math.random() * Math.PI * 2, r = Math.pow(Math.random(), 0.6) * geo.R * 0.32;
         p.globalAlpha = 0.25;
         p.beginPath();
@@ -106,11 +119,13 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
     };
 
     const painted = () => {
-      const c = make(), g = c.getContext("2d")!;
+      const g = layer.getContext("2d")!;
+      g.globalCompositeOperation = "source-over";
+      g.clearRect(0, 0, W, H);
       g.drawImage(paint, 0, 0);
       g.globalCompositeOperation = "destination-in";
       g.drawImage(mask, 0, 0);
-      return c;
+      return layer;
     };
 
     const drawSheet = (alpha: number, lift: number) => {
@@ -118,11 +133,7 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
       ctx.globalAlpha = alpha;
       ctx.translate(0, -lift * H * 0.25);
       ctx.rotate(-lift * 0.04);
-      ctx.shadowColor = "rgba(15,23,42,.2)";
-      ctx.shadowBlur = (18 + 30 * lift) * dpr;
-      ctx.shadowOffsetY = (6 + 18 * lift) * dpr;
-      ctx.drawImage(sheet, 0, 0);
-      ctx.shadowColor = "transparent";
+      ctx.drawImage(shadow, 0, 0);
       ctx.globalAlpha = alpha * 0.35;
       ctx.beginPath();
       ctx.rect(geo.sx, geo.sy, geo.sw, geo.sw);
@@ -168,21 +179,50 @@ export function StencilSprayHero({ className, label }: { className?: string; lab
       cancelAnimationFrame(raf);
       setup();
       t0 = performance.now();
-      if (reduce) still();
+      if (reduce || !idle || !visible || !inView) still();
       else raf = requestAnimationFrame(frame);
     };
 
+    const onIdle = () => {
+      idle = true;
+      start();
+    };
+    let idleHandle = 0;
+    const scheduleIdle = () => {
+      if ("requestIdleCallback" in window) idleHandle = window.requestIdleCallback(onIdle, { timeout: 4000 });
+      else idleHandle = globalThis.setTimeout(onIdle, 1500) as unknown as number;
+    };
+    const cancelIdle = () => {
+      if ("cancelIdleCallback" in window) window.cancelIdleCallback(idleHandle);
+      else globalThis.clearTimeout(idleHandle);
+    };
+    const onLoad = () => scheduleIdle();
+
     start();
+    if (!reduce) {
+      if (document.readyState === "complete") scheduleIdle();
+      else window.addEventListener("load", onLoad, { once: true });
+    }
     const ro = new ResizeObserver(() => start());
     ro.observe(cv);
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      if (inView) start();
+      else cancelAnimationFrame(raf);
+    });
+    io.observe(cv);
     const onVis = () => {
-      if (document.hidden) cancelAnimationFrame(raf);
-      else start();
+      visible = !document.hidden;
+      if (visible) start();
+      else cancelAnimationFrame(raf);
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelAnimationFrame(raf);
+      cancelIdle();
+      window.removeEventListener("load", onLoad);
       ro.disconnect();
+      io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);

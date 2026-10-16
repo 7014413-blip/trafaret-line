@@ -10,17 +10,22 @@ const inter = Inter({
   display: "swap",
 });
 
+// Only Inter (body text, the first screen's largest text) is preloaded: preloading the
+// heading and size-label fonts too took the phone's bandwidth before the first screen
+// (Lighthouse mobile, QA 2026-10-16). They swap in with a size-matched fallback.
 const unbounded = Unbounded({
   variable: "--font-unbounded",
   subsets: ["latin", "cyrillic"],
   weight: ["600", "700"],
   display: "swap",
+  preload: false,
 });
 
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin", "cyrillic"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

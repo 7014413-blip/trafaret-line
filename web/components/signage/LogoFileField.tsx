@@ -2,7 +2,8 @@
 
 // Logo of a sign constructor: an empty dashed button to add the file, or the file name with
 // «Замінити» and «Прибрати» and the constructor's own logo options under it. The file input is
-// cleared after every pick, so the same file can be picked again.
+// cleared after every pick, so the same file can be picked again; the buttons are the controls,
+// the hidden input only carries a name for screen readers and stays out of the tab order.
 
 import { useRef } from "react";
 
@@ -25,7 +26,7 @@ export function LogoFileField({ inputId, accept, fileName, onPick, onRemove, emp
   const open = () => input.current?.click();
   return (
     <>
-      <input ref={input} id={inputId} type="file" accept={accept} className="sr-only" onChange={(e) => { onPick(e.target.files?.[0]); e.target.value = ""; }} />
+      <input ref={input} id={inputId} type="file" accept={accept} aria-label="Файл логотипа" tabIndex={-1} className="sr-only" onChange={(e) => { onPick(e.target.files?.[0]); e.target.value = ""; }} />
       {fileName != null ? (
         <div className="grid min-w-0 gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
           <div className="flex items-center justify-between gap-2">
