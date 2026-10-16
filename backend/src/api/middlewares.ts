@@ -23,6 +23,8 @@ export default defineMiddlewares({
     {
       matcher: "/store/tl-checkout",
       method: ["POST"],
+      // Up to 100 lines, each with its constructor picture of up to 100 000 characters.
+      bodyParser: { sizeLimit: "12mb" },
       middlewares: [
         limitRoute({ name: "checkout-10m", limit: 5, windowMs: 10 * 60_000 }),
         limitRoute({ name: "checkout-day", limit: 30, windowMs: 24 * 60 * 60_000 }),
@@ -41,6 +43,12 @@ export default defineMiddlewares({
       method: ["POST"],
       bodyParser: { sizeLimit: "15mb" },
       middlewares: [limitRoute({ name: "font", limit: 20, windowMs: 60 * 60_000, maxBytes: 100 * 1024 * 1024 })],
+    },
+    {
+      // Customer font by its signed link (WOFF2 unpacked on the server): 60 per hour per address.
+      matcher: "/store/tl-font/file",
+      method: ["GET"],
+      middlewares: [limitRoute({ name: "font-file", limit: 60, windowMs: 60 * 60_000 })],
     },
     {
       // «Простий кабінет»: the Excel table of the whole catalogue comes as one JSON string.

@@ -17,6 +17,7 @@ import { describeParcel, parcelFor } from "@/lib/calculators/packaging";
 import { postJson } from "@/lib/client/api-client";
 import { startWayForPay } from "@/lib/client/wayforpay";
 import { firstErrorField, validateCheckout } from "@/lib/validation/checkout-form";
+import { previewSvgOf } from "@/lib/validation/preview-svg";
 import type { B2BCompany } from "@/types/invoice";
 import type { NpPriceResult } from "@/types/integrations";
 import { CityField } from "./CityField";
@@ -107,7 +108,7 @@ export function Checkout() {
         method: "POST",
         headers: { "content-type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PK ?? "" },
         body: JSON.stringify({
-          lines: items.map((i) => ({ key: i.key, kind: i.kind ?? "stencil", title: i.title, quantity: i.quantity, variantId: i.variantId, materialId: i.materialId, widthCm: i.widthCm, heightCm: i.heightCm, sign: i.sign, pointer: i.pointer, plaque: i.plaque, words: i.words, layered: i.layered, initials: i.initials, letters: i.letters, blank: i.blank, uploadKey: i.uploadKey, spec: i.spec })),
+          lines: items.map((i) => ({ key: i.key, kind: i.kind ?? "stencil", title: i.title, quantity: i.quantity, variantId: i.variantId, materialId: i.materialId, widthCm: i.widthCm, heightCm: i.heightCm, sign: i.sign, pointer: i.pointer, plaque: i.plaque, words: i.words, layered: i.layered, initials: i.initials, letters: i.letters, blank: i.blank, uploadKey: i.uploadKey, spec: i.spec, previewSvg: previewSvgOf(i.vectorSvg) ?? undefined })),
           contact: { phone: form.phone, name: form.name, email: form.payment === "invoice" ? company.email : undefined },
           delivery: {
             method: form.delivery, city: form.city, cityRef: form.cityRef || undefined,

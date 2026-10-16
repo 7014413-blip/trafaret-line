@@ -9,8 +9,11 @@
 //   CUT_OUTER  red   (ACI 1)  outer shape of the sheet, cut last so the part does not move
 //   MARKS      green (ACI 3)  holes (hanging / mounting) and alignment marks
 //   TEMPLATE   black (ACI 7)  positioning template for signs
+//   INFO       grey  (ACI 8)  bounding box and the order text under the part (ТЗ §7): the
+//                            operator switches the layer's output off, it is never cut
 // Cut order on the machine: MARKS → CUT_INNER → CUT_OUTER (inside first, outline last).
-// Units: mm, Y axis down in SVG, up in DXF (flipped on export).
+// Units: mm, Y axis down in SVG, up in DXF (flipped on export). The INFO text is ASCII,
+// because RDWorks and DXF R12 read other characters by the Windows code page.
 
 import type { SheetSize } from "../../types/customizer";
 import type { Vec2 } from "../../types/geometry";
@@ -21,7 +24,13 @@ export const LAYERS: Record<LayerId, LayerStyle> = {
   CUT_INNER: { aci: 5, rgb: "#0000ff", order: 2 },
   CUT_OUTER: { aci: 1, rgb: "#ff0000", order: 3 },
   TEMPLATE: { aci: 7, rgb: "#000000", order: 4 },
+  INFO: { aci: 8, rgb: "#808080", order: 5 },
 };
+
+/** INFO text under the part: gap from the part, line pitch and letter height, mm. */
+const INFO_GAP_MM = 5;
+const INFO_LINE_MM = 6;
+const INFO_TEXT_MM = 4;
 
 /** Outer outline of the sheet as a polyline (circle / oval in ~2 mm segments). */
 export function sheetOutline(sheet: SheetSize): Polyline {
@@ -52,14 +61,24 @@ export function holePolyline(hole: Hole): Polyline {
   };
 }
 
+const closedPolylines = (polygons: ReadonlyArray<ReadonlyArray<Vec2>> | undefined): Polyline[] =>
+  (polygons ?? []).filter((p) => p.length >= 3).map((p) => ({ points: [...p], closed: true }));
+
 /** Polylines per layer for a part. */
 export function partLayers(part: LayeredPart): Record<LayerId, Polyline[]> {
+  const { widthMm: w, heightMm: h } = part.sheet;
   return {
     MARKS: (part.holes ?? []).map(holePolyline),
-    CUT_INNER: part.cutPaths.filter((p) => p.length >= 3).map((p) => ({ points: [...p], closed: true })),
-    CUT_OUTER: [sheetOutline(part.sheet)],
-    TEMPLATE: (part.template ?? []).filter((p) => p.length >= 3).map((p) => ({ points: [...p], closed: true })),
+    CUT_INNER: closedPolylines(part.cutPaths),
+    CUT_OUTER: part.outerCut ? closedPolylines(part.outerCut) : [sheetOutline(part.sheet)],
+    TEMPLATE: closedPolylines(part.template),
+    INFO: part.info?.length ? [{ points: [[0, 0], [w, 0], [w, h], [0, h]], closed: true }] : [],
   };
+}
+
+/** INFO lines reduced to printable ASCII. */
+function infoLines(part: LayeredPart): string[] {
+  return (part.info ?? []).map((line) => line.replace(/[^\x20-\x7e]/g, "?"));
 }
 
 /**
@@ -82,20 +101,30 @@ function orderedLayerIds(): LayerId[] {
   return (Object.keys(LAYERS) as LayerId[]).sort((a, b) => LAYERS[a].order - LAYERS[b].order);
 }
 
-/** Hairline SVG in mm, one <g> per layer, stroke = layer colour, no fill. */
+/**
+ * Hairline SVG in mm, one <g> per layer, stroke = layer colour, no fill. The INFO text sits
+ * under the part, so the drawing grows by the text block; the scale stays 1:1.
+ */
 export function toLayeredSvg(part: LayeredPart): string {
   const { widthMm: w, heightMm: h } = part.sheet;
   const layers = partLayers(part);
+  const info = infoLines(part);
   const groups = orderedLayerIds()
     .filter((id) => layers[id].length)
     .map((id) => {
       const paths = layers[id]
         .map((p) => `<path d="M${p.points.map(([x, y]) => `${num(x)} ${num(y)}`).join("L")}${p.closed ? "Z" : ""}"/>`)
         .join("");
-      return `<g id="${id}" stroke="${LAYERS[id].rgb}" fill="none" stroke-width="0.01">${paths}</g>`;
+      const text = id === "INFO"
+        ? info.map((line, i) => `<text x="0" y="${num(h + INFO_GAP_MM + INFO_TEXT_MM + i * INFO_LINE_MM)}" font-family="Arial, sans-serif" font-size="${INFO_TEXT_MM}" fill="${LAYERS.INFO.rgb}" stroke="none">${escapeXml(line)}</text>`).join("")
+        : "";
+      return `<g id="${id}" stroke="${LAYERS[id].rgb}" fill="none" stroke-width="0.01">${paths}${text}</g>`;
     });
   const title = part.label ? `<title>${escapeXml(part.label)}</title>` : "";
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${num(w)}mm" height="${num(h)}mm" viewBox="0 0 ${num(w)} ${num(h)}">${title}${groups.join("")}</svg>\n`;
+  // Arial is about 0.6 of the letter height wide per character.
+  const width = Math.max(w, ...info.map((line) => line.length * INFO_TEXT_MM * 0.6));
+  const height = info.length ? h + INFO_GAP_MM + info.length * INFO_LINE_MM : h;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${num(width)}mm" height="${num(height)}mm" viewBox="0 0 ${num(width)} ${num(height)}">${title}${groups.join("")}</svg>\n`;
 }
 
 /** DXF R12 with LAYER table and POLYLINE entities, units mm, Y flipped to point up. */
@@ -123,6 +152,11 @@ export function toLayeredDxf(part: LayeredPart): string {
       group(0, "SEQEND"); group(8, id);
     }
   }
+  // INFO text under the part (below y = 0 with the Y axis up).
+  infoLines(part).forEach((line, i) => {
+    group(0, "TEXT"); group(8, "INFO"); group(62, String(LAYERS.INFO.aci));
+    group(10, 0); group(20, -(INFO_GAP_MM + INFO_TEXT_MM + i * INFO_LINE_MM)); group(40, INFO_TEXT_MM); group(1, line);
+  });
   group(0, "ENDSEC"); group(0, "EOF");
   return `${out.join("\n")}\n`;
 }

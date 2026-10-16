@@ -57,6 +57,9 @@ export function frameShape(widthMm: number, heightMm: number, borderMm: number):
 }
 
 /** Default outline of a shape button on the canvas. */
+/** Size a new shape of «Вільне полотно» gets before the customer scales it, mm. */
+export const CANVAS_SHAPE_SIZE_MM = 80;
+
 export function shapeOutline(kind: CanvasShapeKind, sizeMm: number): { groups: Polygon[][]; widthMm: number; heightMm: number } {
   switch (kind) {
     case "circle":

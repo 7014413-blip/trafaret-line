@@ -13,14 +13,14 @@ import { priceStencil, priceWelded } from "@/lib/calculators/pricing";
 import { weldThumbnailSvg } from "@/lib/export/cart-thumbnail";
 import { formatUAH } from "@/lib/format";
 import { computeCanvasAnalysis } from "@/lib/client/geometry-client";
-import { shapeOutline } from "@/lib/geometry/shapes";
+import { CANVAS_SHAPE_SIZE_MM, shapeOutline } from "@/lib/geometry/shapes";
 import { stencilThumbnailSvg } from "@/lib/export/cart-thumbnail";
 import { loadFont, loadFontManifest, registerLoadedFont, type FontEntry, type LoadedFont } from "@/lib/text/font-loader";
 import { listCustomFonts } from "@/lib/client/custom-fonts";
 import { fontEntry } from "@/lib/text/font-entry";
 import { useHistory } from "@/lib/client/use-history";
 import { CustomFontPanel } from "./CustomFontPanel";
-import { textToDesign } from "@/lib/text/text-layout";
+import { canvasTextOutline } from "@/lib/geometry/canvas-text";
 import type { CanvasAnalysis, CanvasElement, CanvasResultMode, CanvasSettings, CanvasShapeKind, CanvasTransform } from "@/types/canvas";
 import type { MaterialOption, MaterialType } from "@/types/customizer";
 import type { Vec2 } from "@/types/geometry";
@@ -169,13 +169,8 @@ export function FreeCanvasEditor() {
     setError("");
     try {
       const font = await loadFont(entry);
-      const layout = textToDesign(font, text, { align: "center" });
-      const k = TEXT_CAP_MM / Math.max(1, layout.capUnits);
-      const groups = layout.glyphs
-        .filter((g) => g.contours.length)
-        .map((g) => g.contours.map((c) => c.map(([x, y]) => [x * k, y * k] as Vec2)));
-      const widthMm = layout.design.bboxMm.w * k;
-      const heightMm = layout.design.bboxMm.h * k;
+      // The same outline the production files rebuild from the stored text (lib/geometry/canvas-text.ts).
+      const { groups, widthMm, heightMm } = canvasTextOutline(font, text.trim(), TEXT_CAP_MM);
       const element: CanvasElement = {
         id: newId(), kind: "text", text: text.trim(), fontId: entry.id, capMm: TEXT_CAP_MM,
         groups, widthMm, heightMm, transform: place(widthMm, heightMm), locked: false,
@@ -190,7 +185,7 @@ export function FreeCanvasEditor() {
   };
 
   const addShape = (shape: CanvasShapeKind) => {
-    const outline = shapeOutline(shape, 80);
+    const outline = shapeOutline(shape, CANVAS_SHAPE_SIZE_MM);
     const element: CanvasElement = {
       id: newId(), kind: "shape", shape, groups: outline.groups, widthMm: outline.widthMm, heightMm: outline.heightMm,
       transform: place(outline.widthMm, outline.heightMm), locked: false,
@@ -241,7 +236,12 @@ export function FreeCanvasEditor() {
         quantity,
         section: "sweet",
         vectorSvg: weldThumbnailSvg(w, h, shifted, MATERIALS[settings.materialId].colours[0]?.hex ?? MATERIALS[settings.materialId].look.face),
-        spec: { source: "free-canvas", result: "piece", autoJoin: settings.autoJoin === true, piece: { widthMm: w, heightMm: h }, elements: elementSpec },
+        spec: {
+          source: "free-canvas", result: "piece", autoJoin: settings.autoJoin === true, piece: { widthMm: w, heightMm: h },
+          // The sheet the elements were placed on: the server rebuilds the piece on it for the workshop.
+          sheet: { widthMm: settings.sheetWidthMm, heightMm: settings.sheetHeightMm, marginMm: settings.marginMm },
+          elements: elementSpec,
+        },
       });
       return;
     }

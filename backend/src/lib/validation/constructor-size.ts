@@ -47,6 +47,11 @@ export function readTextSpec(spec: Record<string, unknown> | null | undefined): 
   return { text, fontId, lineFontIds, align, upper: spec.upper === true };
 }
 
+/** Margin of a «Свій напис» sheet from the spec, mm: 15 by default, 5 to 50. */
+export function readMarginMm(spec: Record<string, unknown>): number {
+  return typeof spec.marginMm === "number" && Number.isFinite(spec.marginMm) ? Math.min(50, Math.max(5, spec.marginMm)) : 15;
+}
+
 /** Main font and per-line fonts of the spec; unknown fonts reject the order line. */
 function fontsOf(spec: TextSpec): { font: LoadedFont; lineFonts: (LoadedFont | null)[] } {
   const font = loadFontById(spec.fontId);

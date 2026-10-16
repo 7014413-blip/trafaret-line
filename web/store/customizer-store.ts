@@ -8,16 +8,15 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { MATERIALS } from "../lib/materials";
 import { sheetForDesign } from "../lib/calculators/geometry";
-import { designPlacement } from "../lib/calculators/design-fit";
 import { DEFAULT_PRICING, calculateStencilPrice, type StencilPriceResult } from "../lib/calculators/pricing";
 import { computeMetrics } from "../lib/calculators/cut-metrics";
 import { checkDesign } from "../lib/calculators/design-check";
-import { bridgeWidthFor, DEFAULT_LASER, laserFor } from "../lib/geometry/laser-config";
+import { designGroupsMm, stencilCutOptions } from "../lib/geometry/stencil-request";
 import { minMaterialMm } from "../lib/geometry/config";
 import type {
   ComplexityFactor, DesignCheck, MaterialType, SectionTheme, Shape, SheetSize, StencilVectorMetrics, SurfaceKind, VectorDesign,
 } from "../types/customizer";
-import type { BridgeStrength, Polygon, StencilCutOptions, StencilCutResult, Vec2 } from "../types/geometry";
+import type { BridgeStrength, Polygon, StencilCutOptions, StencilCutResult } from "../types/geometry";
 
 /** What the customer chose: everything needed to rebuild the stencil exactly. */
 export interface CustomizerInput {
@@ -99,24 +98,6 @@ const DEFAULT_INPUT: CustomizerInput = {
   bridgeStrength: "normal",
 };
 
-/**
- * Design contours (layout units) grouped per glyph, scaled to the sheet and moved inside the
- * margin; on a square sheet the design is fitted and centred (lib/calculators/design-fit.ts).
- */
-export function designGroupsMm(design: VectorDesign, widthMm: number, marginMm: number, square = false): Polygon[][] {
-  const { scale, dx, dy } = designPlacement(design, widthMm, marginMm, square);
-  const groups = new Map<number, Polygon[]>();
-  // Contours without a group (uploaded files, layouts saved before groups existed) form one
-  // even-odd group, so their holes still come out right.
-  design.contours.forEach((contour) => {
-    const key = contour.group ?? -1;
-    const list = groups.get(key) ?? [];
-    list.push(contour.points.map(([x, y]) => [x * scale + dx, y * scale + dy] as Vec2));
-    groups.set(key, list);
-  });
-  return [...groups.values()];
-}
-
 /** Stable number per design object: the cut is recomputed only when the outline really changes. */
 const designIds = new WeakMap<VectorDesign, number>();
 let designSeq = 0;
@@ -144,18 +125,10 @@ export function cutKeyFor(input: CustomizerInput): string {
 /** What the geometry worker needs to build the cut of this input; null without a design. */
 export function cutRequestFor(input: CustomizerInput): { key: string; groups: Polygon[][]; options: StencilCutOptions } | null {
   if (!input.design.contours.length) return null;
-  const sheet = sheetFor(input);
-  const outline: Polygon = [[0, 0], [sheet.widthMm, 0], [sheet.widthMm, sheet.heightMm], [0, sheet.heightMm]];
   return {
     key: cutKeyFor(input),
     groups: designGroupsMm(input.design, input.widthMm, input.marginMm, input.shape === "square"),
-    options: {
-      bridgeWidthMm: bridgeWidthFor(input.capHeightMm ?? 0, DEFAULT_LASER, input.bridgeStrength ?? "normal"),
-      skipBridges: input.design.stencilFont,
-      sheet: outline,
-      // Thin places are judged by the material: PET 1.5, acrylic 2, mirror 3 mm.
-      config: laserFor(minMaterialMm(input.materialId)),
-    },
+    options: stencilCutOptions(sheetFor(input), input.capHeightMm ?? 0, input.materialId, input.bridgeStrength ?? "normal", input.design.stencilFont),
   };
 }
 
