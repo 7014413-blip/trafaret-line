@@ -15,7 +15,7 @@ test("mirror heart: steps, wholesale price and order", async ({ page, request })
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Заготовки");
   // Default: clear acrylic 3 mm circle Ø10 cm.
   await expect(page.getByRole("button", { name: /Ø10 см/ })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Ціна за шт.: 33 ₴")).toBeVisible();
+  await expect(page.getByText("Ціна за шт.: 30 ₴")).toBeVisible();
 
   await page.locator("#bl-shape-heart").click();
   await page.getByRole("button", { name: /^20 см/ }).click();
@@ -24,19 +24,19 @@ test("mirror heart: steps, wholesale price and order", async ({ page, request })
   await page.locator("#bl-colour-rose").click();
   await expect(page.getByRole("img", { name: "Схема заготовки «Серце» 20 см" })).toBeVisible();
 
-  // The scale is visible before the quantity changes: 338 ₴, from 10 pcs 321 ₴.
+  // The scale is visible before the quantity changes: 328 ₴, from 10 pcs 311 ₴.
   const scale = page.getByRole("table", { name: "Ціна за штуку від кількості" });
-  await expect(scale).toContainText("1 шт.338 ₴");
-  await expect(scale).toContainText("від 10 шт.−5%321 ₴");
+  await expect(scale).toContainText("1 шт.328 ₴");
+  await expect(scale).toContainText("від 10 шт.−5%311 ₴");
   await page.locator("#bl-qty").fill("10");
-  await expect(page.getByText("Ціна за шт.: 321 ₴ (−5%)")).toBeVisible();
-  await expect(page.getByText("Упаковка 10 шт.: 3 210 ₴")).toBeVisible();
+  await expect(page.getByText("Ціна за шт.: 311 ₴ (−5%)")).toBeVisible();
+  await expect(page.getByText("Упаковка 10 шт.: 3 110 ₴")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("м²");
 
   await page.getByRole("button", { name: "В кошик" }).first().click();
   const cart = page.getByRole("dialog", { name: "Кошик" });
   await expect(cart).toContainText("Заготовка «Серце» 20 см, дзеркальний акрил 3 мм, рожеве золото");
-  await expect(cart).toContainText("3 210 ₴");
+  await expect(cart).toContainText("3 110 ₴");
 
   await page.goto("/checkout");
   await page.locator("#c-phone").fill("+380 67 123 45 67");
@@ -46,7 +46,7 @@ test("mirror heart: steps, wholesale price and order", async ({ page, request })
   await expect(page.locator("#c-wh").getByRole("option", { name: LOCKER.option })).toBeAttached();
   await page.locator("#c-wh").selectOption(BRANCH.ref);
   await page.getByRole("radio", { name: "Накладений платіж при отриманні" }).check();
-  await page.getByRole("button", { name: /Підтвердити замовлення · 3 210 ₴/ }).click();
+  await page.getByRole("button", { name: /Підтвердити замовлення · 3 110 ₴/ }).click();
   await expect(page.getByRole("heading", { name: /Дякуємо!/ })).toBeVisible();
 
   const [order] = await receivedOrders(request);

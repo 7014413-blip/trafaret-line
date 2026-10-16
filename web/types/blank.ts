@@ -96,6 +96,7 @@ export interface CatalogBlankProduct {
   type: string;
   primary_category: string;
   hole?: unknown;
+  min_price_uah?: number;
   options: { size?: { code: string; sheet_mm: [number, number]; pieces?: number }[] };
   variants: { sku: string; size: string; material: string; price_uah: number }[];
 }
@@ -104,6 +105,12 @@ export interface CatalogBlankProduct {
 export interface BlankRepriceChange {
   handle: string;
   sku: string;
+  from: number;
+  to: number;
+}
+
+/** Lowest price of a repriced catalogue product before and after, for its «від N ₴» texts. */
+export interface BlankMinPriceChange {
   from: number;
   to: number;
 }
