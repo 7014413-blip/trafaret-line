@@ -22,7 +22,7 @@ const CARD_FIELDS = [
   "*variants", "*variants.calculated_price", "*variants.options", "*variants.options.option",
 ].join(",");
 
-function base(): { url: string; key: string } {
+export function base(): { url: string; key: string } {
   const url = process.env.MEDUSA_INTERNAL_URL ?? process.env.NEXT_PUBLIC_MEDUSA_URL;
   const key = process.env.NEXT_PUBLIC_MEDUSA_PK;
   if (!url || !key) throw new UpstreamError("internal", "NEXT_PUBLIC_MEDUSA_URL and NEXT_PUBLIC_MEDUSA_PK must be set");

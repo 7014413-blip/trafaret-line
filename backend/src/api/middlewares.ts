@@ -9,6 +9,15 @@ function closedForGuests(req: MedusaRequest, res: MedusaResponse, next: MedusaNe
   res.status(404).json({ message: "Not found" });
 }
 
+/**
+ * 404 for Medusa's own customer sign-up and sign-in (e-mail and password). Customers sign in only
+ * with Google or Telegram (/store/tl-account): an unverified e-mail account would collect the
+ * guest orders placed with that e-mail (Medusa joins them to a registered customer).
+ */
+function closed(_req: MedusaRequest, res: MedusaResponse): void {
+  res.status(404).json({ message: "Not found" });
+}
+
 // Customer layout uploads come as base64 JSON (up to 25 MB file → ~34 MB body).
 // Public routes are rate-limited per address (QA 2026-10-10, M8): uploads 10 per hour and
 // 150 MB per hour, checkout 5 orders per 10 minutes and 30 per day.
@@ -55,6 +64,27 @@ export default defineMiddlewares({
       matcher: "/admin/tl-products/import",
       method: ["POST"],
       bodyParser: { sizeLimit: "32mb" },
+    },
+    {
+      matcher: "/auth/customer/*",
+      middlewares: [closed],
+    },
+    {
+      // Cabinet sign-in: 30 attempts per 10 minutes per address; «Мої замовлення» 120 per 10 minutes.
+      // The storefront calls these from its server and passes the buyer's address in x-real-ip.
+      matcher: "/store/tl-account/telegram",
+      method: ["POST"],
+      middlewares: [limitRoute({ name: "account-sign-in", limit: 30, windowMs: 10 * 60_000 })],
+    },
+    {
+      matcher: "/store/tl-account/google",
+      method: ["POST"],
+      middlewares: [limitRoute({ name: "account-sign-in", limit: 30, windowMs: 10 * 60_000 })],
+    },
+    {
+      matcher: "/store/tl-account/orders",
+      method: ["GET"],
+      middlewares: [limitRoute({ name: "account-orders", limit: 120, windowMs: 10 * 60_000 })],
     },
     {
       matcher: "/store/tl-pay/wayforpay",

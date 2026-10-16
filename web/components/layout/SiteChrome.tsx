@@ -1,6 +1,6 @@
 "use client";
 
-// Trust bar, sticky header (logo, catalog, search, phone, cart; the RU/EN switch returns
+// Trust bar, sticky header (logo, catalog, search, phone, cabinet, cart; the RU/EN switch returns
 // together with the translated pages, QA 2026-10-10),
 // direction tabs, footer and the mobile bottom navigation.
 
@@ -79,6 +79,9 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
             <b className="text-[15px]">{SITE.phone}</b>
             <small className="text-[var(--muted)]">Viber · Telegram</small>
           </div>
+          <Link href="/kabinet" aria-label="Мій кабінет" className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6" /></svg>
+          </Link>
           <CartButton />
         </div>
       </div>

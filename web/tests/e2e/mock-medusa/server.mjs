@@ -2,7 +2,8 @@
 // storefront makes (regions, categories, products, product photos), takes orders at
 // POST /store/tl-checkout and signs a WayForPay form at POST /store/tl-pay/wayforpay without
 // real keys. It also stands in for the Nova Poshta API at POST /novaposhta/ with the answers
-// of data/knowledge_base/mock_novaposhta.json (the site's server calls it via NP_API_URL). Orders it received are listed at GET /__e2e/orders, so a test can check what the
+// of data/knowledge_base/mock_novaposhta.json (the site's server calls it via NP_API_URL), and
+// answers the cabinet routes (account.mjs). Orders it received are listed at GET /__e2e/orders, so a test can check what the
 // browser sent; DELETE /__e2e/orders clears the list.
 //
 // Usage: node tests/e2e/mock-medusa/server.mjs (port from MOCK_MEDUSA_PORT, default 9100).
@@ -12,6 +13,7 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, REGION, products } from "./catalog.mjs";
+import { accountRoute } from "./account.mjs";
 
 const PORT = Number(process.env.MOCK_MEDUSA_PORT ?? 9100);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -85,6 +87,7 @@ const server = http.createServer(async (req, res) => {
         },
       });
     }
+    if (url.pathname.startsWith("/store/tl-account/") && (await accountRoute(req, url, readJson, send, res))) return;
     if (req.method === "POST" && url.pathname === "/novaposhta/") {
       const { calledMethod, apiKey } = await readJson(req);
       if (!apiKey) return send(res, 200, NOVA_POSHTA.error);
