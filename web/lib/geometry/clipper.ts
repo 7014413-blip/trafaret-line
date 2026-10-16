@@ -4,8 +4,9 @@
 
 import { Clipper, ClipperOffset, EndType, FillRule, JoinType, Path64, Paths64 } from "clipper2-js";
 import type { Polygon, Vec2 } from "../../types/geometry";
+import { CLIPPER_OFFSET_FIXED } from "./clipper-offset-fix";
 
-export { FillRule };
+export { CLIPPER_OFFSET_FIXED, FillRule };
 
 export function toPath64(polygon: Polygon, scale: number): Path64 {
   const path = new Path64();
@@ -67,7 +68,7 @@ export function intersect(subject: ReadonlyArray<Polygon>, clip: ReadonlyArray<P
 }
 
 /** Largest gap between a round corner and its straight-segment approximation, mm. */
-const ARC_TOLERANCE_MM = 0.05;
+export const ARC_TOLERANCE_MM = 0.05;
 
 /**
  * Offsets closed polygons by delta mm (negative = shrink) with round corners. The arc
@@ -81,14 +82,6 @@ export function inflate(polygons: ReadonlyArray<Polygon>, deltaMm: number, scale
   const solution = new Paths64();
   offset.execute(deltaMm * scale, solution);
   return fromPaths64(solution, scale);
-}
-
-/**
- * Morphological opening: shrink by r, grow back by r. Parts narrower than 2r vanish,
- * so `difference(input, opening(input))` is exactly the too-thin areas.
- */
-export function opening(polygons: ReadonlyArray<Polygon>, radiusMm: number, scale: number): Vec2[][] {
-  return inflate(inflate(polygons, -radiusMm, scale), radiusMm, scale);
 }
 
 /** Node of the nesting tree in millimetres. */

@@ -1,6 +1,7 @@
 // Welded word at the width the customer asked for. Moving letters together shortens
-// the word, so the scale is found in two passes: weld at the first guess, measure,
-// correct the scale, weld again. Result is moved to start at (0, 0).
+// the word, so the scale is found in two passes: weld at the first guess (without the
+// skewers, which do not change the width), measure, correct the scale, weld again.
+// Result is moved to start at (0, 0).
 
 import type { PlacedGlyph, TextAlign, Vec2, WeldOptions, WeldResult } from "../../types/geometry";
 import type { SizedWeld } from "../../types/geometry-worker";
@@ -23,12 +24,15 @@ export function weldAtWidth(
   const withOutlines = glyphs.filter((g) => g.contours.length);
   if (!withOutlines.length || targetWidthMm <= 0) return null;
   const box = bboxOf(withOutlines.flatMap((g) => g.contours));
-  let scale = targetWidthMm / Math.max(1e-6, box.maxX - box.minX);
-  let result = weldText(glyphsToMm(glyphs, scale, 0, 0), capUnits * scale, align, options);
-  const width = result.bbox.maxX - result.bbox.minX;
-  if (width > 0 && Math.abs(width - targetWidthMm) > 0.5) {
-    scale *= targetWidthMm / width;
-    result = weldText(glyphsToMm(glyphs, scale, 0, 0), capUnits * scale, align, options);
-  }
+  const firstScale = targetWidthMm / Math.max(1e-6, box.maxX - box.minX);
+  let scale = firstScale;
+  // Skewers hang inside the width of the word, so the measuring pass leaves them out.
+  const measuring: WeldOptions = { ...options, skewers: { ...options.skewers, count: 0 } };
+  const first = weldText(glyphsToMm(glyphs, scale, 0, 0), capUnits * scale, align, measuring);
+  const width = first.bbox.maxX - first.bbox.minX;
+  if (width > 0 && Math.abs(width - targetWidthMm) > 0.5) scale *= targetWidthMm / width;
+  const result = scale === firstScale && !options.skewers.count
+    ? first
+    : weldText(glyphsToMm(glyphs, scale, 0, 0), capUnits * scale, align, options);
   return { result: weldToOrigin(result), capMm: capUnits * scale, scale };
 }
