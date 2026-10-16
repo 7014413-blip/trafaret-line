@@ -10,6 +10,7 @@ import type { JoinedWordsDesign } from "./joined-words";
 import type { LayeredPlaqueDesign } from "./layered-plaque";
 import type { InitialsDesign } from "./initials";
 import type { StickLettersDesign } from "./stick-letters";
+import type { BlankDesign } from "./blank";
 import type { B2BCompany } from "./invoice";
 import type { PackKind } from "./packaging";
 
@@ -20,9 +21,10 @@ import type { PackKind } from "./packaging";
  * words: «Написи на планці», priced by its pieces measured with the server's fonts;
  * layered: two-layer floor, door and number plaques, priced by size and series;
  * initials: wedding cake initials «S | D», priced by the composition measured with the server's fonts;
- * letters: self-adhesive acrylic letters for card boxes, priced by their pieces measured with the server's fonts; accessory.
+ * letters: self-adhesive acrylic letters for card boxes, priced by their pieces measured with the server's fonts;
+ * blank: a blank of the «/zahotovky» configurator, priced by shape, size and sheet; accessory.
  */
-export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "pointer" | "plaque" | "words" | "layered" | "initials" | "letters" | "accessory";
+export type OrderLineKind = "stencil" | "welded" | "catalog" | "sign" | "pointer" | "plaque" | "words" | "layered" | "initials" | "letters" | "blank" | "accessory";
 
 export interface OrderLineInput {
   key: string;
@@ -47,6 +49,8 @@ export interface OrderLineInput {
   initials?: InitialsDesign;
   /** kind "letters": the design, re-read, re-measured and re-priced on the server. */
   letters?: StickLettersDesign;
+  /** kind "blank": the design, re-read and re-priced on the server. */
+  blank?: BlankDesign;
   /** Customer layout file (POST /store/tl-upload). */
   uploadKey?: string;
   section?: SectionTheme;

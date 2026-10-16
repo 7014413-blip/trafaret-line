@@ -20,7 +20,7 @@ export const COLOURS = {
 } satisfies Record<string, MaterialColour>;
 
 type Numbers = Pick<MaterialOption,
-  "id" | "use" | "thicknessMm" | "densityGcm3" | "baseSquareMeterPrice" | "wholesaleSquareMeterPrice" | "minPrice" | "costPerM2" | "available"
+  "id" | "use" | "thicknessMm" | "densityGcm3" | "baseSquareMeterPrice" | "wholesaleSquareMeterPrice" | "minPrice" | "cutFeeUah" | "costPerM2" | "available"
   | "foodSafe" | "magnetic" | "maxDimensionsMm">;
 
 /** The numbers of a material from the knowledge base, in the shape of MaterialOption. */
@@ -34,6 +34,7 @@ function numbers(id: MaterialType): Numbers {
     baseSquareMeterPrice: facts.retailPerM2,
     wholesaleSquareMeterPrice: facts.wholesalePerM2,
     minPrice: facts.minPrice,
+    cutFeeUah: facts.cutFeeUah,
     costPerM2: facts.costPerM2,
     available: facts.available,
     foodSafe: false,
@@ -143,6 +144,11 @@ export const MATERIALS: Record<MaterialType, MaterialOption> = {
     ...numbers("pet_food_board"), name: t("PET 0,5 мм, підкладка під торт", "PET 0,5 мм, подложка под торт", "PET 0.5 mm cake board"),
     finish: "clear", colours: [COLOURS.clear], minLetterMm: 0, look: look("#e4f0ff", "#b9cde6", 0.55, 0.8),
     note: t("Підкладка під торт", "Подложка под торт", "Cake board"),
+  },
+  polystyrene_white_1: {
+    ...numbers("polystyrene_white_1"), name: t("Полістирол 1 мм білий", "Полистирол 1 мм белый", "White polystyrene 1 mm"),
+    finish: "matte", colours: [COLOURS.white], minLetterMm: 0, look: look("#f5f6f7", "#c9ced4", 0.95, 0.35),
+    note: t("Жорсткий білий, під торт", "Жёсткий белый, под торт", "Rigid white, for cakes"),
   },
 };
 

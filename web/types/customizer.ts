@@ -42,7 +42,8 @@ export type MaterialType =
   | "acrylic_color"        // кольоровий акрил
   | "acrylic_mirror_2" | "acrylic_mirror_3"
   | "polystyrene_mirror_1"
-  | "pet_food_board";      // PET 0,5 мм, підкладки під торти
+  | "pet_food_board"       // PET 0,5 мм, підкладки під торти
+  | "polystyrene_white_1"; // полістирол 1 мм білий, підкладки під торти
 
 export type MaterialUse = "stencil" | "blank";
 
@@ -72,8 +73,10 @@ export interface MaterialOption {
   baseSquareMeterPrice: number | null;
   /** Rate for approved wholesalers, UAH per m² (replaces their discount). null = the retail rate. */
   wholesaleSquareMeterPrice: number | null;
-  /** Minimum price per stencil; blanks use the order minimum from PricingConfig. */
+  /** Minimum price per stencil (0 for blanks). */
   minPrice: number;
+  /** Blanks: cutting fee per piece, UAH, added to sheet area × rate (knowledge base); 0 for stencils. */
+  cutFeeUah: number;
   /** Owner's cost of sheet incl. waste, UAH/m². Admin only, never sent to the browser. null = unknown. */
   costPerM2: number | null;
   /**

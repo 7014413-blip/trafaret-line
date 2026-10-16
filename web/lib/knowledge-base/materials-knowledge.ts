@@ -32,6 +32,7 @@ export function materialFacts(id: MaterialType): MaterialFacts {
   if (!USES.has(facts.use)) fail(`${id}.use must be "stencil" or "blank"`);
   if (typeof facts.available !== "boolean") fail(`${id}.available must be true or false`);
   if (typeof facts.minPrice !== "number" || facts.minPrice < 0) fail(`${id}.minPrice must be 0 or more`);
+  if (typeof facts.cutFeeUah !== "number" || !Number.isFinite(facts.cutFeeUah) || facts.cutFeeUah < 0) fail(`${id}.cutFeeUah must be 0 or more`);
   return {
     use: facts.use,
     thicknessMm: positive(facts.thicknessMm, `${id}.thicknessMm`),
@@ -39,6 +40,7 @@ export function materialFacts(id: MaterialType): MaterialFacts {
     retailPerM2: rate(facts.retailPerM2, `${id}.retailPerM2`),
     wholesalePerM2: rate(facts.wholesalePerM2, `${id}.wholesalePerM2`),
     minPrice: facts.minPrice,
+    cutFeeUah: facts.cutFeeUah,
     costPerM2: rate(facts.costPerM2, `${id}.costPerM2`),
     available: facts.available,
   };

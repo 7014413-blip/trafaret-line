@@ -22,8 +22,10 @@ export interface MaterialFacts {
   retailPerM2: number | null;
   /** Rate for approved wholesalers, UAH per m²; null = the retail rate. */
   wholesalePerM2: number | null;
-  /** Minimum price of one stencil, UAH (0 for blanks: they use the order minimum). */
+  /** Minimum price of one stencil, UAH (0 for blanks). */
   minPrice: number;
+  /** Blanks: cutting fee per piece, UAH, added to sheet area × rate; 0 for stencils. */
+  cutFeeUah: number;
   /** Owner's cost incl. waste, UAH per m²; null = unknown. */
   costPerM2: number | null;
   available: boolean;

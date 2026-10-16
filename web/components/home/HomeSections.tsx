@@ -147,7 +147,7 @@ export function BlanksCalculator() {
           {formatUAH(one.unitPrice)}
           <small className="mt-1.5 block text-sm font-normal text-[var(--muted)]">за 1 шт. · від 10 шт. {formatUAH(ten.unitPrice)} за шт.</small>
         </div>
-        <button type="button" className="h-[52px] rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)]">До кошика</button>
+        <Link href="/zahotovky" className="inline-flex h-[52px] items-center rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)]">Обрати форму і колір</Link>
       </div>
     </section>
   );
