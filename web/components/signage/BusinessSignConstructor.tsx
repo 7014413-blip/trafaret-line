@@ -330,7 +330,7 @@ export function BusinessSignConstructor() {
         <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Кріплення</legend>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-adh" checked={adhesive} onChange={(e) => setAdhesive(e.target.checked)} className="accent-[var(--ink)]" />Самоклейка на звороті</label>
           <div className="flex flex-wrap gap-2">{HOLES.map(([n, name]) => <PlaqueChip key={n} id={`bs-holes-${n}`} on={holes === n} onClick={() => setHoles(n)}>{name}</PlaqueChip>)}</div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-tpl" checked={template} onChange={(e) => setTemplate(e.target.checked)} className="accent-[var(--ink)]" />Монтажний трафарет для рівного кріплення</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-tpl" checked={template} onChange={(e) => setTemplate(e.target.checked)} className="accent-[var(--ink)]" />Монтажний трафарет для рівного кріплення (прорізи на 0,2 мм більші за деталі)</label>
         </fieldset>
 
         <QuantityField idPrefix="bs" value={qty} onChange={setQty} />
