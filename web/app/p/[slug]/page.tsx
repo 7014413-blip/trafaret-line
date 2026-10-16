@@ -4,8 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { Gallery, ProductBuyBox } from "@/components/catalog/ProductBuyBox";
-import { HoleProductView } from "@/components/catalog/HoleProductView";
-import { MonogramProductView } from "@/components/catalog/MonogramProductView";
+import { LazyHoleProductView, LazyMonogramProductView } from "@/components/catalog/LazyProductViews";
 import { listCategories, productByHandle, productsByHandles } from "@/services/medusa-store";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
@@ -61,9 +60,9 @@ export default async function ProductPage({ params }: Props) {
           <span>{p.title}</span>
         </nav>
         {p.hole ? (
-          <HoleProductView p={p} rules={p.hole} />
+          <LazyHoleProductView p={p} rules={p.hole} />
         ) : p.monogram ? (
-          <MonogramProductView p={p} />
+          <LazyMonogramProductView p={p} />
         ) : (
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
             <Gallery images={p.images} title={p.title} />

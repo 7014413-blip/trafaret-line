@@ -101,6 +101,8 @@ jobs:
         run: npm run typecheck
       - name: Build
         run: npm run build
+      - name: Unit tests
+        run: npm run test:unit
       - name: HTTP integration test
         run: npm run test:integration:http
 
