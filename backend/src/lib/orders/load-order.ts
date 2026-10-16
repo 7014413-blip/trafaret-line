@@ -17,16 +17,17 @@ const positionOf = (item: RawItem) => (typeof item.metadata?.position === "numbe
 export async function loadOrderForFiles(graph: QueryGraph, orderId: string): Promise<OrderForFiles | null> {
   const { data } = await graph({
     entity: "order",
-    fields: ["id", "display_id", "items.id", "items.title", "items.quantity", "items.created_at", "items.metadata"],
+    fields: ["id", "display_id", "metadata", "items.id", "items.title", "items.quantity", "items.created_at", "items.metadata"],
     filters: { id: orderId },
   });
-  const order = data[0] as { id: string; display_id: number; items?: RawItem[] } | undefined;
+  const order = data[0] as { id: string; display_id: number; metadata?: Record<string, unknown> | null; items?: RawItem[] } | undefined;
   if (!order) return null;
   const items = [...(order.items ?? [])].sort((a, b) =>
     positionOf(a) - positionOf(b) || String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")) || a.id.localeCompare(b.id));
   return {
     id: order.id,
     displayId: order.display_id,
+    approvedAt: typeof order.metadata?.layoutApprovedAt === "string" ? order.metadata.layoutApprovedAt : null,
     items: items.map((item) => ({ title: item.title, quantity: Number(item.quantity), metadata: item.metadata ?? null })),
   };
 }

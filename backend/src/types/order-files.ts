@@ -20,6 +20,8 @@ export interface OrderLineForFiles {
 export interface OrderForFiles {
   id: string;
   displayId: number;
+  /** When the customer ticked «Макет перевірив» (cart metadata layoutApprovedAt), ISO. */
+  approvedAt: string | null;
   items: OrderLineForFiles[];
 }
 

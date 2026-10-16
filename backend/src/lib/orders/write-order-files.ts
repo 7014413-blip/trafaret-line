@@ -3,19 +3,23 @@
 //   … .png                                                        preview of the part
 //   TL-<n>-<position>_<kind>_preview.png                            constructor's picture of other lines
 //   TL-<n>_params.json                                              every line with its parameters
+//   TL-<n>_approval.png                                             «Лист погодження макета»
 //   fonts/<family>_<id>.<ext>                                       customer fonts of the order
 // Written after the order is placed (subscribers/order-production-files.ts) and again from the
 // admin button «Перебудувати файли». Customer fonts of the order are marked as used and kept.
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import { approvalSheetSvg } from "../../shared/lib/export/approval-sheet";
 import { productionFileName } from "../../shared/lib/export/production-name";
+import { needsLayoutApproval } from "../../shared/lib/validation/layout-approval";
+import type { ApprovalSheetLine } from "../../shared/types/production";
 import { toLayeredDxf, toLayeredSvg } from "../../shared/lib/export/layers";
 import { MATERIALS } from "../../shared/lib/materials";
 import type { MaterialType } from "../../shared/types/customizer";
 import type { OrderFilesResult, OrderForFiles, OrderLineForFiles } from "../../types/order-files";
 import { fontFiles, markFontUsed, readFontNote } from "../text/font-usage";
-import { customFontsDir } from "../text/node-fonts";
+import { customFontsDir, loadFontById } from "../text/node-fonts";
 import { lineProductionPart } from "./line-production-part";
 import { listOrderFiles, orderFolder } from "./order-files-dir";
 import { orderFontKeys } from "./order-font-keys";
@@ -34,12 +38,16 @@ function infoLines(orderNumber: string, position: number, count: number, line: O
   ];
 }
 
-/** Machine files and preview of one line; the names written, and problems for the manager. */
-async function writeLine(folder: string, orderNumber: string, position: number, count: number, line: OrderLineForFiles): Promise<{ files: string[]; problems: string[] }> {
+/** Site font the approval sheet is written in. */
+const SHEET_FONT = "montserrat";
+
+/** Machine files and preview of one line; the names written, the picture used and problems for the manager. */
+async function writeLine(folder: string, orderNumber: string, position: number, count: number, line: OrderLineForFiles): Promise<{ files: string[]; problems: string[]; previewSvg: string | null }> {
   const meta = line.metadata ?? {};
   const files: string[] = [];
   const problems: string[] = [];
   let built = false;
+  let previewSvg: string | null = null;
   try {
     const made = lineProductionPart(meta);
     if (made) {
@@ -52,6 +60,7 @@ async function writeLine(folder: string, orderNumber: string, position: number, 
       files.push(`${base}.svg`, `${base}.dxf`, `${base}.png`);
       problems.push(...made.warnings.map((w) => `Позиція ${position}: ${w}`));
       built = true;
+      previewSvg = made.previewSvg;
     }
   } catch (e) {
     problems.push(`Позиція ${position}: файл для станка не зібрано (${(e as Error).message}). Потрібен макет менеджера`);
@@ -62,11 +71,24 @@ async function writeLine(folder: string, orderNumber: string, position: number, 
     try {
       await fs.writeFile(path.join(folder, name), svgToPng(meta.previewSvg));
       files.push(name);
+      previewSvg = meta.previewSvg;
     } catch (e) {
       problems.push(`Позиція ${position}: превʼю не намальовано (${(e as Error).message})`);
     }
   }
-  return { files, problems };
+  return { files, problems, previewSvg };
+}
+
+const cm = (value: unknown) => (typeof value === "number" && value > 0 ? String(Math.round(value * 10) / 10).replace(".", ",") : "");
+
+/** «Лист погодження макета» of the made-to-layout lines, as PNG; null when the order has none. */
+async function writeApprovalSheet(folder: string, order: OrderForFiles, orderNumber: string, lines: ApprovalSheetLine[]): Promise<string | null> {
+  if (!lines.length) return null;
+  const font = loadFontById(SHEET_FONT);
+  if (!font) throw new Error(`font ${SHEET_FONT} is missing on the server`);
+  const name = `${orderNumber}_approval.png`;
+  await fs.writeFile(path.join(folder, name), svgToPng(approvalSheetSvg(font, { orderNumber, approvedAt: order.approvedAt, lines }), 1240));
+  return name;
 }
 
 /** Copies the customer fonts of the order into its folder and marks them as used. */
@@ -98,9 +120,15 @@ export async function writeOrderFiles(order: OrderForFiles): Promise<OrderFilesR
 
   const problems: string[] = [];
   const lines: Record<string, unknown>[] = [];
+  const toApprove: ApprovalSheetLine[] = [];
   for (const [i, line] of order.items.entries()) {
     const written = await writeLine(folder, orderNumber, i + 1, order.items.length, line);
     problems.push(...written.problems);
+    const meta = line.metadata ?? {};
+    if (needsLayoutApproval({ kind: typeof meta.kind === "string" ? meta.kind : null })) {
+      const size = [cm(meta.widthCm), cm(meta.heightCm)];
+      toApprove.push({ position: i + 1, title: line.title, sizeText: size.every(Boolean) ? `${size[0]} × ${size[1]} см` : "", quantity: line.quantity, previewSvg: written.previewSvg });
+    }
     const { previewSvg: _preview, ...metadata } = line.metadata ?? {};
     lines.push({ position: i + 1, title: line.title, quantity: line.quantity, files: written.files, ...metadata });
   }
@@ -108,9 +136,14 @@ export async function writeOrderFiles(order: OrderForFiles): Promise<OrderFilesR
   for (const line of order.items) orderFontKeys(line.metadata, keys);
   const copied = await copyFonts(folder, orderNumber, keys);
   problems.push(...copied.problems);
+  try {
+    await writeApprovalSheet(folder, order, orderNumber, toApprove);
+  } catch (e) {
+    problems.push(`Лист погодження макета не намальовано (${(e as Error).message})`);
+  }
 
   await fs.writeFile(path.join(folder, `${orderNumber}_params.json`), JSON.stringify({
-    order: orderNumber, orderId: order.id, writtenAt: new Date().toISOString(), lines, fonts: copied.fonts, problems,
+    order: orderNumber, orderId: order.id, writtenAt: new Date().toISOString(), layoutApprovedAt: order.approvedAt, lines, fonts: copied.fonts, problems,
   }, null, 2));
   return { orderNumber, files: await listOrderFiles(orderNumber), problems };
 }

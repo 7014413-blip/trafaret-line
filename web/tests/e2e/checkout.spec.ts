@@ -93,3 +93,29 @@ test("payment that cannot start keeps the order and offers a retry", async ({ pa
   await expect(page.getByText(/Замовлення TL-1001 збережено/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Спробувати оплатити ще раз" })).toBeVisible();
 });
+
+test("own text stencil: the order waits for «Макет перевірив»", async ({ page, request }) => {
+  await page.goto("/konstruktor");
+  await page.locator("#k-text").fill("КАВА");
+  const buy = page.getByRole("button", { name: "Купити" }).first();
+  await expect(buy).toBeEnabled();
+  await buy.click();
+  await page.goto("/checkout");
+  await fillContactsAndDelivery(page);
+  await page.getByRole("radio", { name: "Накладений платіж при отриманні" }).check();
+
+  const approval = page.getByRole("group", { name: "Погодження макета" });
+  await expect(approval).toContainText("КАВА");
+  await expect(approval.getByRole("img", { name: /Макет: Свій напис «КАВА»/ })).toBeVisible();
+  const confirm = page.getByRole("button", { name: /Підтвердити замовлення/ });
+  await expect(confirm).toBeDisabled();
+
+  await page.getByLabel(/Макет перевірив/).check();
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await expect(page.getByRole("heading", { name: /Дякуємо! Замовлення TL-1001/ })).toBeVisible();
+
+  const [order] = await receivedOrders(request);
+  expect(order.body.layoutApproved).toBe(true);
+  expect(order.body.lines).toEqual([expect.objectContaining({ kind: "stencil", previewSvg: expect.stringMatching(/^<svg/) })]);
+});
