@@ -4,7 +4,8 @@
 # password and from search engines. Setup steps for the server: deploy/staging/README.md.
 #
 # Secrets (Settings -> Secrets and variables -> Actions -> Secrets):
-#   STAGING_SSH_HOST, STAGING_SSH_USER, STAGING_SSH_PASSWORD  the site's own FastPanel user
+#   STAGING_SSH_HOST, STAGING_SSH_USER                         the site's own server user
+#   STAGING_SSH_KEY (private key, preferred) or STAGING_SSH_PASSWORD
 #   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD     its PostgreSQL database
 #   STAGING_PASSWORD                                          site login "trafaret" and shop admin
 # Variables (same page -> Variables), all optional:
@@ -40,6 +41,7 @@ jobs:
       API_DOMAIN: ${{ vars.STAGING_API_DOMAIN || 'api-test.trafaret-line.com.ua' }}
       SSH_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
       SSHPASS: ${{ secrets.STAGING_SSH_PASSWORD }}
+      SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
       SSH_TARGET: ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -53,9 +55,10 @@ jobs:
           STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
         run: |
           missing=""
-          for name in HOST USER_NAME SSHPASS DB_NAME DB_USER DB_PASSWORD STAGING_PASSWORD; do
+          for name in HOST USER_NAME DB_NAME DB_USER DB_PASSWORD STAGING_PASSWORD; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
+          [ -n "$SSH_KEY" ] || [ -n "$SSHPASS" ] || missing="$missing SSH_KEY(or SSH_PASSWORD)"
           if [ -n "$missing" ]; then
             echo "::error::Staging secrets are not set yet:$missing. See deploy/staging/README.md."
             exit 1
@@ -76,11 +79,22 @@ jobs:
       - name: Install the copy tools
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends sshpass rsync
 
-      - name: Prepare the server and read the storefront key
+      - name: Set up the SSH login
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           ssh-keyscan -p "$SSH_PORT" -H "${SSH_TARGET#*@}" >> ~/.ssh/known_hosts 2>/dev/null
-          key_line="$(sshpass -e ssh -p "$SSH_PORT" "$SSH_TARGET" 'bash -s' < deploy/staging/server/ensure-secrets.sh)"
+          if [ -n "$SSH_KEY" ]; then
+            printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
+            chmod 600 ~/.ssh/staging_key
+            echo "SSH_CMD=ssh -i $HOME/.ssh/staging_key -o IdentitiesOnly=yes -o BatchMode=yes -p $SSH_PORT" >> "$GITHUB_ENV"
+          else
+            echo "SSH_CMD=sshpass -e ssh -p $SSH_PORT" >> "$GITHUB_ENV"
+          fi
+
+      - name: Prepare the server and read the storefront key
+        run: |
+          key_line="$($SSH_CMD "$SSH_TARGET" 'bash -s' < deploy/staging/server/ensure-secrets.sh)"
           key="${key_line#STAGING_PUBLISHABLE_KEY=}"
           [[ "$key" =~ ^pk_[0-9a-f]{64}$ ]] || { echo "::error::The server did not return a storefront key"; exit 1; }
           echo "NEXT_PUBLIC_MEDUSA_PK=$key" >> "$GITHUB_ENV"
@@ -105,12 +119,11 @@ jobs:
 
       - name: Copy the build to the server
         run: |
-          rsh="sshpass -e ssh -p $SSH_PORT"
           remote="$SSH_TARGET:trafaret-staging/incoming"
-          sshpass -e ssh -p "$SSH_PORT" "$SSH_TARGET" 'rm -rf ~/trafaret-staging/incoming && mkdir -p ~/trafaret-staging/incoming'
-          rsync -az --delete -e "$rsh" --exclude node_modules backend/.medusa/server/ "$remote/backend/"
-          rsync -az --delete -e "$rsh" web/.next/standalone/ "$remote/web/"
-          rsync -az --delete -e "$rsh" deploy/staging/server/ "$remote/deploy/"
+          $SSH_CMD "$SSH_TARGET" 'rm -rf ~/trafaret-staging/incoming && mkdir -p ~/trafaret-staging/incoming'
+          rsync -az --delete -e "$SSH_CMD" --exclude node_modules backend/.medusa/server/ "$remote/backend/"
+          rsync -az --delete -e "$SSH_CMD" web/.next/standalone/ "$remote/web/"
+          rsync -az --delete -e "$SSH_CMD" deploy/staging/server/ "$remote/deploy/"
 
       - name: Switch the server to the new build
         env:
@@ -126,8 +139,8 @@ jobs:
             for name in STAGING_PASSWORD DB_NAME DB_USER DB_PASSWORD SITE_DOMAIN API_DOMAIN WEB_PORT API_PORT; do
               printf '%s=%q\n' "$name" "${!name}"
             done
-          } | sshpass -e ssh -p "$SSH_PORT" "$SSH_TARGET" 'umask 077 && cat > ~/trafaret-staging/shared/deploy.env'
-          sshpass -e ssh -p "$SSH_PORT" "$SSH_TARGET" 'bash ~/trafaret-staging/incoming/deploy/deploy.sh'
+          } | $SSH_CMD "$SSH_TARGET" 'umask 077 && cat > ~/trafaret-staging/shared/deploy.env'
+          $SSH_CMD "$SSH_TARGET" 'bash ~/trafaret-staging/incoming/deploy/deploy.sh'
 
       - name: Check the public address
         run: |

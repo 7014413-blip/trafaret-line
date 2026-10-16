@@ -11,10 +11,14 @@
 
 Пароли никуда не пересылаем: они вводятся только в FastPanel и в GitHub.
 
-**1. Пользователь в FastPanel**
-1. FastPanel → «Пользователи» → «Создать».
-2. Логин `trafaret`, придумай пароль (пароль 1).
-3. Включи доступ по SSH с полной оболочкой (bash), не только SFTP.
+**1. Пользователь на сервере и ключ для GitHub**
+1. Пользователь `trafaret` с полной оболочкой (bash). Его создаёт главный админ сервера (FastPanel → «Пользователи» или `useradd`).
+2. На ноутбуке в PowerShell сделай пару ключей (на вопросы жми Enter):
+   `ssh-keygen -t ed25519 -C github-staging -f $HOME\.ssh\trafaret_staging`
+3. Публичный ключ (его можно показывать): `Get-Content $HOME\.ssh\trafaret_staging.pub`. Эту строку добавляют в `~/.ssh/authorized_keys` пользователя `trafaret`.
+4. Закрытый ключ копируется в буфер, на экран не выводится: `Get-Content $HOME\.ssh\trafaret_staging -Raw | Set-Clipboard`. Его вставляешь только в секрет GitHub `STAGING_SSH_KEY`, больше никуда.
+
+Вместо ключа можно дать пароль пользователя в секрете `STAGING_SSH_PASSWORD`, если на сервере разрешён вход по паролю.
 
 **2. База данных**
 1. FastPanel → «Базы данных» → «Создать», тип **PostgreSQL**, владелец `trafaret`.
@@ -34,7 +38,7 @@ GitHub → репозиторий `trafaret-line` → Settings → Secrets and v
 | --- | --- |
 | `STAGING_SSH_HOST` | IP сервера |
 | `STAGING_SSH_USER` | `trafaret` |
-| `STAGING_SSH_PASSWORD` | пароль 1 |
+| `STAGING_SSH_KEY` | закрытый ключ из шага 1.4 (вставить из буфера целиком) |
 | `STAGING_DB_NAME` | `trafaret_test` |
 | `STAGING_DB_USER` | `trafaret_test` |
 | `STAGING_DB_PASSWORD` | пароль 2 |
