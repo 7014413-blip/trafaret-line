@@ -12,29 +12,17 @@
 //   Tube: cardboard wall 0.07 g/cm² of its surface with caps.
 //   Weight: actual = material (lib/calculators/weight.ts) + packaging;
 //     volumetric = L × W × H (cm) / 4000; billed = the larger, rounded up to 0.1 kg.
+// The numbers live in data/knowledge_base/rules_logistics.json.
 
 import type { MaterialType } from "../../types/customizer";
 import type { PackKind, Parcel, ParcelConfig, ParcelItem } from "../../types/packaging";
+import { PARCEL_RULES } from "../knowledge-base/logistics-rules";
 import { MATERIALS } from "../materials";
 import { round3, weightBreakdown } from "./weight";
+import { cmText } from "../format";
 
-export const DEFAULT_PARCEL: ParcelConfig = {
-  marginXYmm: 40,
-  paddingZmm: 10,
-  tubeDiameterMm: 100,
-  tubeExtraMm: 20,
-  flexibleMaxMm: 0.8,
-  cardboardGm2: 450,
-  cardboardMarginMm: 20,
-  cardboardExtra: 0.1,
-  cardboardMinG: 30,
-  flatMinHeightMm: 20,
-  tubeGcm2: 0.07,
-  volumetricDivisor: 4000,
-  // Nova Poshta parcel locker, largest cell: 40 × 30 × 60 cm, up to 20 kg.
-  postomatMaxMm: { length: 600, width: 400, height: 300 },
-  postomatMaxKg: 20,
-};
+/** Parcel rules from data/knowledge_base/rules_logistics.json. */
+export const DEFAULT_PARCEL: ParcelConfig = PARCEL_RULES;
 
 /** PET up to 0.8 mm can go rolled in a tube. */
 export function isFlexible(materialId: MaterialType, cfg: ParcelConfig = DEFAULT_PARCEL): boolean {
@@ -123,10 +111,9 @@ export function parcelFor(items: ParcelItem[], prefer: PackKind = "tube", cfg: P
 
 /** "Коробка 52 × 32 × 3 см, 0,9 кг" for the cart and checkout. */
 export function describeParcel(parcel: Parcel): string {
-  const cm = (mm: number) => (mm / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
   const kg = parcel.billingKg.toLocaleString("uk-UA", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   // The carrier bills the larger of actual and volumetric weight; say which one it is (QA m12).
   const weight = parcel.volumetricKg > parcel.actualKg ? `${kg} кг обʼємної ваги` : `${kg} кг`;
-  if (parcel.kind === "tube") return `Тубус ${cm(parcel.lengthMm)} см, Ø ${cm(parcel.widthMm)} см, ${weight}`;
-  return `Коробка ${cm(parcel.lengthMm)} × ${cm(parcel.widthMm)} × ${cm(parcel.heightMm)} см, ${weight}`;
+  if (parcel.kind === "tube") return `Тубус ${cmText(parcel.lengthMm)} см, Ø ${cmText(parcel.widthMm)} см, ${weight}`;
+  return `Коробка ${cmText(parcel.lengthMm)} × ${cmText(parcel.widthMm)} × ${cmText(parcel.heightMm)} см, ${weight}`;
 }

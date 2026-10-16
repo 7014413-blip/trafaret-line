@@ -6,9 +6,9 @@ import type { InitialsCheck, InitialsConfig, InitialsDesign } from "../../types/
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { DEFAULT_INITIALS_CONFIG } from "./config";
 import type { MeasuredInitials } from "./measure";
+import { cmText } from "../format";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function checkInitials(design: InitialsDesign, measured: MeasuredInitials, cfg: InitialsConfig = DEFAULT_INITIALS_CONFIG): InitialsCheck[] {
   const out: InitialsCheck[] = [];
@@ -16,9 +16,9 @@ export function checkInitials(design: InitialsDesign, measured: MeasuredInitials
   const minLetter = Math.max(cfg.minLetterMm, findJoinedWordsMaterial(design.materialId).minLetterMm);
   if (design.letterHeightMm < minLetter) {
     out.push({ level: "error", code: "letters-too-small", message: t(
-      `Літери ${cm(design.letterHeightMm)} см, з цього листа ріжемо від ${cm(minLetter)} см.`,
-      `Буквы ${cm(design.letterHeightMm)} см, из этого листа режем от ${cm(minLetter)} см.`,
-      `Letters are ${cm(design.letterHeightMm)} cm, this sheet is cut from ${cm(minLetter)} cm.`) });
+      `Літери ${cmText(design.letterHeightMm)} см, з цього листа ріжемо від ${cmText(minLetter)} см.`,
+      `Буквы ${cmText(design.letterHeightMm)} см, из этого листа режем от ${cmText(minLetter)} см.`,
+      `Letters are ${cmText(design.letterHeightMm)} cm, this sheet is cut from ${cmText(minLetter)} cm.`) });
   }
   const parts = [measured.first, measured.sep, measured.second];
   const missing = [...new Set(parts.flatMap((p) => p?.missing ?? []))];

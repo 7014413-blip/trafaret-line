@@ -13,8 +13,9 @@ import type { BuyerContext, LocalizedText } from "../../types/customizer";
 import type {
   AcrylicSheet, SignBase, SignCheck, SignDesign, SignLayer, SignPrice, SignPriceLine, SignPricingConfig,
 } from "../../types/signage";
-import type { Hole } from "../export/layers";
+import type { Hole } from "../../types/vector";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
+import { cmText } from "../format";
 
 /* ------------------------------------------------------------------ */
 /* Defaults                                                            */
@@ -187,8 +188,7 @@ const mm = (v: number) => String(Math.round(v));
 const sizeLabel = (b: SignBase) => {
   const { w, h } = baseSize(b);
   // Customers see centimetres (sizes in cm across the shop).
-  const cm = (v: number) => (Math.round(v) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
-  return b.shape === "circle" ? `Ø${cm(w)} см` : `${cm(w)} × ${cm(h)} см`;
+  return b.shape === "circle" ? `Ø${cmText(w)} см` : `${cmText(w)} × ${cmText(h)} см`;
 };
 
 /**

@@ -5,6 +5,8 @@
 // plaques show the number in the back colour, as it is cut through the front plate.
 
 import { useId } from "react";
+import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
+import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import type { LayeredPlaqueKind, LayeredPlaqueLayout, LayeredPlaqueMaterial } from "@/types/layered-plaque";
 
 function Mirror({ id, sheet }: { id: string; sheet: LayeredPlaqueMaterial }) {
@@ -39,7 +41,7 @@ export function LayeredPlaquePreview({ kind, layout, linePaths, base, overlay, l
   const lift = Math.max(0.3, short * 0.006);
 
   return (
-    <svg viewBox={`${-w / 2 - pad} ${-h / 2 - pad} ${w + pad * 2} ${h + pad * 2}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={label}>
+    <PreviewSvg viewBox={[-w / 2 - pad, -h / 2 - pad, w + pad * 2, h + pad * 2]} label={label}>
       <defs>
         <Mirror id={`b${uid}`} sheet={base} />
         <Mirror id={`o${uid}`} sheet={overlay} />
@@ -61,11 +63,8 @@ export function LayeredPlaquePreview({ kind, layout, linePaths, base, overlay, l
           <rect x={layout.frame.x} y={layout.frame.y} width={layout.frame.width} height={layout.frame.height} rx={layout.frame.corner}
             fill="none" stroke={overlayFill} strokeWidth={layout.frame.stroke} />
         )}
-        {layout.lines.map((line) => {
-          const d = linePaths.get(line.index);
-          return d ? <path key={line.index} d={d} fill={overlayFill} transform={`translate(${line.x} ${line.y}) scale(${line.scale})`} /> : null;
-        })}
+        <PlacedLinePaths lines={layout.lines} paths={linePaths} fill={overlayFill} />
       </g>
-    </svg>
+    </PreviewSvg>
   );
 }

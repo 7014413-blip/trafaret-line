@@ -7,21 +7,15 @@
 
 import type { AcrylicWeightConfig, MaterialOption, SheetSize } from "../../types/customizer";
 import type { ParcelItem, WeightBreakdown, WeightLine } from "../../types/packaging";
+import { ACRYLIC_WEIGHT } from "../knowledge-base/materials-knowledge";
 import { MATERIALS } from "../materials";
 import { shapeAreaM2 } from "./geometry";
 
 const CM2_PER_M2 = 10_000;
 const MM_PER_CM = 10;
 
-/** Measured acrylic weights (admin setting; Денис can refine the points). */
-export const DEFAULT_ACRYLIC_WEIGHT: AcrylicWeightConfig = {
-  points: [
-    { thicknessMm: 1.5, gramsPerCm2: 0.205 },
-    { thicknessMm: 3, gramsPerCm2: 0.351 },
-  ],
-  nominalDensityGcm3: 1.19,
-  nominalFromMm: 4,
-};
+/** Measured acrylic weights, from data/knowledge_base/materials.json (Денис can refine the points there). */
+export const DEFAULT_ACRYLIC_WEIGHT: AcrylicWeightConfig = ACRYLIC_WEIGHT;
 
 /** Acrylic sheet weight per cm² for any thickness, see the top of the file. */
 export function acrylicGramsPerCm2(thicknessMm: number, cfg: AcrylicWeightConfig = DEFAULT_ACRYLIC_WEIGHT): number {

@@ -4,7 +4,7 @@
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
-import { purchaseFields } from "../../../../shared/lib/wayforpay";
+import { purchaseFields } from "../../../../lib/payments/wayforpay";
 
 export async function POST(req: MedusaRequest<{ order_id: string }>, res: MedusaResponse) {
   const { WFP_MERCHANT, WFP_SECRET, WFP_DOMAIN, STOREFRONT_URL, BACKEND_PUBLIC_URL } = process.env;

@@ -10,9 +10,9 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { DEFAULT_POINTER_SIGN_CONFIG } from "./config";
 import { findPointerMaterial } from "./find-material";
 import { resolvePointerSize } from "./size";
+import { cmText } from "../format";
 
 const roundUp = (value: number, step: number) => Math.ceil(value / step - 1e-9) * step;
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function pricePointerSign(
   design: PointerSignDesign, cfg: PointerSignConfig = DEFAULT_POINTER_SIGN_CONFIG, buyer?: BuyerContext,
@@ -36,7 +36,7 @@ export function pricePointerSign(
     basePrice = roundUp(Math.min(Math.max(byRate, floor), ceiling), cfg.roundTo);
   }
 
-  lines.push({ label: `Розмір ${cm(size.widthMm)} × ${cm(size.heightMm)} см${size.preset ? "" : " (свій)"}`, amount: 0 });
+  lines.push({ label: `Розмір ${cmText(size.widthMm)} × ${cmText(size.heightMm)} см${size.preset ? "" : " (свій)"}`, amount: 0 });
   lines.push({ label: `Основа: ${base.name.uk.toLowerCase()} ${base.baseThicknessMm} мм`, amount: 0 });
   lines.push({ label: `Напис: ${overlay.name.uk.toLowerCase()} ${overlay.overlayThicknessMm} мм, усі кольори вже в ціні`, amount: 0 });
   if (design.logo) lines.push({ label: "Логотип: без доплати, макет погодимо перед порізкою", amount: 0 });

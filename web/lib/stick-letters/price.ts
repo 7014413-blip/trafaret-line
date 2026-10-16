@@ -11,8 +11,7 @@ import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { pluralUk } from "../text/plural-uk";
 import { DEFAULT_STICK_LETTERS_CONFIG } from "./config";
 import { stickRateFor } from "./rate-for";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+import { cmText } from "../format";
 
 /** Price of one set before discounts. */
 export function stickLettersBasePrice(
@@ -36,7 +35,7 @@ export function priceStickLetters(
   const unitPrice = applyDiscount(basePrice, discount.value);
   const count = layout.pieces.length;
   const lines = [
-    `${count} ${pluralUk(count, ["деталь", "деталі", "деталей"])}, увесь напис ${cm(layout.widthMm)} × ${cm(layout.heightMm)} см`,
+    `${count} ${pluralUk(count, ["деталь", "деталі", "деталей"])}, увесь напис ${cmText(layout.widthMm)} × ${cmText(layout.heightMm)} см`,
     `${sheet.name.uk}, ${cfg.thicknessMm} мм, ${adhesive ? "самоклейка на звороті" : "без самоклейки"}`,
   ];
   if (cfg.stencil) lines.push("Картонний трафарет для рівної поклейки, у ціні");

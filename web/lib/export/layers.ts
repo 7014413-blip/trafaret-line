@@ -13,39 +13,15 @@
 // Units: mm, Y axis down in SVG, up in DXF (flipped on export).
 
 import type { SheetSize } from "../../types/customizer";
-import type { Polygon, Vec2 } from "../../types/geometry";
+import type { Vec2 } from "../../types/geometry";
+import type { Hole, LayeredPart, LayerId, LayerStyle, Polyline } from "../../types/vector";
 
-export interface Polyline {
-  points: Vec2[];
-  closed: boolean;
-}
-
-export type LayerId = "CUT_INNER" | "CUT_OUTER" | "MARKS" | "TEMPLATE";
-
-export const LAYERS: Record<LayerId, { aci: number; rgb: string; order: number }> = {
+export const LAYERS: Record<LayerId, LayerStyle> = {
   MARKS: { aci: 3, rgb: "#00ff00", order: 1 },
   CUT_INNER: { aci: 5, rgb: "#0000ff", order: 2 },
   CUT_OUTER: { aci: 1, rgb: "#ff0000", order: 3 },
   TEMPLATE: { aci: 7, rgb: "#000000", order: 4 },
 };
-
-export interface Hole {
-  /** Centre, mm from the sheet's top-left corner. */
-  x: number;
-  y: number;
-  diameterMm: number;
-}
-
-export interface LayeredPart {
-  sheet: SheetSize;
-  /** Final cut regions in sheet mm (StencilCutResult.cutPaths or WeldResult.shapes). */
-  cutPaths: ReadonlyArray<Polygon>;
-  holes?: Hole[];
-  /** Positioning template contours (signs), optional. */
-  template?: ReadonlyArray<Polygon>;
-  /** Order number etc., written into SVG metadata and the DXF header comment. */
-  label?: string;
-}
 
 /** Outer outline of the sheet as a polyline (circle / oval in ~2 mm segments). */
 export function sheetOutline(sheet: SheetSize): Polyline {

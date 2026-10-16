@@ -5,8 +5,8 @@
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
-import { callbackAnswer, verifyCallback, type WfpCallback } from "../../../shared/lib/wayforpay";
-import { requestFiscalReceipt } from "../../../shared/lib/fiscal-receipt";
+import { callbackAnswer, verifyCallback, type WfpCallback } from "../../../lib/payments/wayforpay";
+import { requestFiscalReceipt } from "../../../lib/payments/fiscal-receipt";
 
 type OrderItem = { title?: string; quantity?: unknown; unit_price?: unknown };
 

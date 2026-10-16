@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listCustomFonts } from "./custom-fonts";
 import { measurePlaqueLine, type MeasuredPlaqueLine } from "../plaques/measure-line";
+import { fontEntry } from "../text/font-entry";
 import { loadFont, loadFontManifest, registerLoadedFont } from "../text/font-loader";
 import type { PlaqueTextLine } from "../../types/plaques";
 import type { FontEntry, LoadedFont } from "../../types/text";
@@ -54,7 +55,7 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
   }, [lines, shopFonts, customFonts, loaded]);
 
   const allFonts = useMemo<FontEntry[]>(
-    () => [...shopFonts, ...customFonts.map((f): FontEntry => ({ id: f.id, name: f.name, group: f.group, files: f.files, custom: f.custom }))],
+    () => [...shopFonts, ...customFonts.map(fontEntry)],
     [shopFonts, customFonts],
   );
   const measured = useMemo(

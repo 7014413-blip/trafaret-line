@@ -11,8 +11,7 @@ import { layeredPlaqueBasePrice } from "./base-price";
 import { findLayeredPlaqueMaterial } from "./materials";
 import { plaquesInSet } from "./series";
 import { resolveLayeredPlaqueSize } from "./size";
-
-const cm = (mm: number) => (Math.round(mm) / 10).toLocaleString("uk-UA", { maximumFractionDigits: 1 });
+import { cmText } from "../format";
 
 export function priceLayeredPlaque(design: LayeredPlaqueDesign, cfg: LayeredPlaqueConfig, buyer?: BuyerContext): LayeredPlaquePrice {
   const size = resolveLayeredPlaqueSize(design, cfg);
@@ -24,7 +23,7 @@ export function priceLayeredPlaque(design: LayeredPlaqueDesign, cfg: LayeredPlaq
   const discount = bestLineDiscount(count * quantity, 0, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const piecePrice = applyDiscount(basePrice, discount.value);
   const unitPrice = piecePrice * count;
-  const lines = [`Розмір ${cm(size.widthMm)} × ${cm(size.heightMm)} см${size.preset ? "" : " (свій)"}`];
+  const lines = [`Розмір ${cmText(size.widthMm)} × ${cmText(size.heightMm)} см${size.preset ? "" : " (свій)"}`];
   if (cfg.kind === "number") lines.push(`Лицьовий шар ${base.name.uk.toLowerCase()}, нижній ${overlay.name.uk.toLowerCase()}, клейова основа`);
   else lines.push(`Основа ${base.name.uk.toLowerCase()}, напис${design.frame ? " і рамка" : ""}: ${overlay.name.uk.toLowerCase()}`);
   if (design.series) lines.push(`Номери ${design.series.from}–${design.series.to}: ${count} ${pluralUk(count, ["табличка", "таблички", "табличок"])} по ${piecePrice} ₴`);

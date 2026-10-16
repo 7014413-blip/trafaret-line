@@ -5,10 +5,11 @@
 import "server-only";
 import type { InvoiceSeller } from "../types/invoice";
 import { SITE } from "../data/site";
+import { SELLER } from "../lib/knowledge-base/seller-rules";
 import { requireEnv } from "./config";
 
 export function invoiceSeller(): InvoiceSeller {
-  const env = requireEnv("internal", ["SELLER_CODE", "SELLER_IBAN", "SELLER_BANK", "SELLER_ADDRESS"]);
+  const env = requireEnv("internal", SELLER.requisitesEnv);
   return {
     name: SITE.legal,
     code: env.SELLER_CODE,

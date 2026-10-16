@@ -24,7 +24,7 @@ import { readOfficePlaqueDesign } from "../../../shared/lib/office-plaque/read-d
 import { findJoinedWordsMaterial } from "../../../shared/lib/joined-words/find-material";
 import { priceJoinedWordsDesign } from "../../../shared/lib/joined-words/price-design";
 import { readJoinedWordsDesign } from "../../../shared/lib/joined-words/read-design";
-import { loadFontById } from "../../../shared/lib/text/node-fonts";
+import { loadFontById } from "../../../lib/text/node-fonts";
 import { LAYERED_PLAQUE_CONFIGS } from "../../../shared/lib/layered-plaque/configs";
 import { priceLayeredPlaque } from "../../../shared/lib/layered-plaque/price";
 import { readLayeredPlaqueDesign } from "../../../shared/lib/layered-plaque/read-design";
@@ -35,7 +35,7 @@ import { readStickLettersDesign } from "../../../shared/lib/stick-letters/read-d
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
   readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
-} from "../../../shared/lib/validation/constructor-size";
+} from "../../../lib/validation/constructor-size";
 import { invoiceLinkToken } from "../../../lib/order-link";
 import { checkHole } from "../../../shared/lib/catalog/check-hole";
 import { readHoleRules } from "../../../shared/lib/catalog/hole-rules";
