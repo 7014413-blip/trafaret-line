@@ -36,6 +36,7 @@ describe("writeOrderFiles", () => {
     const result = await writeOrderFiles({
       id: "order_1",
       displayId: 42,
+      approvedAt: "2026-10-16T14:05:00Z",
       items: [
         {
           title: "Свій напис «ОБОРОНА»", quantity: 2,
@@ -59,7 +60,7 @@ describe("writeOrderFiles", () => {
     const stencil = names.find((n) => /^TL-42-1_stencil_pet_thin_300x\d+mm\.svg$/.test(n))
     expect(stencil).toBeDefined()
     const base = stencil!.replace(/\.svg$/, "")
-    expect(names).toEqual(expect.arrayContaining([`${base}.dxf`, `${base}.png`, "TL-42-3_plaque_preview.png", "TL-42_params.json", "fonts/Arsenal-SC_0b5c1d1e.ttf"]))
+    expect(names).toEqual(expect.arrayContaining([`${base}.dxf`, `${base}.png`, "TL-42-3_plaque_preview.png", "TL-42_params.json", "TL-42_approval.png", "fonts/Arsenal-SC_0b5c1d1e.ttf"]))
     expect(names.some((n) => /^TL-42-2_word_acrylic_3_\d+x\d+mm\.dxf$/.test(n))).toBe(true)
     expect(names.some((n) => n.startsWith("TL-42-4"))).toBe(false)
 
@@ -72,6 +73,8 @@ describe("writeOrderFiles", () => {
 
     const params = JSON.parse(fs.readFileSync(path.join(folder, "TL-42_params.json"), "utf8"))
     expect(params.lines).toHaveLength(4)
+    expect(params.layoutApprovedAt).toBe("2026-10-16T14:05:00Z")
+    expect(fs.readFileSync(path.join(folder, "TL-42_approval.png")).subarray(0, 4)).toEqual(PNG)
     expect(params.lines[2].previewSvg).toBeUndefined()
     expect(params.fonts[0]).toMatchObject({ key: FONT_KEY, family: "Arsenal SC" })
     expect((await readFontNote(FONT_KEY))?.orders).toEqual(["TL-42"])
@@ -79,10 +82,10 @@ describe("writeOrderFiles", () => {
 
   it("reports a line it cannot rebuild instead of failing the order", async () => {
     const result = await writeOrderFiles({
-      id: "order_2", displayId: 43,
+      id: "order_2", displayId: 43, approvedAt: null,
       items: [{ title: "Свій напис", quantity: 1, metadata: { kind: "stencil", materialId: "pet_thin", widthCm: 30, spec: { text: "Тест", fontId: "no-such-font" } } }],
     })
     expect(result.problems).toEqual([expect.stringContaining("Позиція 1: файл для станка не зібрано")])
-    expect(result.files.map((f) => f.name)).toEqual(["TL-43_params.json"])
+    expect(result.files.map((f) => f.name)).toEqual(["TL-43_approval.png", "TL-43_params.json"])
   })
 })

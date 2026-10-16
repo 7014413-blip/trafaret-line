@@ -89,13 +89,15 @@ export interface OrderDraft {
   company?: B2BCompany;
   comment?: string;
   noCall?: boolean;
+  /** «Макет перевірив»: required when a line is made to the customer's layout (lib/validation/layout-approval.ts). */
+  layoutApproved?: boolean;
   utm?: Record<string, string>;
   /** Honeypot: a field hidden from people; bots fill it and the order is refused. */
   website?: string;
 }
 
 export type OrderValidationError =
-  | "cart_empty" | "phone" | "name" | "city" | "warehouse" | "company" | "line" | "size_mismatch" | "payment" | "rate_limited";
+  | "cart_empty" | "phone" | "name" | "city" | "warehouse" | "company" | "line" | "size_mismatch" | "payment" | "rate_limited" | "layout_approval";
 
 export interface PlacedOrder {
   id: string;

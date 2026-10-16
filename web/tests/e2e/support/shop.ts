@@ -8,10 +8,11 @@ const MOCK_MEDUSA = "http://127.0.0.1:9100";
 export interface ReceivedOrder {
   order: { id: string; number: string; total: number };
   body: {
-    lines: { kind: string; title: string; quantity: number; variantId?: string; pointer?: unknown }[];
+    lines: { kind: string; title: string; quantity: number; variantId?: string; pointer?: unknown; previewSvg?: string }[];
     contact: { phone: string; name: string };
     delivery: { method: string; city: string; cityRef?: string; warehouse?: string; warehouseRef?: string };
     payment: string;
+    layoutApproved?: boolean;
   };
 }
 

@@ -77,3 +77,22 @@ export interface ProductionPart {
   /** Problems found while building, in Ukrainian, for the manager. */
   warnings: string[];
 }
+
+/** One line of the «Лист погодження макета» in the order folder. */
+export interface ApprovalSheetLine {
+  position: number;
+  title: string;
+  /** e.g. "30 × 12 см", or "" when the line has no size. */
+  sizeText: string;
+  quantity: number;
+  /** Picture of the layout (production preview or the constructor's own), null when there is none (a customer's file). */
+  previewSvg: string | null;
+}
+
+/** «Лист погодження макета»: what the customer checked and confirmed before paying. */
+export interface ApprovalSheet {
+  orderNumber: string;
+  /** When «Макет перевірив» was ticked, ISO; null for orders placed before the box existed. */
+  approvedAt: string | null;
+  lines: ApprovalSheetLine[];
+}

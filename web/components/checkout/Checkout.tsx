@@ -18,6 +18,7 @@ import { postJson } from "@/lib/client/api-client";
 import { startWayForPay } from "@/lib/client/wayforpay";
 import { firstErrorField, validateCheckout } from "@/lib/validation/checkout-form";
 import { previewSvgOf } from "@/lib/validation/preview-svg";
+import { needsLayoutApproval } from "@/lib/validation/layout-approval";
 import type { B2BCompany } from "@/types/invoice";
 import type { NpPriceResult } from "@/types/integrations";
 import { CityField } from "./CityField";
@@ -55,6 +56,10 @@ export function Checkout() {
   const [sending, setSending] = useState(false);
   const [quote, setQuote] = useState<NpPriceResult | null>(null);
   const { lines, total } = cartTotals(ready ? items : []);
+  // «Лист погодження макета»: lines made to the customer's layout are sent only after «Макет перевірив».
+  const toApprove = (ready ? items : []).filter(needsLayoutApproval);
+  const [approved, setApproved] = useState(false);
+  const approvalMissing = toApprove.length > 0 && !approved;
   // Editing a field removes its error message right away (QA m6).
   const clearError = (...keys: string[]) => setErrors((er) => {
     if (!keys.some((k) => er[k])) return er;
@@ -93,8 +98,9 @@ export function Checkout() {
     const found = validateCheckout(form, company);
     const er: Record<string, string> = { ...found };
     if (found.code) { er.company = found.code; delete er.code; }
+    if (approvalMissing) er.approve = "Перевірте макет і поставте галочку «Макет перевірив»";
     setErrors(er);
-    const first = firstErrorField(found);
+    const first = firstErrorField(found) ?? (approvalMissing ? "approve" : null);
     if (first) {
       // Move the focus to the first wrong field, so the message is on screen and read out.
       const el = document.getElementById(`c-${first}`);
@@ -118,6 +124,7 @@ export function Checkout() {
           payment: form.payment,
           company: form.payment === "invoice" ? company : undefined,
           comment: form.comment, noCall: form.noCall,
+          layoutApproved: toApprove.length ? approved : undefined,
           website: honeypot,
         }),
       });
@@ -126,6 +133,8 @@ export function Checkout() {
         const codes: string[] = Array.isArray(data?.errors) ? data.errors : [];
         setErrors({ server: codes.includes("size_mismatch")
           ? "Розмір виробу в кошику не збігається з макетом. Відкрийте конструктор, додайте напис у кошик ще раз і оформіть замовлення."
+          : codes.includes("layout_approval")
+            ? "Перевірте макет і поставте галочку «Макет перевірив»."
           : codes.includes("rate_limited") || r.status === 429
             ? "Забагато спроб оформлення. Зачекайте кілька хвилин або напишіть нам у Viber."
             : "Не вдалося оформити замовлення. Перевірте дані або напишіть нам у Viber." });
@@ -248,11 +257,32 @@ export function Checkout() {
             <textarea id="c-comment" rows={3} value={form.comment} onChange={(e) => set("comment", e.target.value)} className="mt-3 w-full rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3" />
           </details>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="c-nocall" checked={form.noCall} onChange={(e) => set("noCall", e.target.checked)} className="accent-[var(--ink)]" />Не передзвонюйте, все вірно</label>
+          {toApprove.length > 0 && (
+            <fieldset className="m-0 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
+              <legend className="px-1.5 font-bold">Погодження макета</legend>
+              <p className="m-0 text-sm text-[var(--muted)]">Ріжемо саме так, як на картинці. Перевірте текст, шрифт, розмір і матеріал.</p>
+              {toApprove.map((item) => (
+                <div key={item.id} className="grid grid-cols-[96px_1fr] items-center gap-3 text-sm">
+                  <span className="h-24 w-24 overflow-hidden rounded-lg bg-[var(--surface)]">{item.vectorSvg
+                    ? <span role="img" aria-label={`Макет: ${item.title}`} className="block h-full w-full p-1.5 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: item.vectorSvg }} />
+                    : <span className="grid h-full place-items-center p-1.5 text-center text-[11px] text-[var(--muted)]">{item.uploadKey ? "Ваш файл" : "Без картинки"}</span>}</span>
+                  <span>{item.title}<br /><span className="text-[var(--muted)]">{item.widthCm} × {item.heightCm} см · {item.quantity} шт.{item.uploadKey ? " · менеджер перевірить файл і надішле превʼю" : ""}</span></span>
+                </div>
+              ))}
+              <label className="flex items-start gap-2 text-sm font-semibold">
+                <input type="checkbox" id="c-approve" checked={approved} aria-invalid={!!errors.approve} aria-describedby={errors.approve ? "e-approve" : undefined}
+                  onChange={(e) => { setApproved(e.target.checked); clearError("approve", "server"); }} className="mt-0.5 accent-[var(--ink)]" />
+                Макет перевірив: текст, шрифт, розмір і матеріал правильні
+              </label>
+              {errors.approve && <span id="e-approve" className="text-[13px] text-[var(--danger)]">{errors.approve}</span>}
+            </fieldset>
+          )}
           <div aria-hidden="true" className="absolute left-[-10000px] h-px w-px overflow-hidden">
             <label>Website<input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} /></label>
           </div>
           {errors.server && <p role="alert" className="m-0 rounded-xl bg-[var(--surface)] p-3 text-sm text-[var(--danger)]">{errors.server}</p>}
-          <button type="submit" disabled={sending} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? "Оформлюємо…" : `Підтвердити замовлення · ${formatUAH(total)}`}</button>
+          <button type="submit" disabled={sending || approvalMissing} aria-describedby={approvalMissing ? "c-approve-hint" : undefined} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? "Оформлюємо…" : `Підтвердити замовлення · ${formatUAH(total)}`}</button>
+          {approvalMissing && <p id="c-approve-hint" className="m-0 text-[13px] text-[var(--muted)]">Кнопка стане активною, коли ви перевірите макет і поставите галочку «Макет перевірив».</p>}
           <p className="m-0 text-[13px] text-[var(--muted)]">Натискаючи кнопку, ви погоджуєтесь з <Link href="/oferta" className="underline">публічною офертою</Link> і <Link href="/polityka-konfidentsiinosti" className="underline">політикою конфіденційності</Link>. Чек надійде від Вчасно.Каси.</p>
         </form>
 

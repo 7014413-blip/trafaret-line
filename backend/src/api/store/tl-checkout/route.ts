@@ -41,6 +41,7 @@ import {
 } from "../../../lib/validation/constructor-size";
 import { invoiceLinkToken } from "../../../lib/order-link";
 import { previewSvgOf } from "../../../shared/lib/validation/preview-svg";
+import { needsLayoutApproval } from "../../../shared/lib/validation/layout-approval";
 import { checkHole } from "../../../shared/lib/catalog/check-hole";
 import { readHoleRules } from "../../../shared/lib/catalog/hole-rules";
 import type { HolePosition, HoleSpec } from "../../../shared/types/hole";
@@ -294,6 +295,8 @@ function validate(body: OrderDraft | undefined): OrderValidationError[] {
   if (method === "np_courier" ? !body?.delivery?.address?.trim() : !body?.delivery?.warehouse?.trim()) errors.push("warehouse");
   if (!body?.payment || !PAYMENTS.has(body.payment)) errors.push("payment");
   if (body?.payment === "invoice" && (!/^(\d{8}|\d{10})$/.test(body.company?.code ?? "") || !body.company?.name?.trim())) errors.push("company");
+  // «Лист погодження макета»: the customer confirmed the layout of every made-to-layout line.
+  if (body?.lines?.some(needsLayoutApproval) && body.layoutApproved !== true) errors.push("layout_approval");
   return errors;
 }
 
@@ -373,6 +376,8 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
       company: body.payment === "invoice" ? body.company ?? null : null,
       comment: String(body.comment ?? "").slice(0, 2000),
       noCall: !!body.noCall,
+      // When the customer ticked «Макет перевірив» (the approval sheet in the order folder shows it).
+      layoutApprovedAt: body.lines.some(needsLayoutApproval) ? new Date().toISOString() : null,
       utm: body.utm ?? {},
     },
   } });
