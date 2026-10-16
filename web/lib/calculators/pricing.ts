@@ -6,7 +6,8 @@
 //                  +5 % when the stencil is split into several machine sheets,
 //                  then ONE best discount (never stacked) from that price, rounded down
 //                  to 1 ₴, never below the cost floor.
-//   blank unit   = max(min price, round1(cutting fee + area × rate)), then the quantity
+//   blank unit   = max(min price, round1(cutting fee + area × rate)), cutting fee 0 since
+//                  Денис chose «only area» on 2026-10-16; then the quantity
 //                  discount the same way; order minimum 200 ₴. The fee per piece and the rates
 //                  are in data/knowledge_base/materials.json; catalogue blank cards are priced
 //                  by the same function (blankUnitPrice), so the card and /zahotovky agree.

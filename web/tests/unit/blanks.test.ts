@@ -4,6 +4,8 @@ import { priceBlankDesign } from "@/lib/blanks/price";
 import { readBlankDesign } from "@/lib/blanks/read-design";
 import { BLANK_SHEETS, blankSheetAt, blankSheetInGroup, blankSheetsAt, blankThicknesses } from "@/lib/blanks/sheets";
 import { blankTitle } from "@/lib/blanks/title";
+import { applyBlankPrices } from "@/lib/catalog/apply-blank-prices";
+import { applyBlankPricesCsv } from "@/lib/catalog/apply-blank-prices-csv";
 import { catalogBlankChanges, catalogBlankPrice } from "@/lib/catalog/blank-catalog-price";
 import { materialForCode } from "@/lib/catalog/material-map";
 import { MATERIALS } from "@/lib/materials";
@@ -14,11 +16,11 @@ const circle = (diameterCm: number, quantity = 1): BlankDesign => ({
 });
 
 describe("blank price", () => {
-  it("is the cutting fee plus sheet area × rate, rounded up to 1 ₴", () => {
-    // acrylic 3 mm: fee 3 ₴, 2990 ₴/m² (knowledge base)
-    expect(priceBlankDesign(circle(5)).unitPrice).toBe(11);
-    expect(priceBlankDesign(circle(10)).unitPrice).toBe(33);
-    expect(priceBlankDesign(circle(30)).unitPrice).toBe(273);
+  it("is sheet area × rate, rounded up to 1 ₴ (Денис 2026-10-16: area only)", () => {
+    // acrylic 3 mm: 2990 ₴/m² (knowledge base), no fee per piece
+    expect(priceBlankDesign(circle(5)).unitPrice).toBe(8);
+    expect(priceBlankDesign(circle(10)).unitPrice).toBe(30);
+    expect(priceBlankDesign(circle(30)).unitPrice).toBe(270);
   });
 
   it("keeps a whole result whole despite binary fractions", () => {
@@ -28,12 +30,12 @@ describe("blank price", () => {
 
   it("shows the wholesale scale and the pack before ordering", () => {
     const price = priceBlankDesign(circle(10, 1));
-    expect(price.tiers.map((t) => [t.minQty, t.unitPrice])).toEqual([[1, 33], [10, 31], [50, 29], [100, 28]]);
+    expect(price.tiers.map((t) => [t.minQty, t.unitPrice])).toEqual([[1, 30], [10, 28], [50, 27], [100, 25]]);
     expect(price.packQty).toBe(10);
-    expect(price.packPrice).toBe(310);
+    expect(price.packPrice).toBe(280);
     const fifty = priceBlankDesign(circle(10, 50));
-    expect(fifty.unitPrice).toBe(29);
-    expect(fifty.total).toBe(1450);
+    expect(fifty.unitPrice).toBe(27);
+    expect(fifty.total).toBe(1350);
     expect(fifty.discount).toBeCloseTo(0.1);
   });
 
@@ -95,7 +97,7 @@ describe("catalogue blank cards", () => {
   const product = (over: Partial<CatalogBlankProduct>): CatalogBlankProduct => ({
     handle: "zahotovka-kolo-akryl-prozoryi", type: "ready", primary_category: "blanks-akryl-prozoryi",
     options: { size: [{ code: "d10", sheet_mm: [100, 100], pieces: 1 }] },
-    variants: [{ sku: "A", size: "d10", material: "bl-acr-3", price_uah: 33 }],
+    variants: [{ sku: "A", size: "d10", material: "bl-acr-3", price_uah: 30 }],
     ...over,
   });
 
@@ -105,8 +107,8 @@ describe("catalogue blank cards", () => {
   });
 
   it("list the variants whose price differs", () => {
-    const old = product({ variants: [{ sku: "A", size: "d10", material: "bl-acr-3", price_uah: 30 }] });
-    expect(catalogBlankChanges([old])).toEqual([{ handle: "zahotovka-kolo-akryl-prozoryi", sku: "A", from: 30, to: 33 }]);
+    const old = product({ variants: [{ sku: "A", size: "d10", material: "bl-acr-3", price_uah: 33 }] });
+    expect(catalogBlankChanges([old])).toEqual([{ handle: "zahotovka-kolo-akryl-prozoryi", sku: "A", from: 33, to: 30 }]);
   });
 
   it("leave products with their own work alone", () => {
@@ -117,6 +119,43 @@ describe("catalogue blank cards", () => {
 
   it("price white polystyrene cake boards as a blank sheet, not as a stencil", () => {
     expect(materialForCode("bl-ps-1-white")).toBe("polystyrene_white_1");
-    expect(catalogBlankPrice([200, 200], 1, "bl-ps-1-white")).toBe(5 + 72);
+    expect(catalogBlankPrice([200, 200], 1, "bl-ps-1-white")).toBe(72);
+  });
+});
+
+describe("writing blank prices into the catalogue", () => {
+  const card = (): CatalogBlankProduct => ({
+    handle: "zahotovka-kolo-akryl-prozoryi", type: "ready", primary_category: "blanks-akryl-prozoryi", min_price_uah: 10,
+    options: { size: [{ code: "d5", sheet_mm: [50, 50], pieces: 1 }, { code: "d10", sheet_mm: [100, 100], pieces: 1 }] },
+    variants: [{ sku: "A", size: "d5", material: "bl-acr-3", price_uah: 10 }, { sku: "B", size: "d10", material: "bl-acr-3", price_uah: 30 }],
+    ...({ uk: { seo_title: "Коло — від 10 ₴", note: "−5 % від 10 шт" } } as object),
+  });
+
+  it("changes prices, the lowest price and its «від N ₴» texts only", () => {
+    const products = [card()];
+    const changes = catalogBlankChanges(products);
+    expect(changes).toEqual([{ handle: "zahotovka-kolo-akryl-prozoryi", sku: "A", from: 10, to: 8 }]);
+    const mins = applyBlankPrices(products, changes);
+    expect(mins.get("zahotovka-kolo-akryl-prozoryi")).toEqual({ from: 10, to: 8 });
+    expect(products[0].variants.map((v) => v.price_uah)).toEqual([8, 30]);
+    expect(products[0].min_price_uah).toBe(8);
+    expect((products[0] as unknown as { uk: { seo_title: string; note: string } }).uk).toEqual({ seo_title: "Коло — від 8 ₴", note: "−5 % від 10 шт" });
+    expect(catalogBlankChanges(products)).toEqual([]);
+  });
+
+  it("changes the same in variants.csv", () => {
+    const csv = [
+      "﻿handle,sku,price_uah,seo_title_uk",
+      "\"zahotovka-kolo-akryl-prozoryi\",\"A\",\"10\",\"Коло \"\"прозоре\"\" — від 10 ₴\"",
+      "\"zahotovka-kolo-akryl-prozoryi\",\"B\",\"30\",\"Коло \"\"прозоре\"\" — від 10 ₴\"",
+      "\"trafaret-x\",\"C\",\"10\",\"Трафарет від 10 ₴\"",
+    ].join("\n");
+    const out = applyBlankPricesCsv(csv, [{ handle: "zahotovka-kolo-akryl-prozoryi", sku: "A", from: 10, to: 8 }], new Map([["zahotovka-kolo-akryl-prozoryi", { from: 10, to: 8 }]]));
+    expect(out.split("\n")).toEqual([
+      "﻿handle,sku,price_uah,seo_title_uk",
+      "\"zahotovka-kolo-akryl-prozoryi\",\"A\",\"8\",\"Коло \"\"прозоре\"\" — від 8 ₴\"",
+      "\"zahotovka-kolo-akryl-prozoryi\",\"B\",\"30\",\"Коло \"\"прозоре\"\" — від 8 ₴\"",
+      "\"trafaret-x\",\"C\",\"10\",\"Трафарет від 10 ₴\"",
+    ]);
   });
 });

@@ -1,10 +1,14 @@
 // Prices the plain blank cards of the catalogue by the site's blank formula.
 //   npm run catalog:blanks -- <catalog>/data/products.json          shows what would change
 //   npm run catalog:blanks -- <catalog>/data/products.json --write  writes the new prices
-// Only price_uah of the plain blank variants changes; every other field stays as it is.
-// The shared catalogue file is written by one thread at a time (export lock of catalog/tools).
+// --write changes the variant prices, the lowest price and its «від N ₴» texts in products.json
+// and the same in variants.csv next to it; every other field stays as it is. The shared
+// catalogue files are written by one thread at a time (export lock of catalog/tools).
 
 import fs from "node:fs";
+import path from "node:path";
+import { applyBlankPrices } from "../lib/catalog/apply-blank-prices";
+import { applyBlankPricesCsv } from "../lib/catalog/apply-blank-prices-csv";
 import { catalogBlankChanges } from "../lib/catalog/blank-catalog-price";
 import type { CatalogBlankProduct } from "../types/blank";
 
@@ -22,13 +26,10 @@ for (const [handle, count] of byHandle) console.log(`${handle}: ${count} variant
 console.log(`${changes.length} variant prices differ from the blank formula.`);
 
 if (flag === "--write" && changes.length) {
-  const price = new Map(changes.map((c) => [c.sku, c.to]));
-  for (const product of products) {
-    for (const variant of product.variants) {
-      const next = price.get(variant.sku);
-      if (next != null) variant.price_uah = next;
-    }
-  }
+  const mins = applyBlankPrices(products, changes);
   fs.writeFileSync(file, JSON.stringify(products, null, 2));
-  console.log(`Written: ${file}`);
+  const csvFile = path.join(path.dirname(file), "variants.csv");
+  if (fs.existsSync(csvFile)) fs.writeFileSync(csvFile, applyBlankPricesCsv(fs.readFileSync(csvFile, "utf8"), changes, mins));
+  for (const [handle, min] of mins) console.log(`${handle}: від ${min.from} → ${min.to} ₴`);
+  console.log(`Written: ${file}${fs.existsSync(csvFile) ? ` and ${csvFile}` : ""}`);
 }
