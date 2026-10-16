@@ -2,6 +2,11 @@ import { loadEnv, defineConfig } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
+// Product photos and catalogue files are stored in ./static and served at /static. Their
+// public links start with BACKEND_PUBLIC_URL, so a server (staging or the shop) hands out
+// its own address instead of localhost.
+const backendPublicUrl = (process.env.BACKEND_PUBLIC_URL || "http://localhost:9000").replace(/\/$/, "")
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -12,5 +17,19 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
-  }
+  },
+  modules: [
+    {
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/file-local",
+            id: "local",
+            options: { backend_url: `${backendPublicUrl}/static` },
+          },
+        ],
+      },
+    },
+  ],
 })
