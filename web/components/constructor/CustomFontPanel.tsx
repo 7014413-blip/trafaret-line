@@ -1,6 +1,6 @@
 "use client";
 
-// «Свій шрифт»: the customer uploads TTF/OTF/WOFF fonts, confirms the right to use them and
+// «Свій шрифт»: the customer uploads TTF/OTF/WOFF/WOFF2 fonts, confirms the right to use them and
 // sees which letters are missing. Uploaded fonts appear among the constructor fonts and go
 // to production with the order; nobody else sees them.
 
@@ -37,13 +37,13 @@ export function CustomFontPanel({ fonts, text, onAdded, onRemoved }: {
 
   return (
     <details className="rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3.5 py-3">
-      <summary className="cursor-pointer font-semibold">Свій шрифт (TTF, OTF, WOFF)</summary>
+      <summary className="cursor-pointer font-semibold">Свій шрифт (TTF, OTF, WOFF, WOFF2)</summary>
       <div className="mt-3 grid gap-2.5 text-sm">
         <label htmlFor={`${id}-rights`} className="flex items-start gap-2">
           <input id={`${id}-rights`} type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--ink)]" />
           <span>Підтверджую, що маю право використовувати цей шрифт для виготовлення виробу. Шрифт бачите лише ви, ми використаємо його тільки для вашого замовлення.</span>
         </label>
-        <input ref={input} type="file" accept=".ttf,.otf,.woff,font/ttf,font/otf,font/woff" hidden onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+        <input ref={input} type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" hidden onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
         {fonts.length >= MAX_CUSTOM_FONTS && <span className="text-[13px] text-[var(--muted)]">Можна додати до {MAX_CUSTOM_FONTS} шрифтів. Приберіть зайвий, щоб додати новий.</span>}
         <button type="button" disabled={!rights || busy || fonts.length >= MAX_CUSTOM_FONTS} onClick={() => input.current?.click()}
           className="h-11 justify-self-start rounded-full px-5 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)] disabled:opacity-50">

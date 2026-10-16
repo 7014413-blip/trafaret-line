@@ -16,7 +16,7 @@ const SIGNS = ".,:;!?-«»()’&№";
 export const MAX_CUSTOM_FONTS = 10;
 export const MAX_CUSTOM_FONTS_BYTES = 30 * 1024 * 1024;
 
-/** Format from the first bytes (the extension is not trusted). WOFF2 is reported separately. */
+/** Format from the first bytes (the extension is not trusted). WOFF2 is reported separately: the shop unpacks it. */
 export function sniffFontFormat(bytes: Uint8Array): CustomFontFormat | "woff2" | null {
   const tag = String.fromCharCode(...bytes.slice(0, 4));
   if (tag === "wOFF") return "woff";
@@ -38,8 +38,9 @@ export function checkFontBuffer(buffer: ArrayBuffer, fileName: string): FontFile
   if (buffer.byteLength === 0) return { ...base, error: "Файл порожній" };
   if (buffer.byteLength > MAX_FONT_BYTES) return { ...base, error: "Файл шрифту більший за 10 МБ" };
   const format = sniffFontFormat(new Uint8Array(buffer));
-  if (format === "woff2") return { ...base, error: "Формат WOFF2 поки не підтримується. Завантажте той самий шрифт у TTF, OTF або WOFF" };
-  if (!format) return { ...base, error: "Це не файл шрифту. Підходять TTF, OTF або WOFF" };
+  // WOFF2 is unpacked by the shop first (backend lib/text/woff2.ts); this check reads the result.
+  if (format === "woff2") return { ...base, error: "Файл WOFF2 потрібно спершу розпакувати" };
+  if (!format) return { ...base, error: "Це не файл шрифту. Підходять TTF, OTF, WOFF або WOFF2" };
 
   let font: opentype.Font;
   try {

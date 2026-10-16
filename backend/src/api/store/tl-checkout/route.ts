@@ -37,9 +37,10 @@ import { readBlankDesign } from "../../../shared/lib/blanks/read-design";
 import { blankTitle } from "../../../shared/lib/blanks/title";
 import type { OrderDraft, OrderLineInput, OrderValidationError, PaymentMethod } from "../../../shared/types/order";
 import {
-  readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
+  readMarginMm, readTextSpec, readWeldOptions, SIZE_TOLERANCE_MM, SpecError, stencilHeightMm, weldedSizeMm,
 } from "../../../lib/validation/constructor-size";
 import { invoiceLinkToken } from "../../../lib/order-link";
+import { previewSvgOf } from "../../../shared/lib/validation/preview-svg";
 import { checkHole } from "../../../shared/lib/catalog/check-hole";
 import { readHoleRules } from "../../../shared/lib/catalog/hole-rules";
 import type { HolePosition, HoleSpec } from "../../../shared/types/hole";
@@ -251,7 +252,7 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
   } else if (spec && typeof spec.text === "string" && spec.square === true) {
     // «Свій напис» on a square sheet (Денис 2026-10-10): the text is fitted inside the square;
     // the layout is rebuilt only to check the font and characters.
-    const margin = typeof spec.marginMm === "number" ? Math.min(50, Math.max(5, spec.marginMm)) : 15;
+    const margin = readMarginMm(spec);
     const textSpec = readTextSpec(spec);
     stencilHeightMm(textSpec, widthMm, margin);
     if (Math.abs(clientHeightMm - widthMm) > SIZE_TOLERANCE_MM) throw new SpecError("square stencil is not square");
@@ -259,7 +260,7 @@ function priceLine(line: OrderLineInput, variants: Map<string, VariantPrice>): P
     label = `Квадратний трафарет «${cleanText(textSpec.text)}»`;
   } else if (spec && typeof spec.text === "string") {
     // «Свій напис»: the sheet height follows the text proportions at the paid width.
-    const margin = typeof spec.marginMm === "number" ? Math.min(50, Math.max(5, spec.marginMm)) : 15;
+    const margin = readMarginMm(spec);
     const textSpec = readTextSpec(spec);
     heightMm = stencilHeightMm(textSpec, widthMm, margin);
     if (Math.abs(heightMm - clientHeightMm) > SIZE_TOLERANCE_MM) throw new SpecError(`size mismatch: sheet ${widthMm}×${heightMm} mm on the server`);
@@ -308,7 +309,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
 
   let items;
   try {
-    items = body.lines.map((line) => {
+    items = body.lines.map((line, index) => {
       const quantity = Math.max(1, Math.min(9999, Math.round(line.quantity)));
       const priced = priceLine({ ...line, quantity }, variants);
       return {
@@ -317,6 +318,8 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
         unit_price: priced.unitPrice,
         requires_shipping: false,
         metadata: {
+          // Position in the order: the production files are named by it (lib/orders/write-order-files.ts).
+          position: index + 1,
           kind: line.kind, key: String(line.key ?? "").slice(0, 300), variantId: line.variantId ?? null,
           sku: line.variantId ? variants.get(line.variantId)?.sku ?? null : null, materialId: line.materialId ?? null,
           widthCm: line.widthCm ?? null, heightCm: line.heightCm ?? null,
@@ -328,6 +331,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
           initials: line.kind === "initials" ? readInitialsDesign(line.initials, quantity) : null,
           letters: line.kind === "letters" ? readStickLettersDesign(line.letters, quantity) : null,
           blank: line.kind === "blank" ? readBlankDesign(line.blank, quantity) : null,
+          previewSvg: previewSvgOf(line.previewSvg),
           needsLayoutReview: !!line.uploadKey || (line.kind === "welded" && line.spec?.source === "free-canvas") || (line.kind === "pointer" && !!line.pointer?.logo),
         },
       };

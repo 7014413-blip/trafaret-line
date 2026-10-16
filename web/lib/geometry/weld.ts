@@ -386,9 +386,8 @@ export function weldText(glyphs: PlacedGlyph[], capMm: number, align: TextAlign,
     // Outline = silhouette: keep outer contours only.
     shape = piecesOf(unionTree(grown, scale)).map((piece) => piece.outer);
   }
-  if (options.skewers.count) shape = union([...shape, ...skewers(shape, options.skewers)], scale);
-
-  const roots = unionTree(shape, scale);
+  // The nesting tree is itself a union, so the skewers are joined in the same pass.
+  const roots = unionTree(options.skewers.count ? [...shape, ...skewers(shape, options.skewers)] : shape, scale);
   const pieces = piecesOf(roots);
   const shapes = pieces.flatMap((piece) => piece.all);
   return {

@@ -29,4 +29,5 @@ export type * from "./product";
 export type * from "./shipping";
 export type * from "./fop";
 export type * from "./vector";
+export type * from "./production";
 export type * from "./system";

@@ -56,6 +56,8 @@ export interface OrderLineInput {
   section?: SectionTheme;
   /** Production data: text, font, sizes, weld options. */
   spec?: Record<string, unknown>;
+  /** Constructor's picture of the line for the PNG preview in the order (lib/validation/preview-svg.ts). */
+  previewSvg?: string;
 }
 
 export type DeliveryMethod = "np_branch" | "np_courier" | "ukrposhta";

@@ -14,8 +14,11 @@ export interface Polyline {
   closed: boolean;
 }
 
-/** Machine layers: inner cuts, outer outline, holes and marks, positioning template. */
-export type LayerId = "CUT_INNER" | "CUT_OUTER" | "MARKS" | "TEMPLATE";
+/**
+ * Machine layers: inner cuts, outer outline, holes and marks, positioning template, and INFO
+ * (bounding box and order text for the operator, never cut: output off in RDWorks/LightBurn).
+ */
+export type LayerId = "CUT_INNER" | "CUT_OUTER" | "MARKS" | "TEMPLATE" | "INFO";
 
 /** Colour of a layer: AutoCAD Color Index in DXF, RGB in SVG; order = cutting order. */
 export interface LayerStyle {
@@ -35,11 +38,18 @@ export interface Hole {
 /** One production part: everything the export turns into one SVG and one DXF. */
 export interface LayeredPart {
   sheet: SheetSize;
-  /** Final cut regions in sheet mm (StencilCutResult.cutPaths or WeldResult.shapes). */
+  /** Final inner cut regions in sheet mm (StencilCutResult.cutPaths, holes of a welded piece). */
   cutPaths: ReadonlyArray<Polygon>;
+  /**
+   * Outer outline of a part that is not a rectangle of the sheet (a welded word): cut on
+   * CUT_OUTER instead of the sheet outline. The sheet is then the bounding box of the part.
+   */
+  outerCut?: ReadonlyArray<Polygon>;
   holes?: Hole[];
   /** Positioning template contours (signs), optional. */
   template?: ReadonlyArray<Polygon>;
   /** Order number etc., written into SVG metadata and the DXF header comment. */
   label?: string;
+  /** Lines of the INFO layer under the part (order, position, material, size), ASCII. */
+  info?: string[];
 }

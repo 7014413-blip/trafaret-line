@@ -3,8 +3,8 @@
 // cut slots narrower than minSlotMm do not let paint through.
 
 import type { LaserConfig, Polygon, ThinZone, ThinZoneKind } from "../../types/geometry";
-import { bboxOf, polygonsNetArea, polygonsPerimeter } from "../calculators/geometry";
-import { difference, opening, unionTree, type TreeNode } from "./clipper";
+import { bboxOf, polygonsNetArea, polygonsPerimeter, signedArea } from "../calculators/geometry";
+import { ARC_TOLERANCE_MM, difference, inflate, unionTree, type TreeNode } from "./clipper";
 
 /** A lost piece counts as thin only if its mean width is at least this share of the limit. */
 const THIN_MIN_WIDTH_SHARE = 0.3;
@@ -27,11 +27,21 @@ function pieces(polygons: ReadonlyArray<Polygon>, scale: number): Polygon[][] {
 export function thinParts(region: ReadonlyArray<Polygon>, widthMm: number, kind: ThinZoneKind, cfg: LaserConfig): ThinZone[] {
   if (!region.length || widthMm <= 0) return [];
   const scale = cfg.clipperScale;
-  const kept = opening(region, widthMm / 2, scale);
+  // Morphological opening (shrink by half the width, grow back), grown back by one arc
+  // tolerance more: the kept shape then never shares an edge with the region, so the
+  // difference has no coincident edges (clipper2-js returns garbage triangles on those) and
+  // no hairline slivers where the round corners only approximate the curve.
+  const kept = inflate(inflate(region, -widthMm / 2, scale), widthMm / 2 + ARC_TOLERANCE_MM, scale);
   const lost = difference(region, kept, scale);
   const threshold = Math.max(cfg.minReportAreaMm2, widthMm * widthMm);
+  // Outlines that cannot make a zone are dropped before nesting (a 90 cm alphabet leaves
+  // thousands of crumbs): a piece is never larger nor wider on average than its own outline.
+  const large = lost.filter((polygon) => {
+    const area = Math.abs(signedArea(polygon));
+    return area >= threshold && (2 * area) / Math.max(1e-6, polygonsPerimeter([polygon])) >= widthMm * THIN_MIN_WIDTH_SHARE;
+  });
   const zones: ThinZone[] = [];
-  for (const piece of pieces(lost, scale)) {
+  for (const piece of pieces(large, scale)) {
     const areaMm2 = polygonsNetArea(piece);
     if (areaMm2 < threshold) continue;
     // A real thin strip loses its whole width. Slivers shaved off the corners of a flattened
