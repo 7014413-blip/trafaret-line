@@ -32,6 +32,15 @@ export const SITE_TEXT: Dictionary<SiteTexts> = {
       { city: "Запорожье", address: "адрес уточняем", note: "отправка" },
     ],
   },
+  en: {
+    hours: "Mon–Fri 9:00–18:00",
+    managerName: "Natalia",
+    managerNameDative: "Natalia",
+    branches: [
+      { city: "Boryspil", address: "46 Hostynna St", note: "production and shipping" },
+      { city: "Zaporizhzhia", address: "address to be confirmed", note: "shipping" },
+    ],
+  },
 };
 
 export const SITE = {

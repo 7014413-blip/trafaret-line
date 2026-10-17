@@ -27,6 +27,11 @@ export interface BlanksTexts {
   tierCaption: string;
   onePiece: string;
   fromQty: (qty: number) => string;
+  /** Order line title: shape name, size with its unit, material and colour. */
+  cartTitle: (shape: string, size: string, sheet: string) => string;
+  /** Material words of a thickness chip: «3 мм, акрил». */
+  acrylicWord: string;
+  polystyreneWord: string;
 }
 
 export const BLANKS: Dictionary<BlanksTexts> = {
@@ -54,6 +59,9 @@ export const BLANKS: Dictionary<BlanksTexts> = {
     tierCaption: "Ціна за штуку від кількості",
     onePiece: "1 шт.",
     fromQty: (qty) => `від ${qty} шт.`,
+    cartTitle: (shape, size, sheet) => `Заготовка «${shape}» ${size}, ${sheet}`,
+    acrylicWord: "акрил",
+    polystyreneWord: "полістирол",
   },
   ru: {
     kicker: "Заготовки",
@@ -79,5 +87,36 @@ export const BLANKS: Dictionary<BlanksTexts> = {
     tierCaption: "Цена за штуку от количества",
     onePiece: "1 шт.",
     fromQty: (qty) => `от ${qty} шт.`,
+    cartTitle: (shape, size, sheet) => `Заготовка «${shape}» ${size}, ${sheet}`,
+    acrylicWord: "акрил",
+    polystyreneWord: "полистирол",
+  },
+  en: {
+    kicker: "Blanks",
+    title: "Acrylic, mirror plastic and PET blanks",
+    lead: "Choose the shape, size, material and colour. Laser cut in 3 business days, price per piece right away, bulk prices from 10 pcs.",
+    schemeRegion: "Blank diagram",
+    schemeLabel: (shape, size) => `Diagram of the “${shape}” blank, ${size}`,
+    unitPrice: (price, discount) => `Price per piece: ${price}${discount}`,
+    pack: (qty, price) => `Pack of ${qty} pcs: ${price}`,
+    shape: "Shape",
+    size: "Size",
+    ownSize: "Custom size",
+    priceAtOnce: "instant price",
+    diameterCm: "Diameter, cm",
+    widthCm: "Width, cm",
+    longerSideCm: "Longer side, cm",
+    heightCm: "Height, cm",
+    sizeRange: (min, max) => `From ${min} to ${max} cm, accurate to 1 mm.`,
+    sizeBySide: " Size is measured along the longer side of the shape.",
+    material: "Material",
+    thickness: "Thickness",
+    colour: "Color",
+    tierCaption: "Price per piece by quantity",
+    onePiece: "1 pc",
+    fromQty: (qty) => `from ${qty} pcs`,
+    cartTitle: (shape, size, sheet) => `“${shape}” blank ${size}, ${sheet}`,
+    acrylicWord: "acrylic",
+    polystyreneWord: "polystyrene",
   },
 };

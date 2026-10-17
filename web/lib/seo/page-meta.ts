@@ -7,7 +7,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "../../types/customizer";
 import { DEFAULT_LOCALE, LOCALE_TAGS, SITE_LOCALES } from "../i18n/locales";
-import { localePath } from "../i18n/locale-path";
+import { hasLocaleVersion, localePath } from "../i18n/locale-path";
 
 export interface PageMetaInput {
   title: string;
@@ -26,7 +26,9 @@ export interface PageMetaInput {
 /** hreflang → path of every language version of a translated page, plus x-default (Ukrainian). */
 export function languageAlternates(path: string): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const locale of SITE_LOCALES) languages[LOCALE_TAGS[locale].hreflang] = localePath(locale, path);
+  for (const locale of SITE_LOCALES) {
+    if (hasLocaleVersion(locale, path)) languages[LOCALE_TAGS[locale].hreflang] = localePath(locale, path);
+  }
   languages["x-default"] = path;
   return languages;
 }

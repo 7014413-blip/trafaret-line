@@ -52,7 +52,7 @@ export function MonogramProductView({ p }: { p: CatalogProduct }) {
   const letters = `${check.value.first} & ${check.value.second}`;
   const personal: BuyBoxPersonalisation = {
     ready,
-    summary: [letters, fields.includes("date") ? check.value.date : "", style.name[locale === "ru" ? "ru" : "uk"]].filter(Boolean).join(", "),
+    summary: [letters, fields.includes("date") ? check.value.date : "", style.name[locale]].filter(Boolean).join(", "),
     spec: {
       monogram: {
         style: style.id,
@@ -72,7 +72,7 @@ export function MonogramProductView({ p }: { p: CatalogProduct }) {
                 <button key={s.id} type="button" role="radio" aria-checked={s.id === style.id}
                   onClick={() => setStyleId(s.id)}
                   className={`min-h-11 rounded-full border-[1.5px] px-4 text-sm ${s.id === style.id ? "border-[2px] border-[var(--ink)] bg-[var(--surface)] font-semibold" : "border-[var(--line)] bg-[var(--card)]"}`}>
-                  {s.name[locale === "ru" ? "ru" : "uk"]}
+                  {s.name[locale]}
                 </button>
               ))}
             </div>

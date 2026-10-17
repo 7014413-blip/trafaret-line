@@ -9,7 +9,7 @@ import { useMemo, useRef, useState } from "react";
 import { MATERIALS } from "@/lib/materials";
 import { priceBlank } from "@/lib/calculators/pricing";
 import { formatUAH } from "@/lib/format";
-import { pluralUk } from "@/lib/text/plural-uk";
+import { plural } from "@/lib/text/plural";
 import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import type { MaterialType, SheetSize } from "@/types/customizer";
 import { CardBadges } from "@/components/catalog/CardBadges";
@@ -46,7 +46,8 @@ export function CatalogRail({ categories }: { categories: CategoryLink[] }) {
 
 /* ---------- Product card ---------- */
 function ProductCard({ p }: { p: CatalogCardLite }) {
-  const t = tr(HOME, useLocale());
+  const locale = useLocale();
+  const t = tr(HOME, locale);
   return (
     <Link href={`/p/${p.handle}`} className="group grid snap-start content-start gap-2.5">
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--card)] transition-shadow group-hover:shadow-[0_10px_28px_rgba(15,23,42,.12)]">
@@ -55,8 +56,8 @@ function ProductCard({ p }: { p: CatalogCardLite }) {
         <span aria-hidden className="absolute bottom-2.5 right-2.5 grid h-11 w-11 place-items-center rounded-full bg-[var(--buy)] text-xl font-bold text-[var(--buy-fg)]">+</span>
       </div>
       <h3 className="m-0 text-[15px] font-medium leading-snug">{p.title}</h3>
-      <b className="text-[19px] tabular-nums">{t.from} {formatUAH(p.minPrice)}</b>
-      <div className="text-[13px] text-[var(--muted)]">{p.sizeCount} {pluralUk(p.sizeCount, t.sizeForms)} · {p.materialLabels.length} {pluralUk(p.materialLabels.length, t.materialForms)}</div>
+      <b className="text-[19px] tabular-nums">{t.from} {formatUAH(p.minPrice, locale)}</b>
+      <div className="text-[13px] text-[var(--muted)]">{p.sizeCount} {plural(locale, p.sizeCount, t.sizeForms)} · {p.materialLabels.length} {plural(locale, p.materialLabels.length, t.materialForms)}</div>
     </Link>
   );
 }
@@ -153,8 +154,8 @@ export function BlanksCalculator() {
           <text x="100" y="196" textAnchor="middle" fontSize="12" fill="#475569">{label}</text>
         </svg>
         <div className="text-[34px] font-extrabold leading-none tabular-nums">
-          {formatUAH(one.unitPrice)}
-          <small className="mt-1.5 block text-sm font-normal text-[var(--muted)]">{t.perPiece} · {t.fromTen} {formatUAH(ten.unitPrice)} {t.perPieceShort}</small>
+          {formatUAH(one.unitPrice, locale)}
+          <small className="mt-1.5 block text-sm font-normal text-[var(--muted)]">{t.perPiece} · {t.fromTen} {formatUAH(ten.unitPrice, locale)} {t.perPieceShort}</small>
         </div>
         <Link href="/zahotovky" className="inline-flex h-[52px] items-center rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)]">{t.blanksButton}</Link>
       </div>

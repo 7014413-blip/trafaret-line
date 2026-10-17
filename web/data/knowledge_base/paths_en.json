@@ -1,0 +1,34 @@
+{
+  "pages": {
+    "/": "/",
+    "/catalog": "/catalog",
+    "/checkout": "/checkout",
+    "/thank-you": "/thank-you",
+    "/poshuk": "/search",
+    "/dostavka-i-oplata": "/delivery-and-payment",
+    "/povernennia": "/returns",
+    "/pro-nas": "/about",
+    "/kontakty": "/contacts",
+    "/vidguky": "/reviews",
+    "/kabinet": "/account",
+    "/kabinet/vhid-telegram": "/account/telegram-sign-in",
+    "/konstruktor": "/custom-stencil",
+    "/konstruktor/polotno": "/custom-stencil/free-canvas",
+    "/konstruktor/akrylovi-tsyfry-i-litery": "/acrylic-letters-and-numbers",
+    "/konstruktor/inicialy-na-tort": "/cake-initials",
+    "/konstruktor/samoklejni-litery": "/self-adhesive-letters",
+    "/konstruktor/samoklejni-litery-dlia-vyvisok": "/self-adhesive-sign-letters",
+    "/zahotovky": "/blanks",
+    "/vyvisky": "/signs",
+    "/vyvisky/napysy-na-plantsi": "/signs/words-on-a-bar",
+    "/vyvisky/nomerky": "/signs/house-numbers",
+    "/vyvisky/ofisni-tablychky": "/signs/office-plaques",
+    "/vyvisky/tablychky-na-dveri": "/signs/door-plaques",
+    "/vyvisky/tablychky-poverkh": "/signs/floor-plaques",
+    "/vyvisky/vkazivnyky": "/signs/arrow-signs"
+  },
+  "prefixes": {
+    "/vidguk/": "/review/"
+  },
+  "catalog": {}
+}

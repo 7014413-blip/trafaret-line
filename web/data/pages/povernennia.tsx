@@ -58,5 +58,31 @@ export const RETURNS_PAGE: Dictionary<InfoPageContent> = {
         </Card>
       </>
     ),
+  },  en: {
+    metaTitle: "Exchanges and returns",
+    metaDescription: "Ready-made stencils: 14-day exchanges and returns. Custom items: replacement or refund if defective.",
+    title: "Exchanges and returns",
+    lead: "We want your stencil to work. If something is wrong, message us and we will sort it out quickly.",
+    body: (
+      <>
+        <Card>
+          <h2>Ready-made stencils from the catalog</h2>
+          <p>Exchange or return within 14 days of receipt if the item is unused and in its original condition. The customer pays return shipping unless the item is defective.</p>
+        </Card>
+        <Card>
+          <h2>Custom items</h2>
+          <p>Stencils with your text, made from your design, and signs are made just for you, so they can only be returned if defective: we will remake them for free or refund your money. Before cutting, we send you a preview to approve.</p>
+        </Card>
+        <Card>
+          <h2>How to request</h2>
+          <ul>
+            <li>Send us your order number and a photo of the item via Viber or Telegram.</li>
+            <li>We will reply within one business day and offer a solution.</li>
+            <li>We refund using the same payment method, with a refund receipt.</li>
+          </ul>
+          <p className="text-[13px] text-[var(--muted)]">These terms will be reviewed by a lawyer before launch.</p>
+        </Card>
+      </>
+    ),
   },
 };

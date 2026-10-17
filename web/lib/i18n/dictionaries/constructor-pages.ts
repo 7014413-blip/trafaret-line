@@ -139,4 +139,62 @@ export const CONSTRUCTOR_PAGES: Dictionary<Record<ConstructorPagePath, PageMetaT
       description: "Объёмная двухслойная табличка-стрелка с вашей надписью и логотипом: 25×10 см от 450 ₴, свой шрифт, цвет основы и надписи, направление влево или вправо. Изготовление 3 рабочих дня.",
     },
   },
+  en: {
+    "/konstruktor": {
+      title: "Your own text stencil maker with preview and price",
+      description: "Type your text, pick a font, size and material. We add stencil bridges to the letters automatically and show the price right away. Made in 3 business days.",
+    },
+    "/konstruktor/polotno": {
+      title: "Free canvas: several texts and shapes on one stencil",
+      description: "Place texts, a circle, star, heart or frame on one sheet. We add bridges automatically, highlight thin spots and show the price right away.",
+    },
+    "/zahotovky": {
+      title: "Acrylic, mirror plastic and PET blanks cut to your size",
+      description: "Circles, squares, hearts, stars, arches and other shapes in clear, colored and mirror acrylic, plus PET and polystyrene cake boards. Custom size, instant price per piece, bulk prices from 10 pcs.",
+    },
+    "/konstruktor/akrylovi-tsyfry-i-litery": {
+      title: "Acrylic numbers and letters from 2 to 80 cm, with instant price",
+      description: "Individual 3 mm acrylic numbers and letters: house or apartment number, date, initials, decor. Height from 2 to 80 cm, any color and font, with or without adhesive tape. Instant price.",
+    },
+    "/konstruktor/inicialy-na-tort": {
+      title: "Acrylic wedding cake initials topper maker with price",
+      description: "The couple's initials for the cake: two letters with a divider, your own font, size and color, mirror or colored acrylic. As separate pieces or on a bar with a skewer, instant price.",
+    },
+    "/konstruktor/samoklejni-litery-dlia-vyvisok": {
+      title: "Self-adhesive acrylic letters for signs and lettering, with price",
+      description: "Individual 3 mm acrylic capital and lowercase letters with tape on the back, 2 to 20 cm: lettering for shop windows, walls, doors and ads. Black, white, mirror gold, silver and rose gold. Price of every letter right away.",
+    },
+    "/konstruktor/samoklejni-litery": {
+      title: "Self-adhesive acrylic letters for a card box, with price",
+      description: "Raised 3 mm acrylic letters with tape on the back: lettering for a wedding card box, a gift or a table. Your own text and font for each line, joined or separate letters, cardboard placement stencil included.",
+    },
+    "/vyvisky": {
+      title: "Acrylic logo sign maker with instant price",
+      description: "Two-layer acrylic signs for salons, cafes and offices: your logo, text, mirror frame, round or rectangular shape, self-adhesive or standoff mounts. Instant price, made in 3 business days.",
+    },
+    "/vyvisky/napysy-na-plantsi": {
+      title: "Acrylic words on a bar: cafe menu lettering, with price",
+      description: "Acrylic words where the letters stand on a thin bar, each word in one piece. Menus with prices, zone names, wall lettering. Your own font, color and letter height, instant price.",
+    },
+    "/vyvisky/nomerky": {
+      title: "Two-layer acrylic door numbers, from 65 ₴",
+      description: "Number plates for offices, apartments or tables: two offset acrylic layers, the number cut into the top layer, adhesive back. 8×8 cm for 65 ₴, a full set of numbers at once.",
+    },
+    "/vyvisky/ofisni-tablychky": {
+      title: "Engraved office plaque maker with instant price",
+      description: "A plaque for a door or wall: black or white base, mirror plate in gold, silver, bronze gold or satin silver with your text. 21×6 cm from 220 ₴, 3M adhesive back.",
+    },
+    "/vyvisky/tablychky-na-dveri": {
+      title: "Door plaques with mirror edging: online maker",
+      description: "A door plaque for an office or salon: acrylic base, gold or silver mirror edging and raised letters. Your own text, font and color, instant price.",
+    },
+    "/vyvisky/tablychky-poverkh": {
+      title: "“FLOOR 1” floor signs for buildings, with instant price",
+      description: "Raised acrylic floor signs: white or black base, text, number and frame in gold or silver mirror acrylic. 13×18 cm for 360 ₴, a set for every floor at once.",
+    },
+    "/vyvisky/vkazivnyky": {
+      title: "Arrow direction sign maker with instant price",
+      description: "A raised two-layer arrow sign with your text and logo: 25×10 cm from 450 ₴, your own font, base and text colors, pointing left or right. Made in 3 business days.",
+    },
+  },
 };

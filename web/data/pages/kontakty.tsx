@@ -66,5 +66,32 @@ export const CONTACTS_PAGE: Dictionary<InfoPageContent> = {
         </Card>
       </>
     ),
+  },  en: {
+    metaTitle: "Contacts",
+    metaDescription: `Phone ${SITE.phone}, Viber, Telegram. Boryspil and Zaporizhzhia. ${SITE_TEXT.en.hours}.`,
+    title: "Contacts",
+    lead: "During business hours we reply within 15 minutes.",
+    body: (
+      <>
+        <Card>
+          <h2>Get in touch</h2>
+          <p>Our manager {SITE_TEXT.en.managerName} will answer your questions about designs, materials and delivery.</p>
+          <p><ManagerCallButton variant="card" locale="en" /></p>
+          <ul>
+            <li>Phone, Viber, Telegram: <b className="select-all">{SITE.phone}</b></li>
+            <li>Email: <b className="select-all">{SITE.email}</b></li>
+            <li>Hours: {SITE_TEXT.en.hours}</li>
+          </ul>
+        </Card>
+        <Card>
+          <h2>Branches</h2>
+          <BranchList locale="en" />
+        </Card>
+        <Card>
+          <h2>Follow us</h2>
+          {social}
+        </Card>
+      </>
+    ),
   },
 };

@@ -68,5 +68,36 @@ export const DELIVERY_PAGE: Dictionary<InfoPageContent> = {
         </Card>
       </>
     ),
+  },  en: {
+    metaTitle: "Delivery and payment",
+    metaDescription: "Nova Poshta, Ukrposhta, courier. Pay by card, Apple Pay, Google Pay, on delivery or by invoice. Made in 3 business days.",
+    title: "Delivery and payment",
+    lead: "We make your order in 3 business days and ship it from Boryspil or Zaporizhzhia. The exact dispatch date is shown on the product page and in the cart.",
+    body: (
+      <>
+        <Card>
+          <h2>Delivery</h2>
+          <ul>
+            <li><b>Nova Poshta</b>: branch, parcel locker or courier. Shipping is charged at the carrier&apos;s rates and paid on delivery.</li>
+            <li><b>Ukrposhta</b>: at Ukrposhta rates.</li>
+            <li>Thin PET up to 0.8 mm ships in a tube, rigid materials in a flat box.</li>
+            <li>We send the tracking number via Viber or Telegram on the day of dispatch.</li>
+          </ul>
+        </Card>
+        <Card>
+          <h2>Payment</h2>
+          <ul>
+            <li>Online by card, Apple Pay, Google Pay (WayForPay).</li>
+            <li>Cash on delivery at Nova Poshta.</li>
+            <li>By invoice for sole proprietors (FOP) and companies (TOV), no VAT.</li>
+          </ul>
+          <p>A fiscal receipt is sent to your phone or email after payment.</p>
+        </Card>
+        <Card>
+          <h2>Lead times</h2>
+          <p>Production takes up to 3 business days. Orders placed after 14:00 count from the next business day. For large and multi-part stencils and custom signs, the manager confirms the lead time.</p>
+        </Card>
+      </>
+    ),
   },
 };

@@ -5,7 +5,9 @@
 // shows the size that will be made.
 
 import { FIELDSET_CLASS, INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
-import { cmText, formatUAH } from "@/lib/format";
+import { formatUAH } from "@/lib/format";
+import { localCm } from "@/lib/plaques/local-cm";
+import { units } from "@/lib/i18n/dictionaries/units";
 import type { PresetSizeState, SizeLimits, SizePresetOption } from "@/types/constructor-ui";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
@@ -23,7 +25,8 @@ export function SizePresetPicker<P extends SizePresetOption>({ idPrefix, presets
   /** Rules of the custom size under the fields. */
   note: React.ReactNode;
 }) {
-  const t = tr(SIGNAGE, useLocale());
+  const locale = useLocale();
+  const t = tr(SIGNAGE, locale);
   const { sizeCode, setSizeCode, customCm, setCustomCm, size } = state;
   const card = (on: boolean) => `grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${on ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`;
   const showClamped = () => setCustomCm({ w: size.widthMm / 10, h: size.heightMm / 10 });
@@ -34,7 +37,7 @@ export function SizePresetPicker<P extends SizePresetOption>({ idPrefix, presets
       <div className={`grid grid-cols-2 gap-2 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
         {presets.map((p) => (
           <button key={p.code} id={`${idPrefix}-size-${p.code}`} type="button" aria-pressed={sizeCode === p.code} onClick={() => setSizeCode(p.code)} className={card(sizeCode === p.code)}>
-            <b className="text-[15px]">{cmText(p.widthMm)}×{cmText(p.heightMm)} см</b>
+            <b className="text-[15px]">{localCm(p.widthMm, locale)}×{localCm(p.heightMm, locale)} {units(locale).cm}</b>
             <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(p))}</span>
           </button>
         ))}

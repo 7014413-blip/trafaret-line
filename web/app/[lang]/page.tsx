@@ -94,7 +94,7 @@ export default async function Home({ params }: { params: Promise<LangParams> }) 
           <div className="relative order-first aspect-[4/3] max-w-full overflow-hidden rounded-[20px] bg-[var(--surface)] md:order-none md:aspect-[16/11]">
             <StencilSprayHero className="block h-full w-full" label={t.heroAnimation} />
             <span className="absolute left-3.5 top-3.5 rounded-full bg-white/90 px-3 py-1.5 text-[13px] font-bold text-[#0f172a]">{t.heroSample}</span>
-            <span className="absolute bottom-3.5 right-3.5 rounded-xl bg-[#0f172a] px-3 py-2 text-[13px] leading-tight text-white">{t.from} <b className="block text-base">{heroPrice ? formatUAH(heroPrice) : ""}</b></span>
+            <span className="absolute bottom-3.5 right-3.5 rounded-xl bg-[#0f172a] px-3 py-2 text-[13px] leading-tight text-white">{t.from} <b className="block text-base">{heroPrice ? formatUAH(heroPrice, locale) : ""}</b></span>
           </div>
         </section>
 

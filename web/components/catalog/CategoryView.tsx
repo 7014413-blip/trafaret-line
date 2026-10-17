@@ -10,7 +10,7 @@ import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useState } from "react";
 import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import { formatUAH } from "@/lib/format";
-import { pluralUk } from "@/lib/text/plural-uk";
+import { plural } from "@/lib/text/plural";
 import { CardBadges } from "@/components/catalog/CardBadges";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
@@ -22,7 +22,8 @@ type Filters = { mat: string[]; kind: string[] };
 const EMPTY: Filters = { mat: [], kind: [] };
 
 export function CategoryView({ products, subcategories }: { products: CatalogCardLite[]; subcategories: CategoryLink["children"] }) {
-  const t = tr(CATALOG, useLocale());
+  const locale = useLocale();
+  const t = tr(CATALOG, locale);
   const [f, setF] = useState<Filters>(EMPTY);
   const [sort, setSort] = useState("popular");
   const [sheet, setSheet] = useState(false);
@@ -104,7 +105,7 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
           </div>
         ) : (
           <>
-            <p className="m-0 mb-3 text-sm text-[var(--muted)]" aria-live="polite">{list.length} {pluralUk(list.length, t.productForms)}</p>
+            <p className="m-0 mb-3 text-sm text-[var(--muted)]" aria-live="polite">{list.length} {plural(locale, list.length, t.productForms)}</p>
             <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4 xl:gap-5">
               {visible.map((p, i) => (
                 <li key={p.handle}>
@@ -114,8 +115,8 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
                       <CardBadges hit={p.hit} isNew={p.isNew} />
                     </div>
                     <h3 className="m-0 text-[15px] font-medium leading-snug">{p.title}</h3>
-                    <div className="text-[13px] text-[var(--muted)]">{t.kinds[p.kind]} · {p.sizeCount} {pluralUk(p.sizeCount, t.sizeForms)}</div>
-                    <b className="text-[19px] tabular-nums">{t.from} {formatUAH(p.minPrice)}</b>
+                    <div className="text-[13px] text-[var(--muted)]">{t.kinds[p.kind]} · {p.sizeCount} {plural(locale, p.sizeCount, t.sizeForms)}</div>
+                    <b className="text-[19px] tabular-nums">{t.from} {formatUAH(p.minPrice, locale)}</b>
                   </Link>
                 </li>
               ))}
@@ -139,7 +140,7 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
               <div className="flex flex-wrap gap-2">{subcategories.map((s) => <Link key={s.handle} href={s.path} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-sm">{s.name}</Link>)}</div>
             )}
             {filters}
-            <button type="button" onClick={() => setSheet(false)} className="h-12 rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)]">{t.show} {list.length} {pluralUk(list.length, t.productForms)}</button>
+            <button type="button" onClick={() => setSheet(false)} className="h-12 rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)]">{t.show} {list.length} {plural(locale, list.length, t.productForms)}</button>
           </div>
         </div>
       )}

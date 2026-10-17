@@ -91,10 +91,11 @@ export function blankSheetInGroup(group: BlankMaterialGroupId, current: BlankShe
 
 /** Chip label of a thickness: "3 мм" for acrylic, with the material where a group mixes materials. */
 export function blankThicknessLabel(group: BlankMaterialGroupId, thicknessMm: number, locale: Locale = "uk"): string {
-  const mm = `${String(thicknessMm).replace(".", ",")} мм`;
+  const mm = locale === "en" ? `${thicknessMm} mm` : `${String(thicknessMm).replace(".", ",")} мм`;
   const material = blankSheetsAt(group, thicknessMm)[0]?.materialId ?? "";
-  const polystyrene = locale === "ru" ? "полистирол" : "полістирол";
-  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, акрил`;
+  const polystyrene = { uk: "полістирол", ru: "полистирол", en: "polystyrene" }[locale];
+  const acrylic = locale === "en" ? "acrylic" : "акрил";
+  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, ${acrylic}`;
   if (group === "board") return material === "pet_food_board" ? `PET ${mm}` : `${polystyrene.charAt(0).toUpperCase()}${polystyrene.slice(1)} ${mm}`;
   return mm;
 }

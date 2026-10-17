@@ -45,5 +45,18 @@ export const ASSISTANT: Dictionary<AssistantTexts> = {
     writing: "Пишу ответ…",
     question: "Ваш вопрос",
     send: "Отправить",
+  },  en: {
+    greeting: "Hi! I can help you choose a stencil, size and material, or price your own text. What are you planning to decorate?",
+    quick: ["Cake stencil with lettering", "What works best for plaster?", "How much is an A4?", "How fast do you ship?"],
+    notConfigured: "Our assistant is still learning. Message us on Viber or give us a call, we reply quickly.",
+    rateLimited: "Too many messages in a row. Message us on Viber and a manager will continue the conversation.",
+    failed: "Could not get a reply. Please try again or message us on Viber.",
+    close: "Close assistant",
+    open: "Ask the assistant",
+    dialog: "Trafaret Line assistant",
+    title: "Assistant",
+    writing: "Typing a reply…",
+    question: "Your question",
+    send: "Send",
   },
 };

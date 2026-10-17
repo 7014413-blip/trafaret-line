@@ -1,4 +1,5 @@
-// Languages in addresses (plan step 12): Ukrainian at the root, Russian under /ru/.
+// Languages in addresses (plan step 12): Ukrainian at the root, Russian under /ru/, English
+// under /en/ (its own slugs: tests/unit/english-paths.test.ts).
 
 import { describe, expect, it } from "vitest";
 import { localePath, splitLocalePath } from "../../lib/i18n/locale-path";
@@ -58,10 +59,10 @@ describe("localeRoute", () => {
 });
 
 describe("tr", () => {
-  it("picks the page language and falls back to Ukrainian for English", () => {
-    const dictionary = { uk: "Каталог трафаретів", ru: "Каталог трафаретов" };
+  it("picks the page language", () => {
+    const dictionary = { uk: "Каталог трафаретів", ru: "Каталог трафаретов", en: "Stencil catalog" };
     expect(tr(dictionary, "ru")).toBe("Каталог трафаретов");
-    expect(tr(dictionary, "en")).toBe("Каталог трафаретів");
+    expect(tr(dictionary, "en")).toBe("Stencil catalog");
   });
 });
 
@@ -69,7 +70,7 @@ describe("pageMeta", () => {
   it("gives a translated page its own canonical and every language version", () => {
     const meta = pageMeta({ title: "Каталог", description: "Усі розділи", path: "/catalog", locale: "ru" });
     expect(meta.alternates?.canonical).toBe("/ru/catalog");
-    expect(meta.alternates?.languages).toEqual({ "uk-UA": "/catalog", "ru-UA": "/ru/catalog", "x-default": "/catalog" });
+    expect(meta.alternates?.languages).toEqual({ "uk-UA": "/catalog", "ru-UA": "/ru/catalog", "en-UA": "/en/catalog", "x-default": "/catalog" });
     expect(meta.openGraph).toMatchObject({ locale: "ru_UA", url: "/ru/catalog" });
   });
 
