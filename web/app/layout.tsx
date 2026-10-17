@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Unbounded, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AssistantChat } from "@/components/chat/AssistantChat";
+import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
+import { AnalyticsListeners } from "@/components/analytics/AnalyticsListeners";
+import { CookieBanner } from "@/components/analytics/CookieBanner";
 import { siteUrl } from "@/lib/seo/site-url";
 
 const inter = Inter({
@@ -55,8 +58,11 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <body className={`${inter.variable} ${unbounded.variable} ${jetbrains.variable} antialiased`}>
+        <AnalyticsScripts />
         {children}
         <AssistantChat />
+        <AnalyticsListeners />
+        <CookieBanner />
       </body>
     </html>
   );

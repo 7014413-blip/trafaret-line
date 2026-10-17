@@ -9,6 +9,8 @@ import { categoryByPath, listCategories, listCategoryCards } from "@/services/me
 import { pageMeta } from "@/lib/seo/page-meta";
 import { toCategoryLink } from "@/lib/catalog/card-lite";
 import { siteUrl } from "@/lib/seo/site-url";
+import { listItems } from "@/lib/analytics/analytics-item";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
 
 const BASE = siteUrl();
 
@@ -52,6 +54,7 @@ export async function CategoryPage({ segments }: { segments: string[] }) {
         )}
 
         <CategoryView products={products} subcategories={toCategoryLink(category).children} />
+        {products.length > 0 && <TrackEvent name="view_item_list" params={{ item_list_name: category.name, items: listItems(products, category.name) }} />}
 
         {(category.bodyHtml || category.faq.length > 0) && (
           <section className="mt-10 grid max-w-[80ch] gap-2.5">
