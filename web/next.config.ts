@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: medusa.protocol.replace(":", "") as "http" | "https", hostname: medusa.hostname, port: medusa.port, pathname: "/static/**" },
+      // Photos of published reviews (backend api/tl-media/reviews).
+      { protocol: medusa.protocol.replace(":", "") as "http" | "https", hostname: medusa.hostname, port: medusa.port, pathname: "/tl-media/reviews/**" },
       { protocol: "http", hostname: "localhost", port: "9000", pathname: "/static/**" },
     ],
   },

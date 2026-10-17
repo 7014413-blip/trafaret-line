@@ -6,6 +6,10 @@ import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/co
 import { Gallery, ProductBuyBox } from "@/components/catalog/ProductBuyBox";
 import { LazyHoleProductView, LazyMonogramProductView } from "@/components/catalog/LazyProductViews";
 import { listCategories, productByHandle, productsByHandles } from "@/services/medusa-store";
+import { listReviews } from "@/services/medusa-reviews";
+import { ProductReviews } from "@/components/reviews/ProductReviews";
+import { reviewJsonLd } from "@/lib/reviews/review-json-ld";
+import { jsonLdText } from "@/lib/seo/json-ld";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { siteUrl } from "@/lib/seo/site-url";
@@ -29,9 +33,9 @@ export default async function ProductPage({ params }: Props) {
   const { all } = await listCategories();
   const category = all.find((c) => c.handle === p.categoryHandles[0]) ?? null;
   const parent = category?.parentHandle ? all.find((c) => c.handle === category.parentHandle) ?? null : null;
-  const related = await productsByHandles(p.relatedHandles.slice(0, 8));
+  const [related, reviews] = await Promise.all([productsByHandles(p.relatedHandles.slice(0, 8)), listReviews({ product: p.handle, limit: 10 })]);
 
-  // ProductGroup with size × material variants (ТЗ §18). Ratings only after real reviews exist.
+  // ProductGroup with size × material variants (ТЗ §18). Ratings only from published reviews.
   const ld = {
     "@context": "https://schema.org", "@type": "ProductGroup", name: p.title, productGroupID: p.handle, description: p.seo.description,
     brand: { "@type": "Brand", name: "Trafaret Line" }, image: p.images.map((i) => i.url), variesBy: ["https://schema.org/size", "https://schema.org/material"],
@@ -39,6 +43,7 @@ export default async function ProductPage({ params }: Props) {
       "@type": "Product", name: `${p.title}, ${v.sizeLabel}, ${v.materialLabel}`, sku: v.sku ?? v.id, size: v.sizeLabel, material: v.materialLabel,
       offers: { "@type": "Offer", price: v.price, priceCurrency: "UAH", availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition", url: `${BASE}/p/${p.handle}` },
     })),
+    ...reviewJsonLd(reviews),
   };
 
   const sections: { title: string; html: string }[] = [
@@ -89,6 +94,7 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
         </section>
+        <ProductReviews list={reviews} />
         {related.length > 0 && (
           <section className="mt-10">
             <h2 className="m-0 mb-4 text-xl font-bold">Пасує разом</h2>
@@ -103,7 +109,7 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </section>
         )}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(ld) }} />
       </main>
       <SiteFooter />
       <BottomNav />

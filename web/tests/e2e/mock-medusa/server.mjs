@@ -3,7 +3,8 @@
 // POST /store/tl-checkout and signs a WayForPay form at POST /store/tl-pay/wayforpay without
 // real keys. It also stands in for the Nova Poshta API at POST /novaposhta/ with the answers
 // of data/knowledge_base/mock_novaposhta.json (the site's server calls it via NP_API_URL). Orders it received are listed at GET /__e2e/orders, so a test can check what the
-// browser sent; DELETE /__e2e/orders clears the list.
+// browser sent; DELETE /__e2e/orders clears the list. Reviews: published ones at GET /store/tl-reviews,
+// the review form of one order (reviews.mjs) and the reviews it received at GET /__e2e/reviews.
 //
 // Usage: node tests/e2e/mock-medusa/server.mjs (port from MOCK_MEDUSA_PORT, default 9100).
 
@@ -12,6 +13,7 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, REGION, products } from "./catalog.mjs";
+import { REVIEW_ORDER, reviewList, reviewOrder } from "./reviews.mjs";
 
 const PORT = Number(process.env.MOCK_MEDUSA_PORT ?? 9100);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -21,6 +23,7 @@ const NOVA_POSHTA = JSON.parse(fs.readFileSync(path.resolve(HERE, "../../../data
 const WAYFORPAY_URL = "https://secure.wayforpay.com/pay";
 
 const orders = [];
+const reviews = [];
 
 function send(res, status, body, type = "application/json") {
   res.writeHead(status, {
@@ -68,6 +71,20 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && url.pathname === "/store/product-categories") return send(res, 200, { product_categories: CATEGORIES });
     if (req.method === "GET" && url.pathname === "/store/products") return send(res, 200, listProducts(url.searchParams));
     if (req.method === "GET" && url.pathname.startsWith("/static/")) return send(res, 200, fs.readFileSync(PHOTO), "image/jpeg");
+    if (req.method === "GET" && url.pathname === "/store/tl-reviews") return send(res, 200, reviewList(ORIGIN, url.searchParams));
+    if (req.method === "GET" && url.pathname.startsWith("/tl-media/reviews/")) return send(res, 200, fs.readFileSync(PHOTO), "image/jpeg");
+    if (url.pathname === `/store/tl-reviews/order/${REVIEW_ORDER.id}`) {
+      if (url.searchParams.get("t") !== REVIEW_ORDER.token) return send(res, 404, { message: "Посилання недійсне" });
+      if (req.method === "GET") return send(res, 200, reviewOrder(reviews));
+      const body = await readJson(req);
+      if (reviews.some((r) => r.key === body.key)) return send(res, 409, { message: "Відгук на цей товар уже надіслано. Дякуємо!" });
+      reviews.push(body);
+      return send(res, 200, { ok: true, status: "pending" });
+    }
+    if (url.pathname === "/__e2e/reviews") {
+      if (req.method === "DELETE") reviews.length = 0;
+      return send(res, 200, { reviews });
+    }
     if (req.method === "POST" && url.pathname === "/store/tl-checkout") {
       const body = await readJson(req);
       if (!Array.isArray(body.lines) || body.lines.length === 0) return send(res, 400, { errors: ["empty_cart"] });

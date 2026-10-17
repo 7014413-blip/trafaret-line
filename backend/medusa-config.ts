@@ -31,6 +31,8 @@ module.exports = defineConfig({
         ],
       },
     },
+    // Customer reviews with moderation in «Простий кабінет» (src/modules/review).
+    { resolve: "./src/modules/review" },
     // Fiscal receipts: one per order, never two (src/modules/fiscal-receipt).
     { resolve: "./src/modules/fiscal-receipt" },
   ],
