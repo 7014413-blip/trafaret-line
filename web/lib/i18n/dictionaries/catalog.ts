@@ -7,6 +7,8 @@ import type { MonogramField } from "../../../types/monogram";
 
 export interface CatalogTexts {
   home: string;
+  /** The buyer's texts after the product name in the cart line. */
+  cartTexts: (texts: string) => string;
   breadcrumbs: string;
   catalogTitle: string;
   catalogMetaTitle: string;
@@ -110,6 +112,7 @@ const mmTextEn = (value: string) => `${value} mm`;
 export const CATALOG: Dictionary<CatalogTexts> = {
   uk: {
     home: "Головна",
+    cartTexts: (texts) => ` («${texts}»)`,
     breadcrumbs: "Хлібні крихти",
     catalogTitle: "Каталог",
     catalogMetaTitle: "Каталог трафаретів: стіни, штукатурка, торти, свята, заготовки",
@@ -207,6 +210,7 @@ export const CATALOG: Dictionary<CatalogTexts> = {
   },
   ru: {
     home: "Главная",
+    cartTexts: (texts) => ` («${texts}»)`,
     breadcrumbs: "Хлебные крошки",
     catalogTitle: "Каталог",
     catalogMetaTitle: "Каталог трафаретов: стены, штукатурка, торты, праздники, заготовки",
@@ -308,6 +312,7 @@ export const CATALOG: Dictionary<CatalogTexts> = {
     toCatalog: "В каталог",
   },  en: {
     home: "Home",
+    cartTexts: (texts) => ` (“${texts}”)`,
     breadcrumbs: "Breadcrumbs",
     catalogTitle: "Catalog",
     catalogMetaTitle: "Stencil catalog: walls, plaster, cakes, holidays, blanks",

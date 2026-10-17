@@ -7,10 +7,10 @@ import { CustomFontPanel } from "@/components/constructor/CustomFontPanel";
 import { FontOptions } from "@/components/constructor/FontOptions";
 import { INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
 import type { PlaqueLinesState } from "@/lib/client/use-plaque-lines";
-import { cmText } from "@/lib/format";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { tr } from "@/lib/i18n/translate";
+import { cmText } from "@/lib/format";
 
 /** Letter size of a line relative to the others, from small to the largest. */
 const SIZE_STEPS = [0.8, 1, 1.3, 1.6] as const;
@@ -26,7 +26,8 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
   /** More fields of a line under its font and size (the price piece of «Написи на планці»). */
   renderExtra?: (index: number) => React.ReactNode;
 }) {
-  const t = tr(SIGNAGE, useLocale());
+  const locale = useLocale();
+  const t = tr(SIGNAGE, locale);
   const { lines, setLine, addLine, removeLine, maxLines, allFonts, customFonts, onFontAdded, onFontRemoved } = state;
 
   return (
@@ -55,7 +56,7 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
               </label>
             </div>
             {renderExtra?.(i)}
-            {cap != null && <span className="text-[13px] text-[var(--muted)] tabular-nums">{t.capHeight(cmText(cap))}</span>}
+            {cap != null && <span className="text-[13px] text-[var(--muted)] tabular-nums">{t.capHeight(cmText(cap, locale))}</span>}
           </div>
         );
       })}

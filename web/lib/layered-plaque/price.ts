@@ -24,7 +24,7 @@ export function priceLayeredPlaque(design: LayeredPlaqueDesign, cfg: LayeredPlaq
   const discount = bestLineDiscount(count * quantity, 0, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const piecePrice = applyDiscount(basePrice, discount.value);
   const unitPrice = piecePrice * count;
-  const lines = [text.size(cmText(size.widthMm), cmText(size.heightMm), !size.preset)];
+  const lines = [text.size(cmText(size.widthMm, locale), cmText(size.heightMm, locale), !size.preset)];
   if (cfg.kind === "number") lines.push(text.numberLayers(base.name[locale].toLowerCase(), overlay.name[locale].toLowerCase()));
   else lines.push(text.plaqueLayers(base.name[locale].toLowerCase(), !!design.frame, overlay.name[locale].toLowerCase()));
   if (design.series) lines.push(text.plaqueSeries(design.series.from, design.series.to, text.plaques(count), piecePrice));

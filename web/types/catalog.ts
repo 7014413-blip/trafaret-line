@@ -99,7 +99,7 @@ export interface RawProduct {
     blocks?: InLanguages<Record<string, { title: string; html: string }>>;
     i18n?: InLanguages<RawProductTranslation>;
     related_handles?: string[];
-    fields?: { key: string; uk: string; ru: string; en?: string; def: string }[] | null;
+    fields?: { key: string; uk: string; ru: string; en?: string; def: string; def_en?: string }[] | null;
     /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */
     constructor_path?: string | null;
     /** Set in «Простий кабінет»; missing means in stock. */

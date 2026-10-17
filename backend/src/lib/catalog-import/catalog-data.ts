@@ -7,11 +7,11 @@ import type {
   FaqItem,
   ImportMode,
   ImportSettings,
-  Localized,
   SharedBlock,
   SharedBlocks,
   SharedFaq,
   Lang,
+  WithEnglish,
 } from "../../types/catalog"
 
 const DEFAULT_SALES_CHANNEL = "Trafaret Line"
@@ -69,31 +69,43 @@ export function sortByDepth(categories: CatalogCategory[]): CatalogCategory[] {
 }
 
 /** The product's own two questions followed by the shared FAQ blocks it refers to. */
-export function resolveFaq(product: CatalogProduct, sharedFaq: SharedFaq): Localized<FaqItem[]> {
-  const pick = (lang: Lang): FaqItem[] => {
+export function resolveFaq(product: CatalogProduct, sharedFaq: SharedFaq): WithEnglish<FaqItem[]> {
+  const pick = (lang: Lang | "en"): FaqItem[] => {
     const shared = product.faq_blocks.flatMap((key) => {
       const block = sharedFaq[key]
       if (!block) {
         throw new Error(`Shared FAQ "${key}" is missing in shared-faq.json`)
       }
-      return block[lang]
+      const texts = block[lang]
+      if (!texts) {
+        throw new Error(`Shared FAQ "${key}" has no ${lang} texts, needed by ${product.handle}`)
+      }
+      return texts
     })
-    return [...product[lang].faq, ...shared]
+    const own = product[lang]
+    if (!own) {
+      throw new Error(`Product ${product.handle} has no ${lang} texts`)
+    }
+    return [...own.faq, ...shared]
   }
-  return { uk: pick("uk"), ru: pick("ru") }
+  return { uk: pick("uk"), ru: pick("ru"), ...(product.en ? { en: pick("en") } : {}) }
 }
 
 /** The shared tabs (how-to, care, delivery, guarantee) resolved to their texts. */
-export function resolveBlocks(product: CatalogProduct, sharedBlocks: SharedBlocks): Localized<Record<string, SharedBlock>> {
-  const pick = (lang: Lang): Record<string, SharedBlock> =>
+export function resolveBlocks(product: CatalogProduct, sharedBlocks: SharedBlocks): WithEnglish<Record<string, SharedBlock>> {
+  const pick = (lang: Lang | "en"): Record<string, SharedBlock> =>
     Object.fromEntries(
       Object.entries(product.blocks).map(([slot, key]) => {
         const block = sharedBlocks[key]
         if (!block) {
           throw new Error(`Shared block "${key}" is missing in shared-blocks.json`)
         }
-        return [slot, block[lang]]
+        const text = block[lang]
+        if (!text) {
+          throw new Error(`Shared block "${key}" has no ${lang} text, needed by ${product.handle}`)
+        }
+        return [slot, text]
       })
     )
-  return { uk: pick("uk"), ru: pick("ru") }
+  return { uk: pick("uk"), ru: pick("ru"), ...(product.en ? { en: pick("en") } : {}) }
 }

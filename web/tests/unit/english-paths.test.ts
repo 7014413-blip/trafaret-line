@@ -20,7 +20,7 @@ describe("English addresses", () => {
 
   it("gives English links their own address and keeps Ukrainian for untranslated pages", () => {
     expect(localePath("en", "/")).toBe("/en");
-    expect(localePath("en", "/zahotovky?shape=heart#top")).toBe("/en/blanks?shape=heart#top");
+    expect(localePath("en", "/zahotovky?shape=heart#top")).toBe("/en/custom-blanks?shape=heart#top");
     expect(localePath("en", "/oferta")).toBe("/oferta");
     expect(localePath("en", "/en/blanks")).toBe("/en/blanks");
     expect(hasLocaleVersion("en", "/oferta")).toBe(false);

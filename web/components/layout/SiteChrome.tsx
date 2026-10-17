@@ -6,7 +6,6 @@
 import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useState } from "react";
 import { DIRECTIONS } from "@/data/home";
-import { SITE } from "@/data/site";
 import { CartButton, CartHost } from "@/components/cart/CartHost";
 import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
 import { CookieSettingsButton } from "@/components/analytics/CookieBanner";
@@ -130,7 +129,7 @@ export function SiteFooter() {
             Trafaret Line
           </div>
           <p className="mt-3 max-w-[34ch] opacity-80">{t.footerAbout}</p>
-          <p className="mt-2 text-[13px] opacity-70">{SITE.legal}, {SITE.tax}</p>
+          <p className="mt-2 text-[13px] opacity-70">{t.seller}</p>
           <p className="mt-2 text-[13px] opacity-70"><CookieSettingsButton /></p>
         </div>
         {t.footerColumns.map((c) => col(c.title, c.links))}

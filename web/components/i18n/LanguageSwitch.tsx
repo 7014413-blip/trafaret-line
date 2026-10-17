@@ -1,11 +1,12 @@
 "use client";
 
-// «УКР · РУС» in the trust bar: the same page in the other language.
+// «УКР · РУС · ENG» in the trust bar: the same page in the other language, or the home page of
+// that language when the page has no version there (English covers part of the site).
 
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
 import type { Locale } from "@/types/customizer";
-import { localePath, splitLocalePath } from "@/lib/i18n/locale-path";
+import { hasLocaleVersion, localePath, splitLocalePath } from "@/lib/i18n/locale-path";
 import { SITE_LOCALES } from "@/lib/i18n/locales";
 import { useLocale } from "./LocaleProvider";
 
@@ -18,7 +19,7 @@ export function LanguageSwitch({ label }: { label: string }) {
   return (
     <nav aria-label={label} className="flex gap-1">
       {SITE_LOCALES.map((other) => (
-        <NextLink key={other} href={localePath(other, path)} hrefLang={other}
+        <NextLink key={other} href={localePath(other, hasLocaleVersion(other, path) ? path : "/")} hrefLang={other}
           aria-current={other === locale ? "true" : undefined}
           className={`inline-flex min-h-[28px] items-center rounded px-1.5 ${other === locale ? "font-bold" : "opacity-70 hover:opacity-100"}`}>
           {LABELS[other]}

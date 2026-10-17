@@ -4,11 +4,11 @@
 import type { BlankShape } from "../../types/blank";
 import type { Locale } from "../../types/customizer";
 import { units } from "../i18n/dictionaries/units";
-import { localCm } from "../plaques/local-cm";
+import { cmText } from "../format";
 
 export function blankShapeSizeText(shape: Pick<BlankShape, "sizeMode">, widthMm: number, heightMm: number, locale: Locale = "uk"): string {
   const cm = units(locale).cm;
-  if (shape.sizeMode === "diameter") return `Ø${localCm(widthMm, locale)} ${cm}`;
-  if (shape.sizeMode === "side") return `${localCm(widthMm, locale)} ${cm}`;
-  return `${localCm(widthMm, locale)}×${localCm(heightMm, locale)} ${cm}`;
+  if (shape.sizeMode === "diameter") return `Ø${cmText(widthMm, locale)} ${cm}`;
+  if (shape.sizeMode === "side") return `${cmText(widthMm, locale)} ${cm}`;
+  return `${cmText(widthMm, locale)}×${cmText(heightMm, locale)} ${cm}`;
 }

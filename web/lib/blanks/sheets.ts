@@ -16,7 +16,7 @@ const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en }
 
 export const BLANK_GROUPS: readonly BlankMaterialGroup[] = [
   { id: "clear", name: t("Прозорий акрил", "Прозрачный акрил", "Clear acrylic"), note: t("Від 1,5 до 15 мм, глянцевий з обох боків", "От 1,5 до 15 мм, глянцевый с обеих сторон", "1.5 to 15 mm, gloss on both sides") },
-  { id: "coloured", name: t("Кольоровий акрил", "Цветной акрил", "Coloured acrylic"), note: t("Чорний, молочний і яскраві кольори", "Чёрный, молочный и яркие цвета", "Black, opal white and bright colours") },
+  { id: "coloured", name: t("Кольоровий акрил", "Цветной акрил", "Colored acrylic"), note: t("Чорний, молочний і яскраві кольори", "Чёрный, молочный и яркие цвета", "Black, opal white and bright colors") },
   { id: "mirror", name: t("Дзеркальний", "Зеркальный", "Mirror"), note: t("Акрил 2 і 3 мм або легкий полістирол 1 мм", "Акрил 2 и 3 мм или лёгкий полистирол 1 мм", "Acrylic 2 and 3 mm or light polystyrene 1 mm") },
   { id: "board", name: t("Підкладки під торт", "Подложки под торт", "Cake boards"), note: t("Прозорий PET 0,5 мм або білий полістирол 1 мм", "Прозрачный PET 0,5 мм или белый полистирол 1 мм", "Clear PET 0.5 mm or white polystyrene 1 mm") },
 ];

@@ -16,6 +16,7 @@ import { CardBadges } from "@/components/catalog/CardBadges";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HOME } from "@/lib/i18n/dictionaries/home";
 import { tr } from "@/lib/i18n/translate";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 
 /* ---------- Left catalog rail with fly-out subcategories ---------- */
 export function CatalogRail({ categories }: { categories: CategoryLink[] }) {
@@ -134,7 +135,7 @@ export function BlanksCalculator() {
   const one = useMemo(() => priceBlank(sheet, m, 1), [shape, mat, size]); // eslint-disable-line react-hooks/exhaustive-deps
   const ten = useMemo(() => priceBlank(sheet, m, 10), [shape, mat, size]); // eslint-disable-line react-hooks/exhaustive-deps
   const fill = m.finish === "mirror" ? "url(#mir)" : mat === "acrylic_color" ? "#e76f51" : m.look.face;
-  const label = `${shape === "circle" ? "Ø" : ""}${size}${shape === "rect" ? `×${h / 10}` : shape === "square" ? `×${size}` : ""} см`;
+  const label = `${shape === "circle" ? "Ø" : ""}${size}${shape === "rect" ? `×${decimal(h / 10, locale)}` : shape === "square" ? `×${size}` : ""} ${units(locale).cm}`;
 
   return (
     <section className="mb-11 grid items-center gap-7 rounded-[20px] bg-[var(--surface)] p-5 md:grid-cols-2 md:p-7">
@@ -143,7 +144,7 @@ export function BlanksCalculator() {
         <p className="mb-4 text-[var(--muted)]">{t.blanksLead}</p>
         <Chips label={t.shape} items={SHAPES.map((id) => [id, t.shapes[id]] as const)} value={shape} onChange={setShape} />
         <Chips label={t.material} items={BLANK_MATS.map((id) => [id, MATERIALS[id].name[locale]] as const)} value={mat} onChange={setMat} />
-        <Chips label={t.size} items={SIZES.map((s) => [s, `${s} см`] as const)} value={size} onChange={setSize} />
+        <Chips label={t.size} items={SIZES.map((s) => [s, `${s} ${units(locale).cm}`] as const)} value={size} onChange={setSize} />
       </div>
       <div className="grid justify-items-center gap-3.5 text-center">
         <svg viewBox="0 0 200 200" className="h-auto w-[min(260px,70%)]" aria-hidden>

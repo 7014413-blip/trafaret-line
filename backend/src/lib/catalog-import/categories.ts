@@ -21,12 +21,14 @@ function categoryData(category: CatalogCategory, parentId: string | null, imageU
       seo: {
         uk: { title: category.uk.seo_title, description: category.uk.seo_description, h1: category.uk.h1 },
         ru: { title: category.ru.seo_title, description: category.ru.seo_description, h1: category.ru.h1 },
+        ...(category.en ? { en: { title: category.en.seo_title, description: category.en.seo_description, h1: category.en.h1 } } : {}),
       },
       content: {
         uk: { intro: category.uk.intro, body_html: category.uk.body_html, faq: category.uk.faq },
         ru: { intro: category.ru.intro, body_html: category.ru.body_html, faq: category.ru.faq },
+        ...(category.en ? { en: { intro: category.en.intro, body_html: category.en.body_html, faq: category.en.faq } } : {}),
       },
-      i18n: { ru: { name: category.ru.name } },
+      i18n: { ru: { name: category.ru.name }, ...(category.en ? { en: { name: category.en.name, slug: category.en.slug } } : {}) },
       catalog_files: files,
     },
   }

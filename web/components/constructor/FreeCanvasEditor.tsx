@@ -103,7 +103,7 @@ export function FreeCanvasEditor() {
       })
       .catch(() => setError(t.fontLoadFailed));
     // The customer's own fonts: each text element can use any of them.
-    listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
+    listCustomFonts(locale).then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
   }, [replaceHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -357,7 +357,7 @@ export function FreeCanvasEditor() {
             <label key={m.id} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-3 ${settings.materialId === m.id ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
               <input type="radio" name="fc-mat" id={`fc-mat-${m.id}`} checked={settings.materialId === m.id} onChange={() => setSheet({ materialId: m.id as MaterialType })} className="h-[18px] w-[18px] accent-[var(--ink)]" />
               <span><b className="block">{m.name[locale]}</b><span className="text-[13px] text-[var(--muted)]">{m.note[locale]}</span></span>
-              <em className="not-italic font-semibold tabular-nums">{pieceMode && !pieceBox ? "" : formatUAH(priceFor(m, 1).unitPrice)}</em>
+              <em className="not-italic font-semibold tabular-nums">{pieceMode && !pieceBox ? "" : formatUAH(priceFor(m, 1).unitPrice, locale)}</em>
             </label>
           ))}
         </fieldset>
@@ -377,8 +377,8 @@ export function FreeCanvasEditor() {
         </div>
 
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4">
-          <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(price.total)}
-            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{quantity > 1 ? `${formatUAH(price.unitPrice)} × ${quantity} ${t.pcs} · ` : ""}{t.production}</small>
+          <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(price.total, locale)}
+            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{quantity > 1 ? `${formatUAH(price.unitPrice, locale)} × ${quantity} ${t.pcs} · ` : ""}{t.production}</small>
           </div>
           <button type="button" onClick={buy} disabled={!canBuy} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-50">{t.buy}</button>
         </div>

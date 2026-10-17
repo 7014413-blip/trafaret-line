@@ -111,7 +111,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
       kind: "catalog",
       variantId: variant.id,
       basePrice: variant.price,
-      title: `${p.title}, ${variant.sizeLabel}, ${variant.materialLabel}${texts ? ` («${texts}»)` : ""}`,
+      title: `${p.title}, ${variant.sizeLabel}, ${variant.materialLabel}${texts ? t.cartTexts(texts) : ""}`,
       materialId: materialForCode(variant.materialCode),
       widthCm: sheet[0] / 10,
       heightCm: sheet[1] / 10,

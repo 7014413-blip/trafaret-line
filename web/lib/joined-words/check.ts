@@ -28,19 +28,19 @@ export function checkJoinedWords(
       out.push({ level: "error", code: "letters-too-small", lineIndex: piece.lineIndex, message: t(
         `Рядок ${n}: літери ${cmText(piece.capMm)} см, з цього листа ріжемо від ${cmText(minLetter)} см. Збільште висоту літер або розмір рядка.`,
         `Строка ${n}: буквы ${cmText(piece.capMm)} см, из этого листа режем от ${cmText(minLetter)} см. Увеличьте высоту букв или размер строки.`,
-        `Line ${n}: letters are ${cmText(piece.capMm)} cm, this sheet is cut from ${cmText(minLetter)} cm. Make the letters larger.`) });
+        `Line ${n}: letters are ${cmText(piece.capMm, "en")} cm, this sheet is cut from ${cmText(minLetter, "en")} cm. Make the letters larger.`) });
     }
     if (piece.capMm > cfg.maxLetterMm + 0.05 && once("large")) {
       out.push({ level: "error", code: "letters-too-large", lineIndex: piece.lineIndex, message: t(
         `Рядок ${n}: літери ${cmText(piece.capMm)} см, найбільше ${cmText(cfg.maxLetterMm)} см. Для більших літер оберіть вивіску.`,
         `Строка ${n}: буквы ${cmText(piece.capMm)} см, максимум ${cmText(cfg.maxLetterMm)} см. Для больших букв выберите вывеску.`,
-        `Line ${n}: letters are ${cmText(piece.capMm)} cm, at most ${cmText(cfg.maxLetterMm)} cm. Pick a sign for larger letters.`) });
+        `Line ${n}: letters are ${cmText(piece.capMm, "en")} cm, at most ${cmText(cfg.maxLetterMm, "en")} cm. Pick a sign for larger letters.`) });
     }
     if ((piece.widthMm > cfg.maxPieceWidthMm || piece.heightMm > cfg.maxPieceHeightMm) && once("long")) {
       out.push({ level: "error", code: "piece-too-long", lineIndex: piece.lineIndex, message: t(
         `Рядок ${n}: деталь ${cmText(piece.widthMm)} см, одним шматком ріжемо до ${cmText(cfg.maxPieceWidthMm)} см. Розбийте рядок на два або зменште літери.`,
         `Строка ${n}: деталь ${cmText(piece.widthMm)} см, одним куском режем до ${cmText(cfg.maxPieceWidthMm)} см. Разбейте строку на две или уменьшите буквы.`,
-        `Line ${n}: the piece is ${cmText(piece.widthMm)} cm, one piece is at most ${cmText(cfg.maxPieceWidthMm)} cm. Split the line or make the letters smaller.`) });
+        `Line ${n}: the piece is ${cmText(piece.widthMm, "en")} cm, one piece is at most ${cmText(cfg.maxPieceWidthMm, "en")} cm. Split the line or make the letters smaller.`) });
     }
   }
   glyphs.forEach((line, index) => {

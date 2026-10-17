@@ -4,9 +4,9 @@
 import type { LocalizedText } from "../../types/customizer";
 import type { LayeredPlaqueCheck, LayeredPlaqueConfig, LayeredPlaqueDesign, LayeredPlaqueLayout } from "../../types/layered-plaque";
 import { seriesValid } from "./series";
+import { localMm } from "../plaques/local-mm";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const mm = (v: number) => v.toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function checkLayeredPlaque(
   design: LayeredPlaqueDesign, layout: LayeredPlaqueLayout, missingGlyphs: string[][], cfg: LayeredPlaqueConfig,
@@ -19,9 +19,9 @@ export function checkLayeredPlaque(
     if (line.capMm >= minLetter) continue;
     const n = line.index + 1;
     out.push({ level: "error", code: "letters-too-small", lineIndex: line.index, message: t(
-      `Рядок ${n}: літери ${mm(line.capMm)} мм, ріжемо від ${mm(minLetter)} мм. Скоротіть текст або візьміть більший розмір.`,
-      `Строка ${n}: буквы ${mm(line.capMm)} мм, режем от ${mm(minLetter)} мм. Сократите текст или возьмите больший размер.`,
-      `Line ${n}: letters are ${mm(line.capMm)} mm, cut from ${mm(minLetter)} mm. Shorten the text or pick a larger size.`) });
+      `Рядок ${n}: літери ${localMm(line.capMm)} мм, ріжемо від ${localMm(minLetter)} мм. Скоротіть текст або візьміть більший розмір.`,
+      `Строка ${n}: буквы ${localMm(line.capMm)} мм, режем от ${localMm(minLetter)} мм. Сократите текст или возьмите больший размер.`,
+      `Line ${n}: letters are ${localMm(line.capMm, "en")} mm, cut from ${localMm(minLetter, "en")} mm. Shorten the text or pick a larger size.`) });
   }
   missingGlyphs.forEach((chars, index) => {
     if (!chars.length) return;

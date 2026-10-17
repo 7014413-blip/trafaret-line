@@ -35,7 +35,7 @@ export function OrderCard({ order, locale = "uk" }: { order: AccountOrder; local
       </header>
       {order.ttn && (
         <p className="m-0">
-          ТТН <b className="tabular-nums">{order.ttn}</b>
+          {t.parcelNumber} <b className="tabular-nums">{order.ttn}</b>
           {order.trackingUrl && <> · <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">{t.whereParcel}</a></>}
         </p>
       )}

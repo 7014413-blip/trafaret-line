@@ -39,6 +39,8 @@ export interface ConstructorTexts {
   customFontChecking: string;
   customFontUpload: string;
   customFontNeedRights: string;
+  /** Group of the customer's own fonts in the font lists. */
+  customFontGroup: string;
   cyrillic: string;
   latin: string;
   digits: string;
@@ -181,6 +183,7 @@ export const CONSTRUCTOR: Dictionary<ConstructorTexts> = {
     customFontChecking: "Перевіряємо шрифт…",
     customFontUpload: "Завантажити шрифт",
     customFontNeedRights: "Щоб завантажити, підтвердіть право на шрифт.",
+    customFontGroup: "Ваші шрифти",
     cyrillic: "Кирилиця",
     latin: "Латиниця",
     digits: "Цифри",
@@ -323,6 +326,7 @@ export const CONSTRUCTOR: Dictionary<ConstructorTexts> = {
     customFontChecking: "Проверяем шрифт…",
     customFontUpload: "Загрузить шрифт",
     customFontNeedRights: "Чтобы загрузить, подтвердите право на шрифт.",
+    customFontGroup: "Ваши шрифты",
     cyrillic: "Кириллица",
     latin: "Латиница",
     digits: "Цифры",
@@ -479,6 +483,7 @@ export const CONSTRUCTOR: Dictionary<ConstructorTexts> = {
     customFontChecking: "Checking the font…",
     customFontUpload: "Upload font",
     customFontNeedRights: "To upload, confirm you have the right to use the font.",
+    customFontGroup: "Your fonts",
     cyrillic: "Cyrillic",
     latin: "Latin",
     digits: "Digits",

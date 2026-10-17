@@ -7,8 +7,7 @@
 import { FIELDSET_CLASS, INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
 import { BLANK_SIZE_LIMITS_MM, clampBlankSideMm, presetMm } from "@/lib/blanks/size";
 import { blankShapeSizeText } from "@/lib/blanks/shape-size-text";
-import { formatUAH } from "@/lib/format";
-import { localCm } from "@/lib/plaques/local-cm";
+import { cmText, formatUAH } from "@/lib/format";
 import type { BlankShape, BlankSizeValue } from "@/types/blank";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { BLANKS } from "@/lib/i18n/dictionaries/blanks";
@@ -41,13 +40,13 @@ export function BlankSizePicker({ shape, value, onChange, priceOf }: {
           return (
             <button key={i} id={`bl-size-${i}`} type="button" aria-pressed={value.preset === i} onClick={() => onChange({ preset: i, ...size })} className={card(value.preset === i)}>
               <b className="text-[15px]">{blankShapeSizeText(shape, size.widthMm, size.heightMm, locale)}</b>
-              <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(size.widthMm, size.heightMm))}</span>
+              <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(size.widthMm, size.heightMm), locale)}</span>
             </button>
           );
         })}
         <button id="bl-size-custom" type="button" aria-pressed={custom} onClick={() => onChange({ ...value, preset: null })} className={card(custom)}>
           <b className="text-[15px]">{t.ownSize}</b>
-          <span className="text-[13px] text-[var(--muted)]">{custom ? formatUAH(priceOf(clampBlankSideMm(value.widthMm), clampBlankSideMm(box ? value.heightMm : value.widthMm))) : t.priceAtOnce}</span>
+          <span className="text-[13px] text-[var(--muted)]">{custom ? formatUAH(priceOf(clampBlankSideMm(value.widthMm), clampBlankSideMm(box ? value.heightMm : value.widthMm)), locale) : t.priceAtOnce}</span>
         </button>
       </div>
       {custom && (
@@ -63,7 +62,7 @@ export function BlankSizePicker({ shape, value, onChange, priceOf }: {
             </label>
           )}
           <span className="col-span-2 text-[13px] text-[var(--muted)]">
-            {t.sizeRange(localCm(BLANK_SIZE_LIMITS_MM.min, locale), localCm(BLANK_SIZE_LIMITS_MM.max, locale))}
+            {t.sizeRange(cmText(BLANK_SIZE_LIMITS_MM.min, locale), cmText(BLANK_SIZE_LIMITS_MM.max, locale))}
             {shape.sizeMode === "side" ? t.sizeBySide : ""}
           </span>
         </div>

@@ -5,8 +5,7 @@
 // shows the size that will be made.
 
 import { FIELDSET_CLASS, INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
-import { formatUAH } from "@/lib/format";
-import { localCm } from "@/lib/plaques/local-cm";
+import { cmText, formatUAH } from "@/lib/format";
 import { units } from "@/lib/i18n/dictionaries/units";
 import type { PresetSizeState, SizeLimits, SizePresetOption } from "@/types/constructor-ui";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -37,13 +36,13 @@ export function SizePresetPicker<P extends SizePresetOption>({ idPrefix, presets
       <div className={`grid grid-cols-2 gap-2 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
         {presets.map((p) => (
           <button key={p.code} id={`${idPrefix}-size-${p.code}`} type="button" aria-pressed={sizeCode === p.code} onClick={() => setSizeCode(p.code)} className={card(sizeCode === p.code)}>
-            <b className="text-[15px]">{localCm(p.widthMm, locale)}×{localCm(p.heightMm, locale)} {units(locale).cm}</b>
-            <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(p))}</span>
+            <b className="text-[15px]">{cmText(p.widthMm, locale)}×{cmText(p.heightMm, locale)} {units(locale).cm}</b>
+            <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(p), locale)}</span>
           </button>
         ))}
         <button id={`${idPrefix}-size-custom`} type="button" aria-pressed={custom} onClick={() => setSizeCode("custom")} className={card(custom)}>
           <b className="text-[15px]">{t.ownSize}</b>
-          <span className="text-[13px] text-[var(--muted)]">{custom && customPrice != null ? formatUAH(customPrice) : t.priceAtOnce}</span>
+          <span className="text-[13px] text-[var(--muted)]">{custom && customPrice != null ? formatUAH(customPrice, locale) : t.priceAtOnce}</span>
         </button>
       </div>
       {custom && (

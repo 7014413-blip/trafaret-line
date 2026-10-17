@@ -29,7 +29,7 @@ export function priceOfficePlaque(
   const discount = bestLineDiscount(quantity, (size.widthMm * size.heightMm) / 1e6, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
   const lines = [
-    text.size(cmText(size.widthMm), cmText(size.heightMm), !size.preset),
+    text.size(cmText(size.widthMm, locale), cmText(size.heightMm, locale), !size.preset),
     text.officeLayers(base.name[locale].toLowerCase(), plate.name[locale].toLowerCase()),
     text.office3m,
   ];

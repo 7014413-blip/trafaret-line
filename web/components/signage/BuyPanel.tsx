@@ -39,15 +39,15 @@ export function BuyPanel({ lines, total, unitPrice, qty, unitLabel, note, state,
   };
   const unit = unitLabel ?? t.pcs;
   const disabled = !canBuy || state === "uploading";
-  const totalText = total == null ? "—" : formatUAH(total);
-  const each = unitPrice != null && qty > 1 ? `${formatUAH(unitPrice)} × ${qty}${unit ? ` ${unit}` : ""} · ` : "";
+  const totalText = total == null ? "—" : formatUAH(total, locale);
+  const each = unitPrice != null && qty > 1 ? `${formatUAH(unitPrice, locale)} × ${qty}${unit ? ` ${unit}` : ""} · ` : "";
   return (
     <>
       <div className="grid gap-2 rounded-2xl bg-[var(--surface)] p-4">
         {children}
         <ul className="m-0 grid list-none gap-0.5 p-0 text-[13px] text-[var(--muted)]">
           {lines.map((l, i) => (
-            <li key={i} className="flex justify-between gap-3"><span>{l.label}</span>{l.amount != null && l.amount > 0 && <span className="tabular-nums">+{formatUAH(l.amount)}</span>}</li>
+            <li key={i} className="flex justify-between gap-3"><span>{l.label}</span>{l.amount != null && l.amount > 0 && <span className="tabular-nums">+{formatUAH(l.amount, locale)}</span>}</li>
           ))}
         </ul>
         <div className="flex flex-wrap items-center justify-between gap-3">

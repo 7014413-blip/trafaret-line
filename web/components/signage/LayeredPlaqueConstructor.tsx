@@ -23,7 +23,7 @@ import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { usePresetSize } from "@/lib/client/use-preset-size";
 import { layeredPlaqueThumbnailSvg } from "@/lib/export/layered-plaque-thumbnail";
-import { cmText } from "@/lib/format";
+import { units } from "@/lib/i18n/dictionaries/units";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { SIGNAGE_PLAQUES } from "@/lib/i18n/dictionaries/signage-plaques";
 import { tr } from "@/lib/i18n/translate";
@@ -37,6 +37,7 @@ import { clampLayeredPlaqueSizeMm } from "@/lib/layered-plaque/size";
 import { measurePlaqueLine } from "@/lib/plaques/measure-line";
 import { useCart } from "@/store/cart-store";
 import type { LayeredPlaqueDesign, LayeredPlaqueKind } from "@/types/layered-plaque";
+import { cmText } from "@/lib/format";
 export function LayeredPlaqueConstructor({ kind }: { kind: LayeredPlaqueKind }) {
   const cfg = LAYERED_PLAQUE_CONFIGS[kind];
   const locale = useLocale();
@@ -102,7 +103,7 @@ export function LayeredPlaqueConstructor({ kind }: { kind: LayeredPlaqueKind }) 
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `layered|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: `${copy.cartName} «${words}», ${cmText(design.widthMm)}×${cmText(design.heightMm)} см${price.count > 1 ? t.setOf(price.count) : ""}`,
+      title: `${copy.cartName} «${words}», ${cmText(design.widthMm, locale)}×${cmText(design.heightMm, locale)} ${units(locale).cm}${price.count > 1 ? t.setOf(price.count) : ""}`,
       materialId: "acrylic",
       widthCm: design.widthMm / 10,
       heightCm: design.heightMm / 10,
@@ -118,9 +119,9 @@ export function LayeredPlaqueConstructor({ kind }: { kind: LayeredPlaqueKind }) 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={plaques.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#eceeef] lg:sticky lg:top-24">
-        <LayeredPlaquePreview kind={kind} layout={layout} linePaths={linePaths} base={base} overlay={overlay} label={t.previewLabel(copy.cartName.toLowerCase(), `${cmText(size.widthMm)}×${cmText(size.heightMm)}`)} />
+        <LayeredPlaquePreview kind={kind} layout={layout} linePaths={linePaths} base={base} overlay={overlay} label={t.previewLabel(copy.cartName.toLowerCase(), `${cmText(size.widthMm, locale)}×${cmText(size.heightMm, locale)}`)} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см{design.series ? t.numbers(design.series.from, design.series.to) : ""}</span>
+          <span>{cmText(size.widthMm, locale)} × {cmText(size.heightMm, locale)} {units(locale).cm}{design.series ? t.numbers(design.series.from, design.series.to) : ""}</span>
           <span>{base.name[locale]} + {overlay.name[locale].toLowerCase()}</span>
         </div>
       </section>
@@ -130,7 +131,7 @@ export function LayeredPlaqueConstructor({ kind }: { kind: LayeredPlaqueKind }) 
 
         <SizePresetPicker idPrefix="lp" presets={cfg.presets} priceOf={(p) => p.price} state={sizeState} limits={cfg}
           customPrice={layeredPlaqueBasePrice(size.widthMm, size.heightMm, cfg)}
-          note={s.sizeRange(cmText(cfg.minWidthMm), cmText(cfg.maxWidthMm), cmText(cfg.minHeightMm), cmText(cfg.maxHeightMm))} />
+          note={s.sizeRange(cmText(cfg.minWidthMm, locale), cmText(cfg.maxWidthMm, locale), cmText(cfg.minHeightMm, locale), cmText(cfg.maxHeightMm, locale))} />
 
         <PlaqueLinesEditor state={text} legend={s.text} idPrefix="lp" maxChars={cfg.maxLineChars}
           capByLine={new Map(layout.lines.map((l) => [l.index, l.capMm]))} />

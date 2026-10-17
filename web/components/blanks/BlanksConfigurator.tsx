@@ -41,7 +41,7 @@ export function BlanksConfigurator() {
   const [sheet, setSheet] = useState<BlankSheetOption>(() => blankSheetAt("clear", 3, "clear"));
   const [qty, setQty] = useState(1);
   const buyState = useBuyState();
-  const dispatch = useDispatchLabel();
+  const dispatch = useDispatchLabel(locale);
   const cart = useCart();
 
   const shape = blankShape(shapeId);
@@ -74,8 +74,8 @@ export function BlanksConfigurator() {
   };
 
   const lines = [
-    { label: t.unitPrice(formatUAH(price.unitPrice), price.discount ? ` (−${Math.round(price.discount * 100)}%)` : "") },
-    { label: t.pack(price.packQty, formatUAH(price.packPrice)) },
+    { label: t.unitPrice(formatUAH(price.unitPrice, locale), price.discount ? ` (−${Math.round(price.discount * 100)}%)` : "") },
+    { label: t.pack(price.packQty, formatUAH(price.packPrice, locale)) },
   ];
 
   return (

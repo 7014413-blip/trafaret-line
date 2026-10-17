@@ -19,6 +19,8 @@ export interface AccountTexts {
   noOrders: string;
   toCatalog: string;
   order: (number: string) => string;
+  /** Label before the Nova Poshta parcel number. */
+  parcelNumber: string;
   whereParcel: string;
   pieces: string;
   now: string;
@@ -46,6 +48,7 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
     noOrders: "Тут зʼявляться замовлення, які ви оформите, коли увійшли в кабінет.",
     toCatalog: "До каталогу",
     order: (number) => `Замовлення ${number}`,
+    parcelNumber: "ТТН",
     whereParcel: "Де посилка?",
     pieces: "шт.",
     now: "зараз",
@@ -76,6 +79,7 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
     noOrders: "Здесь появятся заказы, которые вы оформите, когда вошли в кабинет.",
     toCatalog: "В каталог",
     order: (number) => `Заказ ${number}`,
+    parcelNumber: "ТТН",
     whereParcel: "Где посылка?",
     pieces: "шт.",
     now: "сейчас",
@@ -116,6 +120,7 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
     noOrders: "Orders you place while signed in will appear here.",
     toCatalog: "Back to catalog",
     order: (number) => `Order ${number}`,
+    parcelNumber: "Tracking no.",
     whereParcel: "Track parcel",
     pieces: "pcs",
     now: "now",

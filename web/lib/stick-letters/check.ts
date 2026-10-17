@@ -20,13 +20,13 @@ export function checkStickLetters(
       out.push({ level: "error", code: "letters-too-small", lineIndex: line.index, message: t(
         `Рядок ${n}: літери ${cmText(line.capMm)} см, ріжемо від ${cmText(cfg.minLetterMm)} см. Збільште висоту літер або розмір рядка.`,
         `Строка ${n}: буквы ${cmText(line.capMm)} см, режем от ${cmText(cfg.minLetterMm)} см. Увеличьте высоту букв или размер строки.`,
-        `Line ${n}: letters are ${cmText(line.capMm)} cm, we cut from ${cmText(cfg.minLetterMm)} cm. Make the letters larger.`) });
+        `Line ${n}: letters are ${cmText(line.capMm, "en")} cm, we cut from ${cmText(cfg.minLetterMm, "en")} cm. Make the letters larger.`) });
     }
     if (line.capMm > cfg.maxLetterMm + 0.05) {
       out.push({ level: "error", code: "letters-too-large", lineIndex: line.index, message: t(
         `Рядок ${n}: літери ${cmText(line.capMm)} см, найбільше ${cmText(cfg.maxLetterMm)} см.`,
         `Строка ${n}: буквы ${cmText(line.capMm)} см, максимум ${cmText(cfg.maxLetterMm)} см.`,
-        `Line ${n}: letters are ${cmText(line.capMm)} cm, at most ${cmText(cfg.maxLetterMm)} cm.`) });
+        `Line ${n}: letters are ${cmText(line.capMm, "en")} cm, at most ${cmText(cfg.maxLetterMm, "en")} cm.`) });
     }
     if (line.apart) {
       out.push({ level: "warning", code: "not-joined", lineIndex: line.index, message: t(
@@ -47,7 +47,7 @@ export function checkStickLetters(
     out.push({ level: "error", code: "piece-too-long", lineIndex: long.lineIndex, message: t(
       `Рядок ${long.lineIndex + 1}: деталь ${cmText(long.width)} см, одним шматком ріжемо до ${cmText(cfg.maxPieceWidthMm)} см. Зменште літери.`,
       `Строка ${long.lineIndex + 1}: деталь ${cmText(long.width)} см, одним куском режем до ${cmText(cfg.maxPieceWidthMm)} см. Уменьшите буквы.`,
-      `Line ${long.lineIndex + 1}: the piece is ${cmText(long.width)} cm, at most ${cmText(cfg.maxPieceWidthMm)} cm. Make the letters smaller.`) });
+      `Line ${long.lineIndex + 1}: the piece is ${cmText(long.width, "en")} cm, at most ${cmText(cfg.maxPieceWidthMm, "en")} cm. Make the letters smaller.`) });
   }
   return out;
 }

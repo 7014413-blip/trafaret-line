@@ -21,7 +21,6 @@ import { useBuyState } from "@/lib/client/use-buy-state";
 import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { joinedWordsThumbnailSvg } from "@/lib/export/joined-words-thumbnail";
-import { cmText } from "@/lib/format";
 import { checkJoinedWords } from "@/lib/joined-words/check";
 import { DEFAULT_JOINED_WORDS_CONFIG } from "@/lib/joined-words/config";
 import { findJoinedWordsMaterial } from "@/lib/joined-words/find-material";
@@ -37,6 +36,7 @@ import { SIGNAGE_LETTERS } from "@/lib/i18n/dictionaries/signage-letters";
 import { tr } from "@/lib/i18n/translate";
 import type { JoinedLineMeasures, JoinedWordsDesign } from "@/types/joined-words";
 import type { PlaqueTextLine } from "@/types/plaques";
+import { cmText } from "@/lib/format";
 
 const CFG = DEFAULT_JOINED_WORDS_CONFIG;
 // Example lines of a coffee shop menu: the text comes from the dictionary in the page language.
@@ -108,7 +108,7 @@ export function JoinedWordsConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `words|${JSON.stringify({ ...final, quantity: 0 })}`,
-      title: t.cartTitle(words.length > 60 ? `${words.slice(0, 59)}…` : words, cmText(letterMm), sheet.name[locale].toLowerCase()),
+      title: t.cartTitle(words.length > 60 ? `${words.slice(0, 59)}…` : words, cmText(letterMm, locale), sheet.name[locale].toLowerCase()),
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -124,9 +124,9 @@ export function JoinedWordsConstructor() {
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <JoinedWordsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm), cmText(layout.heightMm))} />
+        <JoinedWordsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale))} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{ts.wholeSet(cmText(layout.widthMm), cmText(layout.heightMm))} · {layout.pieces.length} {ts.piecesShort}</span>
+          <span>{ts.wholeSet(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale))} · {layout.pieces.length} {ts.piecesShort}</span>
           <span>{ts.sheetThickness(sheet.name[locale], sheet.thicknessMm)}</span>
         </div>
       </section>
@@ -152,11 +152,11 @@ export function JoinedWordsConstructor() {
 
         <LetterHeightField idPrefix="jw" heightsCm={HEIGHTS_CM} valueMm={letterMm} minMm={CFG.minLetterMm} maxMm={CFG.maxLetterMm} onChange={setLetterMm}
           inputLabel={t.capHeightInput}
-          note={t.heightNote(cmText(CFG.minLetterMm), cmText(CFG.maxLetterMm))}
+          note={t.heightNote(cmText(CFG.minLetterMm, locale), cmText(CFG.maxLetterMm, locale))}
           extra={(
             <label className="grid gap-1 text-sm text-[var(--muted)]">{t.widestRow}
               <span className="flex min-w-0 gap-2">
-                <input id="jw-width" type="number" inputMode="decimal" step={1} min={5} value={widthInput} placeholder={cmText(layout.widthMm)}
+                <input id="jw-width" type="number" inputMode="decimal" step={1} min={5} value={widthInput} placeholder={cmText(layout.widthMm, locale)}
                   onChange={(e) => setWidthInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fitWidth(); } }}
                   className={`${INPUT_CLASS} w-full min-w-0`} />
                 <button id="jw-fit" type="button" onClick={fitWidth} disabled={!widthInput || !ready} className="h-11 shrink-0 rounded-xl border-[1.5px] border-[var(--ink)] px-3 text-sm font-semibold disabled:opacity-40">{t.fit}</button>

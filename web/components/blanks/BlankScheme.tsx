@@ -4,8 +4,8 @@
 import { blankShapePath, drawnSize } from "@/lib/blanks/shape-path";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { units } from "@/lib/i18n/dictionaries/units";
-import { localCm } from "@/lib/plaques/local-cm";
 import type { BlankColour, BlankShape } from "@/types/blank";
+import { cmText } from "@/lib/format";
 
 const PAD = 0.2;
 
@@ -28,7 +28,7 @@ export function BlankScheme({ shape, widthMm, heightMm, colour, label }: {
   const fill = colour.shine ? "url(#blank-shine)" : colour.hex;
   const locale = useLocale();
   const cm = units(locale).cm;
-  const widthText = shape.sizeMode === "diameter" ? `Ø${localCm(widthMm, locale)} ${cm}` : `${localCm(widthMm, locale)} ${cm}`;
+  const widthText = shape.sizeMode === "diameter" ? `Ø${cmText(widthMm, locale)} ${cm}` : `${cmText(widthMm, locale)} ${cm}`;
   const lineY = pad + h + 9;
   const lineX = pad + w + 9;
   // A tall one-number shape (arch, drop) is measured along its height, the larger side.
@@ -58,7 +58,7 @@ export function BlankScheme({ shape, widthMm, heightMm, colour, label }: {
       {(shape.sizeMode === "box" || tall) && (
         <>
           <line x1={lineX} y1={pad} x2={lineX} y2={pad + h} stroke="#64748b" strokeWidth={0.5} markerStart="url(#blank-arrow)" markerEnd="url(#blank-arrow)" />
-          <text x={lineX + 3} y={pad + h / 2} fontSize={6} fill="#0f172a" dominantBaseline="middle">{localCm(heightMm, locale)} {cm}</text>
+          <text x={lineX + 3} y={pad + h / 2} fontSize={6} fill="#0f172a" dominantBaseline="middle">{cmText(heightMm, locale)} {cm}</text>
         </>
       )}
     </svg>

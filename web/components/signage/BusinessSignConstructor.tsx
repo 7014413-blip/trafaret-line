@@ -36,6 +36,7 @@ import { parseBusinessSignDraft } from "@/lib/draft/business-sign-draft";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { businessSignThumbnailSvg } from "@/lib/export/business-sign-thumbnail";
 import { cmText, formatUAH } from "@/lib/format";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { SIGNAGE_SIGN } from "@/lib/i18n/dictionaries/signage-sign";
 import { tr } from "@/lib/i18n/translate";
@@ -43,6 +44,7 @@ import { loadFont } from "@/lib/text/font-loader";
 import { useCart } from "@/store/cart-store";
 import type { BusinessSignDesign, BusinessSignLine, BusinessSignLogo, BusinessSignLogoPlace } from "@/types/business-sign";
 import type { BusinessSignDraft } from "@/types/draft";
+import type { Locale } from "@/types/customizer";
 import type { SignShape } from "@/types/signage";
 import type { LoadedFont } from "@/types/text";
 
@@ -51,7 +53,7 @@ const SHAPES: SignShape[] = ["circle", "rect", "rounded", "square", "arrow", "po
 const PLACES: BusinessSignLogoPlace[] = ["above", "left"];
 const HOLES: (0 | 2 | 4)[] = [0, 2, 4];
 const isSquare = (shape: SignShape) => shape === "circle" || shape === "square";
-const sizeName = (shape: SignShape, w: number, h: number) => (shape === "circle" ? `Ø${cmText(w)} см` : `${cmText(w)}×${cmText(isSquare(shape) ? w : h)} см`);
+const sizeName = (shape: SignShape, w: number, h: number, locale: Locale) => (shape === "circle" ? `Ø${cmText(w, locale)} ${units(locale).cm}` : `${cmText(w, locale)}×${cmText(isSquare(shape) ? w : h, locale)} ${units(locale).cm}`);
 
 type LogoState = Omit<BusinessSignLogo, "fileName" | "format" | "aspect"> & { file: File; previewUrl: string; fileName: string; format: "svg" | "raster" | "pdf"; aspect: number; uploadKey: string | null };
 
@@ -226,7 +228,7 @@ export function BusinessSignConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `sign|${JSON.stringify({ ...design, quantity: 0 })}|${uploadKey ?? ""}`,
-      title: t.cartTitle(texts, design.logo ? "own" : design.logoDevelopment ? "development" : null, sizeName(shape, layout.widthMm, layout.heightMm)),
+      title: t.cartTitle(texts, design.logo ? "own" : design.logoDevelopment ? "development" : null, sizeName(shape, layout.widthMm, layout.heightMm, locale)),
       materialId: "acrylic",
       widthCm: layout.widthMm / 10,
       heightCm: layout.heightMm / 10,
@@ -244,14 +246,14 @@ export function BusinessSignConstructor() {
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
         <BusinessSignPreview design={design} layout={layout} linePaths={linePaths} logoUrl={logo?.previewUrl ?? null} view={view}
-          label={t.previewLabel(sizeName(shape, layout.widthMm, layout.heightMm))} />
+          label={t.previewLabel(sizeName(shape, layout.widthMm, layout.heightMm, locale))} />
         <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
           <PlaqueChip id="bs-view-close" on={view === "close"} onClick={() => setView("close")}>{s.close}</PlaqueChip>
           <PlaqueChip id="bs-view-wall" on={view === "wall"} onClick={() => setView("wall")}>{s.onWall}</PlaqueChip>
         </div>
         <div className="flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{sizeName(shape, layout.widthMm, layout.heightMm)}{layout.lines[0] ? t.lettersFrom(cmText(Math.min(...layout.lines.map((l) => l.capMm)))) : ""}</span>
-          <span>{base.name[locale]}, {thickness} мм</span>
+          <span>{sizeName(shape, layout.widthMm, layout.heightMm, locale)}{layout.lines[0] ? t.lettersFrom(cmText(Math.min(...layout.lines.map((l) => l.capMm)), locale)) : ""}</span>
+          <span>{base.name[locale]}, {decimal(thickness, locale)} {units(locale).mm}</span>
         </div>
       </section>
 
@@ -267,7 +269,7 @@ export function BusinessSignConstructor() {
             {CFG.presets[shape].map((p) => (
               <PlaqueChip key={`${p.widthMm}x${p.heightMm}`} id={`bs-size-${p.widthMm}x${p.heightMm}`}
                 on={widthMm === p.widthMm && (isSquare(shape) || heightMm === p.heightMm)} onClick={() => setSize(p.widthMm, p.heightMm)}>
-                {sizeName(shape, p.widthMm, p.heightMm)}{shape === "circle" && DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm] ? ` · ${formatUAH(DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm])}` : ""}
+                {sizeName(shape, p.widthMm, p.heightMm, locale)}{shape === "circle" && DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm] ? ` · ${formatUAH(DEFAULT_SIGN_PRICING.circlePresetPrices[p.widthMm], locale)}` : ""}
               </PlaqueChip>
             ))}
           </div>
@@ -296,7 +298,7 @@ export function BusinessSignConstructor() {
         <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{s.base}</legend>
           <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={baseId} onChange={pickBase} idPrefix="bs-base" label={t.baseColour} />
           <div className="flex flex-wrap gap-2">
-            {thicknesses.map((mm) => <PlaqueChip key={mm} id={`bs-thick-${mm}`} on={thickness === mm} onClick={() => setThickness(mm)}>{mm} мм{mm > 3 ? t.surcharge : ""}</PlaqueChip>)}
+            {thicknesses.map((mm) => <PlaqueChip key={mm} id={`bs-thick-${mm}`} on={thickness === mm} onClick={() => setThickness(mm)}>{decimal(mm, locale)} {units(locale).mm}{mm > 3 ? t.surcharge : ""}</PlaqueChip>)}
           </div>
           <span className="text-[13px] text-[var(--muted)]">{base.name[locale]}{base.inStock ? "" : s.toOrder}.</span>
         </fieldset>

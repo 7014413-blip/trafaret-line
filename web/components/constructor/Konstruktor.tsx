@@ -41,6 +41,7 @@ import { WeldOptionsPanel } from "./WeldOptionsPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
 import { tr } from "@/lib/i18n/translate";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 
 type Mode = KonstruktorMode;
 
@@ -83,8 +84,8 @@ export function Konstruktor() {
   // The customer's own fonts (IndexedDB), shown after the shop fonts.
   const [customFonts, setCustomFonts] = useState<LoadedFont[]>([]);
   useEffect(() => {
-    listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
-  }, []);
+    listCustomFonts(locale).then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
+  }, [locale]);
   const allFonts = useMemo<FontEntry[]>(() => [...fonts, ...customFonts.map(fontEntry)], [fonts, customFonts]);
 
   // A different font per line (Денис 10.10): empty entry = the main font.
@@ -393,8 +394,8 @@ export function Konstruktor() {
                     {SQUARE_STENCIL_PRESETS.map((p) => (
                       <button key={p.sideMm} id={`k-square-${p.sideMm / 10}`} type="button" aria-pressed={s.widthMm === p.sideMm} onClick={() => s.set({ widthMm: p.sideMm })}
                         className={`grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${s.widthMm === p.sideMm ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
-                        <b className="text-[15px]">{p.sideMm / 10}×{p.sideMm / 10} см</b>
-                        <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceStencil({ shape: "square", widthMm: p.sideMm, heightMm: p.sideMm }, material, 1).unitPrice)}</span>
+                        <b className="text-[15px]">{decimal(p.sideMm / 10, locale)}×{decimal(p.sideMm / 10, locale)} {units(locale).cm}</b>
+                        <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceStencil({ shape: "square", widthMm: p.sideMm, heightMm: p.sideMm }, material, 1).unitPrice, locale)}</span>
                       </button>
                     ))}
                   </div>
@@ -412,7 +413,7 @@ export function Konstruktor() {
                     {WIDTHS.map((w) => (
                       <button key={w} type="button" aria-pressed={s.widthMm === w * 10} onClick={() => s.set({ widthMm: w * 10 })}
                         className={`h-10 rounded-full border-[1.5px] px-3.5 tabular-nums ${s.widthMm === w * 10 ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>
-                        {w === 21 ? "A4 · 21" : w} см
+                        {w === 21 ? "A4 · 21" : w} {units(locale).cm}
                       </button>
                     ))}
                   </div>
@@ -433,7 +434,7 @@ export function Konstruktor() {
                   <label key={id} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-3 ${s.materialId === id ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
                     <input type="radio" name="k-mat" id={`k-mat-${id}`} checked={s.materialId === id} onChange={() => s.set({ materialId: id })} className="h-[18px] w-[18px] accent-[var(--ink)]" />
                     <span><b className="block">{m.name[locale]}</b><span className="text-[13px] text-[var(--muted)]">{m.note[locale]}</span></span>
-                    <em className="not-italic font-semibold tabular-nums">{formatUAH(priceStencil(sheet, m, 1).unitPrice)}</em>
+                    <em className="not-italic font-semibold tabular-nums">{formatUAH(priceStencil(sheet, m, 1).unitPrice, locale)}</em>
                   </label>
                 );
               })}
@@ -464,7 +465,7 @@ export function Konstruktor() {
               <div className="flex flex-wrap gap-2">
                 {WELD_WIDTHS.map((w) => (
                   <button key={w} type="button" aria-pressed={weldWidthMm === w * 10} onClick={() => setWeldWidthMm(w * 10)}
-                    className={`h-10 rounded-full border-[1.5px] px-3.5 tabular-nums ${weldWidthMm === w * 10 ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>{w} см</button>
+                    className={`h-10 rounded-full border-[1.5px] px-3.5 tabular-nums ${weldWidthMm === w * 10 ? "border-[var(--ink)] bg-[var(--surface)] font-bold" : "border-[var(--line)] bg-[var(--card)]"}`}>{decimal(w, locale)} {units(locale).cm}</button>
                 ))}
               </div>
             </fieldset>
@@ -480,7 +481,7 @@ export function Konstruktor() {
                     <input type="radio" name="k-weld-mat" id={`k-weld-mat-${id}`} checked={weldMaterial === id}
                       onChange={() => { setWeldMaterial(id); setColourId(m.colours[0].id); }} className="h-[18px] w-[18px] accent-[var(--ink)]" />
                     <b>{m.name[locale]}</b>
-                    <em className="not-italic font-semibold tabular-nums">{weld ? formatUAH(priceWelded(weldW, weldH, m, 1).unitPrice) : ""}</em>
+                    <em className="not-italic font-semibold tabular-nums">{weld ? formatUAH(priceWelded(weldW, weldH, m, 1).unitPrice, locale) : ""}</em>
                   </label>
                 );
               })}
@@ -504,7 +505,7 @@ export function Konstruktor() {
               return (
                 <button type="button" key={tier.minQty} onClick={() => s.set({ quantity: tier.minQty })}
                   className={`rounded-lg border-[1.5px] px-1 py-1.5 ${on ? "border-[var(--ok)] text-[var(--ink)]" : "border-dashed border-[var(--line)] text-[var(--muted)]"}`}>
-                  <b className="block text-sm text-[var(--ink)]">{formatUAH(tierPrice(tier.minQty))}</b>{tier.minQty === 1 ? t.onePiece : t.fromQty(tier.minQty)}
+                  <b className="block text-sm text-[var(--ink)]">{formatUAH(tierPrice(tier.minQty), locale)}</b>{tier.minQty === 1 ? t.onePiece : t.fromQty(tier.minQty)}
                 </button>
               );
             })}
@@ -526,8 +527,8 @@ export function Konstruktor() {
         ))}
 
         <div className="hidden items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4 lg:flex">
-          <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(total)}
-            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{s.quantity > 1 ? `${formatUAH(unit)} × ${s.quantity} ${t.pcs} · ` : ""}{t.production}</small>
+          <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(total, locale)}
+            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{s.quantity > 1 ? `${formatUAH(unit, locale)} × ${s.quantity} ${t.pcs} · ` : ""}{t.production}</small>
           </div>
           <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-50">{t.buy}</button>
         </div>
@@ -537,7 +538,7 @@ export function Konstruktor() {
       </form>
 
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] lg:hidden">
-        <b className="text-xl tabular-nums">{formatUAH(total)}{buyHint && <small className="block text-[12px] font-normal text-[var(--muted)]">{t.calculating}</small>}</b>
+        <b className="text-xl tabular-nums">{formatUAH(total, locale)}{buyHint && <small className="block text-[12px] font-normal text-[var(--muted)]">{t.calculating}</small>}</b>
         <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-12 rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] disabled:opacity-50">{t.buy}</button>
       </div>
     </div>

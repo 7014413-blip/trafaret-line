@@ -18,7 +18,7 @@ export function checkInitials(design: InitialsDesign, measured: MeasuredInitials
     out.push({ level: "error", code: "letters-too-small", message: t(
       `Літери ${cmText(design.letterHeightMm)} см, з цього листа ріжемо від ${cmText(minLetter)} см.`,
       `Буквы ${cmText(design.letterHeightMm)} см, из этого листа режем от ${cmText(minLetter)} см.`,
-      `Letters are ${cmText(design.letterHeightMm)} cm, this sheet is cut from ${cmText(minLetter)} cm.`) });
+      `Letters are ${cmText(design.letterHeightMm, "en")} cm, this sheet is cut from ${cmText(minLetter, "en")} cm.`) });
   }
   const parts = [measured.first, measured.sep, measured.second];
   const missing = [...new Set(parts.flatMap((p) => p?.missing ?? []))];

@@ -33,6 +33,7 @@ import { CompanyFields, EMPTY_COMPANY } from "./CompanyFields";
 import { WarehouseField } from "./WarehouseField";
 import { CHECKOUT } from "@/lib/i18n/dictionaries/checkout";
 import { tr } from "@/lib/i18n/translate";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 import { INTL_TAG } from "@/lib/i18n/messages";
 import type { Locale } from "@/types/customizer";
 
@@ -292,7 +293,7 @@ export function Checkout() {
                   <span className="h-24 w-24 overflow-hidden rounded-lg bg-[var(--surface)]">{item.vectorSvg
                     ? <span role="img" aria-label={t.layoutOf(item.title)} className="block h-full w-full p-1.5 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: item.vectorSvg }} />
                     : <span className="grid h-full place-items-center p-1.5 text-center text-[11px] text-[var(--muted)]">{item.uploadKey ? t.yourFile : t.noPicture}</span>}</span>
-                  <span>{item.title}<br /><span className="text-[var(--muted)]">{item.widthCm} × {item.heightCm} см · {item.quantity} {t.pieces}{item.uploadKey ? ` · ${t.managerChecksFile}` : ""}</span></span>
+                  <span>{item.title}<br /><span className="text-[var(--muted)]">{decimal(item.widthCm, locale)} × {decimal(item.heightCm, locale)} {units(locale).cm} · {item.quantity} {t.pieces}{item.uploadKey ? ` · ${t.managerChecksFile}` : ""}</span></span>
                 </div>
               ))}
               <label className="flex items-start gap-2 text-sm font-semibold">

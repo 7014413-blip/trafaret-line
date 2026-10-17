@@ -143,7 +143,7 @@ export function mapProduct(raw: RawProduct, locale: Locale = "uk"): CatalogProdu
     variants,
     blocks: Object.entries(blocks).map(([slot, b]) => ({ slot, title: b.title, html: b.html })),
     relatedHandles: raw.metadata?.related_handles ?? [],
-    fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: pick(f.uk, locale === "uk" ? null : f[locale], locale), placeholder: f.def })),
+    fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: pick(f.uk, locale === "uk" ? null : f[locale], locale), placeholder: (locale === "en" && f.def_en) || f.def })),
     availability: raw.metadata?.availability === "on_order" || raw.metadata?.availability === "out_of_stock" ? raw.metadata.availability : "in_stock",
     hole: readHoleRules(raw.metadata?.hole),
     monogram: raw.metadata?.monogram?.styles?.length ? { styles: raw.metadata.monogram.styles } : null,

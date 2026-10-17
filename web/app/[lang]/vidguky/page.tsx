@@ -11,6 +11,7 @@ import { listReviews } from "@/services/medusa-reviews";
 import { PAGES } from "@/lib/i18n/dictionaries/pages";
 import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
 import { tr } from "@/lib/i18n/translate";
+import { decimal } from "@/lib/i18n/dictionaries/units";
 import { localeOf } from "@/lib/i18n/locales";
 import type { LangParams } from "@/types/i18n";
 
@@ -39,7 +40,7 @@ export default async function ReviewsPage({ params, searchParams }: Props) {
         <>
           <p className="flex flex-wrap items-center gap-2">
             <Stars value={average} size={20} locale={locale} />
-            <b className="tabular-nums">{String(average).replace(".", ",")}</b>
+            <b className="tabular-nums">{decimal(average, locale)}</b>
             <span className="text-[var(--muted)]">· {count} {plural(locale, count, tr(CATALOG, locale).reviewForms)}</span>
           </p>
           <ReviewList reviews={list.reviews} showProduct locale={locale} />
