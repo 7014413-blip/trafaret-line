@@ -1,6 +1,8 @@
 // Production files of an order (ТЗ §7), written into its folder (lib/orders/order-files-dir.ts):
 //   TL-<n>-<position>_<constructor>_<material>_<w>x<h>mm.svg / .dxf  machine files, CUT layers + INFO
 //   … .png                                                        preview of the part
+//   TL-<n>-<position>_catalog_<material>_<w>x<h>mm[_p<n>].svg/.dxf/.png  catalogue stencil from its
+//                                                                  master layout (size cache, lib/masters)
 //   TL-<n>-<position>_<kind>_preview.png                            constructor's picture of other lines
 //   TL-<n>_params.json                                              every line with its parameters
 //   TL-<n>_approval.png                                             «Лист погодження макета»
@@ -24,6 +26,7 @@ import { lineProductionPart } from "./line-production-part";
 import { listOrderFiles, orderFolder } from "./order-files-dir";
 import { orderFontKeys } from "./order-font-keys";
 import { svgToPng } from "./svg-to-png";
+import { writeCatalogLine } from "./write-catalog-line";
 
 const safe = (value: string) => value.replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "font";
 
@@ -42,12 +45,26 @@ function infoLines(orderNumber: string, position: number, count: number, line: O
 const SHEET_FONT = "montserrat";
 
 /** Machine files and preview of one line; the names written, the picture used and problems for the manager. */
-async function writeLine(folder: string, orderNumber: string, position: number, count: number, line: OrderLineForFiles): Promise<{ files: string[]; problems: string[]; previewSvg: string | null }> {
+async function writeLine(folder: string, orderNumber: string, position: number, count: number, line: OrderLineForFiles): Promise<{ files: string[]; problems: string[]; previewSvg: string | null; master: { article: string; fromCache: boolean } | null }> {
   const meta = line.metadata ?? {};
   const files: string[] = [];
   const problems: string[] = [];
   let built = false;
   let previewSvg: string | null = null;
+  if (line.catalog) {
+    if (!line.catalog.designUrls.length) {
+      problems.push(`Позиція ${position}: у товару немає мастер-макета, файл для станка готує менеджер`);
+      return { files, problems, previewSvg, master: null };
+    }
+    try {
+      const made = await writeCatalogLine(folder, orderNumber, position, line.catalog,
+        (materialId, widthMm, heightMm) => infoLines(orderNumber, position, count, line, materialId, widthMm, heightMm));
+      return { files: made.files, problems, previewSvg: made.previewSvg, master: { article: made.article, fromCache: made.fromCache } };
+    } catch (e) {
+      problems.push(`Позиція ${position}: мастер-макет не перетворено на файл для станка (${(e as Error).message}). Потрібен макет менеджера`);
+      return { files, problems, previewSvg, master: null };
+    }
+  }
   try {
     const made = lineProductionPart(meta);
     if (made) {
@@ -76,7 +93,7 @@ async function writeLine(folder: string, orderNumber: string, position: number, 
       problems.push(`Позиція ${position}: превʼю не намальовано (${(e as Error).message})`);
     }
   }
-  return { files, problems, previewSvg };
+  return { files, problems, previewSvg, master: null };
 }
 
 const cm = (value: unknown) => (typeof value === "number" && value > 0 ? String(Math.round(value * 10) / 10).replace(".", ",") : "");
@@ -130,7 +147,7 @@ export async function writeOrderFiles(order: OrderForFiles): Promise<OrderFilesR
       toApprove.push({ position: i + 1, title: line.title, sizeText: size.every(Boolean) ? `${size[0]} × ${size[1]} см` : "", quantity: line.quantity, previewSvg: written.previewSvg });
     }
     const { previewSvg: _preview, ...metadata } = line.metadata ?? {};
-    lines.push({ position: i + 1, title: line.title, quantity: line.quantity, files: written.files, ...metadata });
+    lines.push({ position: i + 1, title: line.title, quantity: line.quantity, files: written.files, ...metadata, ...(written.master ? { master: written.master } : {}) });
   }
   const keys = new Set<string>();
   for (const line of order.items) orderFontKeys(line.metadata, keys);

@@ -32,6 +32,8 @@ export interface ConstructorConfig {
   bridgeZoneShare: number;
   bridgeLongWarnMm: number;
   minSlotMm: number;
+  /** Openings of a positioning (mounting) template are this much larger than the pieces, mm. */
+  positioningToleranceMm: number;
   weldOverlapRatio: number;
   weldOverlapMinMm: number;
   weldOverlapMaxOfNarrow: number;

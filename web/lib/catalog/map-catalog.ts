@@ -78,6 +78,7 @@ export function mapProductCard(raw: RawProduct): CatalogProductCard {
     minPrice: variants.length ? Math.min(...variants.map((v) => v.price)) : raw.metadata?.min_price_uah ?? 0,
     sizeCount: sizes,
     hit: !!raw.metadata?.hit,
+    isNew: raw.metadata?.is_new === true,
     kind: raw.metadata?.catalog_type ?? "ready",
     categoryHandles: (raw.categories ?? []).map((c) => c.handle),
     materialLabels: materials,

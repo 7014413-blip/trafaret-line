@@ -8,7 +8,11 @@ test("finds a stencil in its section and opens it", async ({ page }) => {
   await page.goto("/food/tort");
   await expect(page.getByRole("heading", { level: 1, name: "Торти" })).toBeVisible();
   await expect(page.getByText("1 товар")).toBeVisible();
-  await page.getByRole("link", { name: /Трафарет для торта «Троянди»/ }).click();
+  const card = page.getByRole("link", { name: /Трафарет для торта «Троянди»/ });
+  // Both badges the manager set in «Простий кабінет».
+  await expect(card.getByText("Новинка", { exact: true })).toBeVisible();
+  await expect(card.getByText("Хіт", { exact: true })).toBeVisible();
+  await card.click();
   await expect(page).toHaveURL(/\/p\/trafaret-troiandy$/);
   await expect(page.getByRole("heading", { level: 1, name: "Трафарет для торта «Троянди»" })).toBeVisible();
 });

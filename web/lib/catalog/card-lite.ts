@@ -13,6 +13,7 @@ export function toCardLite(card: CatalogProductCard): CatalogCardLite {
     minPrice: card.minPrice,
     sizeCount: card.sizeCount,
     hit: card.hit,
+    isNew: card.isNew,
     kind: card.kind,
     materialLabels: card.materialLabels,
   };
