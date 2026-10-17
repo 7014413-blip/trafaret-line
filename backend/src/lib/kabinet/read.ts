@@ -127,6 +127,7 @@ export async function listKabinetProducts(graph: Graph, query: KabinetListQuery)
       categories: (p.categories ?? []).map((c) => c.name),
       variantCount: p.variants?.length ?? 0,
       hit: p.metadata?.hit === true,
+      isNew: p.metadata?.is_new === true,
       availability: availabilityOf(p.metadata),
       updatedAt: new Date(p.updated_at).toISOString(),
     }
@@ -188,6 +189,7 @@ export function toKabinetProduct(p: RawProductRow, storefrontUrl: string): Kabin
     status: statusOf(p.status),
     availability: availabilityOf(metadata),
     hit: metadata.hit === true,
+    isNew: metadata.is_new === true,
     categoryIds: (p.categories ?? []).map((c) => c.id),
     images,
     sizes: optionList(p, SIZE_OPTION, variants),
