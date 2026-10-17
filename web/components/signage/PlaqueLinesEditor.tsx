@@ -8,8 +8,12 @@ import { FontOptions } from "@/components/constructor/FontOptions";
 import { INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
 import type { PlaqueLinesState } from "@/lib/client/use-plaque-lines";
 import { cmText } from "@/lib/format";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
+import { tr } from "@/lib/i18n/translate";
 
-const SIZE_STEPS: [number, string][] = [[0.8, "Малий"], [1, "Середній"], [1.3, "Великий"], [1.6, "Найбільший"]];
+/** Letter size of a line relative to the others, from small to the largest. */
+const SIZE_STEPS = [0.8, 1, 1.3, 1.6] as const;
 
 export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine, onRemove, renderExtra }: {
   state: PlaqueLinesState;
@@ -22,6 +26,7 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
   /** More fields of a line under its font and size (the price piece of «Написи на планці»). */
   renderExtra?: (index: number) => React.ReactNode;
 }) {
+  const t = tr(SIGNAGE, useLocale());
   const { lines, setLine, addLine, removeLine, maxLines, allFonts, customFonts, onFontAdded, onFontRemoved } = state;
 
   return (
@@ -32,30 +37,30 @@ export function PlaqueLinesEditor({ state, legend, idPrefix, maxChars, capByLine
         return (
           <div key={i} className="grid grid-cols-[minmax(0,1fr)] gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
             <div className="flex items-center gap-2">
-              <input id={`${idPrefix}-line-${i}`} aria-label={`Рядок ${i + 1}`} value={line.text} maxLength={maxChars} placeholder={`Рядок ${i + 1}`}
+              <input id={`${idPrefix}-line-${i}`} aria-label={t.line(i + 1)} value={line.text} maxLength={maxChars} placeholder={t.line(i + 1)}
                 onChange={(e) => setLine(i, { text: e.target.value })} className={`${INPUT_CLASS} h-12 min-w-0 flex-1 text-lg`} />
               {lines.length > 1 && (
-                <button type="button" aria-label={`Прибрати рядок ${i + 1}`} onClick={() => { removeLine(i); onRemove?.(i); }}
+                <button type="button" aria-label={t.removeLine(i + 1)} onClick={() => { removeLine(i); onRemove?.(i); }}
                   className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-xl">×</button>
               )}
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Шрифт
+              <label className="grid gap-1 text-sm text-[var(--muted)]">{t.font}
                 <select id={`${idPrefix}-font-${i}`} value={line.fontId} onChange={(e) => setLine(i, { fontId: e.target.value })} className={`${INPUT_CLASS} w-full min-w-0`}><FontOptions fonts={allFonts} current={line.fontId} /></select>
               </label>
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Розмір літер
+              <label className="grid gap-1 text-sm text-[var(--muted)]">{t.letterSize}
                 <select id={`${idPrefix}-lsize-${i}`} value={line.size} onChange={(e) => setLine(i, { size: Number(e.target.value) })} className={`${INPUT_CLASS} w-full min-w-0`}>
-                  {SIZE_STEPS.map(([v, name]) => <option key={v} value={v}>{name}</option>)}
+                  {SIZE_STEPS.map((v, step) => <option key={v} value={v}>{t.sizeSteps[step]}</option>)}
                 </select>
               </label>
             </div>
             {renderExtra?.(i)}
-            {cap != null && <span className="text-[13px] text-[var(--muted)] tabular-nums">Висота великих літер ≈ {cmText(cap)} см</span>}
+            {cap != null && <span className="text-[13px] text-[var(--muted)] tabular-nums">{t.capHeight(cmText(cap))}</span>}
           </div>
         );
       })}
       {lines.length < maxLines && (
-        <button id={`${idPrefix}-add-line`} type="button" onClick={addLine} className="h-11 justify-self-start rounded-full border-[1.5px] border-dashed border-[var(--line)] px-4 text-sm font-semibold">+ Додати рядок</button>
+        <button id={`${idPrefix}-add-line`} type="button" onClick={addLine} className="h-11 justify-self-start rounded-full border-[1.5px] border-dashed border-[var(--line)] px-4 text-sm font-semibold">{t.addLine}</button>
       )}
       <CustomFontPanel fonts={customFonts} text={lines.map((l) => l.text).join(" ")} onAdded={onFontAdded} onRemoved={onFontRemoved} />
     </fieldset>

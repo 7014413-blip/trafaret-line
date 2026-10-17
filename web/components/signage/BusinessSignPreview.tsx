@@ -9,10 +9,13 @@
 // to a person 1.75 m tall, so the size reads at a glance.
 
 import { useId } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { PlacedLinePaths } from "@/components/signage/PlacedLinePaths";
 import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import { findBusinessSignSheet } from "@/lib/business-sign/palette";
 import { shadeHex } from "@/lib/business-sign/shade-hex";
+import { SIGNAGE_SIGN } from "@/lib/i18n/dictionaries/signage-sign";
+import { tr } from "@/lib/i18n/translate";
 import type { BusinessSignDesign, BusinessSignLayout } from "@/types/business-sign";
 import type { AcrylicSheet } from "@/types/signage";
 
@@ -106,6 +109,7 @@ export function BusinessSignPreview({ design, layout, linePaths, logoUrl, label,
   label: string;
   view?: BusinessSignView;
 }) {
+  const t = tr(SIGNAGE_SIGN, useLocale());
   const uid = useId().replace(/:/g, "");
   const w = layout.widthMm;
   const h = layout.heightMm;
@@ -170,7 +174,7 @@ export function BusinessSignPreview({ design, layout, linePaths, logoUrl, label,
     const px = w / 2 + personGap + personW / 2;
     const head = 115;
     return (
-      <svg viewBox={`${left} ${-wallH} ${wallW} ${wallH + 120}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={`${label}, на стіні поруч з людиною зросту 1,75 м`}>
+      <svg viewBox={`${left} ${-wallH} ${wallW} ${wallH + 120}`} className="block h-auto max-h-[62vh] w-full" role="img" aria-label={t.onWallLabel(label)}>
         {defs}
         <rect x={left} y={-wallH} width={wallW} height={wallH} fill={`url(#wall${uid})`} />
         <rect x={left} y={0} width={wallW} height={120} fill="#cfc6b8" />

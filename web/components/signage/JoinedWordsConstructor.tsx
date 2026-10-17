@@ -31,22 +31,30 @@ import { JOINED_WORDS_MATERIALS } from "@/lib/joined-words/materials";
 import { measureJoinedWordsDesign } from "@/lib/joined-words/measure-design";
 import { priceJoinedWords } from "@/lib/joined-words/price";
 import { useCart } from "@/store/cart-store";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
+import { SIGNAGE_LETTERS } from "@/lib/i18n/dictionaries/signage-letters";
+import { tr } from "@/lib/i18n/translate";
 import type { JoinedLineMeasures, JoinedWordsDesign } from "@/types/joined-words";
 import type { PlaqueTextLine } from "@/types/plaques";
 
 const CFG = DEFAULT_JOINED_WORDS_CONFIG;
-const FIRST_LINES: PlaqueTextLine[] = [
-  { text: "ЛАТЕ ГАРБУЗОВИЙ", fontId: "oswald", size: 1 },
-  { text: "СОЛОНА КАРАМЕЛЬ", fontId: "oswald", size: 1 },
-  { text: "СІНАБОН", fontId: "oswald", size: 1 },
-  { text: "ПОПКОРН", fontId: "oswald", size: 1 },
+// Example lines of a coffee shop menu: the text comes from the dictionary in the page language.
+const FIRST_FONTS: Omit<PlaqueTextLine, "text">[] = [
+  { fontId: "oswald", size: 1 },
+  { fontId: "oswald", size: 1 },
+  { fontId: "oswald", size: 1 },
+  { fontId: "oswald", size: 1 },
 ];
 const FIRST_TAILS = ["110/160", "110/160", "100", "110"];
 const HEIGHTS_CM = [3, 4, 5, 6, 8, 10];
 
 
 export function JoinedWordsConstructor() {
-  const text = usePlaqueLines(FIRST_LINES, CFG.maxLines);
+  const locale = useLocale();
+  const t = tr(SIGNAGE_LETTERS, locale).joinedWords;
+  const ts = tr(SIGNAGE, locale);
+  const text = usePlaqueLines(FIRST_FONTS.map((f, i) => ({ ...f, text: t.firstLines[i] })), CFG.maxLines);
   const [tails, setTails] = useState<string[]>(FIRST_TAILS);
   const [upper, setUpper] = useState(true);
   const [materialId, setMaterialId] = useState("black");
@@ -54,7 +62,7 @@ export function JoinedWordsConstructor() {
   const [widthInput, setWidthInput] = useState("");
   const [qty, setQty] = useState(1);
   const buyState = useBuyState();
-  const dispatch = useDispatchLabel();
+  const dispatch = useDispatchLabel(locale);
   const cart = useCart();
 
   const design: JoinedWordsDesign = {
@@ -83,7 +91,7 @@ export function JoinedWordsConstructor() {
   }));
   const checks = ready ? checkJoinedWords(layout, sheet, glyphs, CFG) : [];
   const errors = checks.filter((c) => c.level === "error");
-  const price = priceJoinedWords(design, layout, CFG);
+  const price = priceJoinedWords(design, layout, CFG, undefined, locale);
   const canBuy = ready && errors.length === 0;
 
   const setHeight = (mm: number) => setLetterMm(Math.min(CFG.maxLetterMm, Math.max(CFG.minLetterMm, Math.round(mm))));
@@ -100,7 +108,7 @@ export function JoinedWordsConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `words|${JSON.stringify({ ...final, quantity: 0 })}`,
-      title: `Напис на планці «${words.length > 60 ? `${words.slice(0, 59)}…` : words}», літери ${cmText(letterMm)} см, ${sheet.name.uk.toLowerCase()}`,
+      title: t.cartTitle(words.length > 60 ? `${words.slice(0, 59)}…` : words, cmText(letterMm), sheet.name[locale].toLowerCase()),
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -115,24 +123,23 @@ export function JoinedWordsConstructor() {
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Превʼю напису" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <JoinedWordsPreview layout={layout} paths={paths} sheet={sheet} label={`Превʼю напису ${cmText(layout.widthMm)}×${cmText(layout.heightMm)} см`} />
+      <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
+        <JoinedWordsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm), cmText(layout.heightMm))} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>Весь набір ≈ {cmText(layout.widthMm)} × {cmText(layout.heightMm)} см · {layout.pieces.length} дет.</span>
-          <span>{sheet.name.uk}, {sheet.thicknessMm} мм</span>
+          <span>{ts.wholeSet(cmText(layout.widthMm), cmText(layout.heightMm))} · {layout.pieces.length} {ts.piecesShort}</span>
+          <span>{ts.sheetThickness(sheet.name[locale], sheet.thicknessMm)}</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <ConstructorHeader kicker="Конструктор написів" title="Написи на планці з акрилу"
-          lead="Кожне слово вирізаємо однією деталлю: літери стоять на тонкій планці. Меню для кавʼярні, назви зон, цитати на стіну. Ціна поруч з кожним рядком стане окремою деталлю." />
+        <ConstructorHeader kicker={t.kicker} title={t.title} lead={t.lead} />
 
-        <PlaqueLinesEditor state={text} legend="Рядки" idPrefix="jw" maxChars={CFG.maxLineChars}
+        <PlaqueLinesEditor state={text} legend={t.linesLegend} idPrefix="jw" maxChars={CFG.maxLineChars}
           capByLine={new Map(layout.pieces.map((p) => [p.lineIndex, p.capMm]))}
           onRemove={(i) => setTails((list) => list.filter((_, k) => k !== i))}
           renderExtra={(i) => (
-            <label className="grid gap-1 text-sm text-[var(--muted)]">Ціна чи число окремою деталлю (необовʼязково)
-              <input id={`jw-tail-${i}`} value={tails[i] ?? ""} maxLength={CFG.maxTailChars} placeholder="Напр. 110 або 110/160"
+            <label className="grid gap-1 text-sm text-[var(--muted)]">{t.tailLabel}
+              <input id={`jw-tail-${i}`} value={tails[i] ?? ""} maxLength={CFG.maxTailChars} placeholder={t.tailPlaceholder}
                 onChange={(e) => setTails((list) => { const next = [...list]; while (next.length <= i) next.push(""); next[i] = e.target.value; return next; })}
                 className={`${INPUT_CLASS} w-full min-w-0`} />
             </label>
@@ -140,33 +147,33 @@ export function JoinedWordsConstructor() {
 
         <label className="flex items-center gap-2 text-sm">
           <input id="jw-upper" type="checkbox" checked={upper} onChange={(e) => setUpper(e.target.checked)} className="h-5 w-5 accent-[var(--ink)]" />
-          Лише великі літери
+          {t.upperOnly}
         </label>
 
         <LetterHeightField idPrefix="jw" heightsCm={HEIGHTS_CM} valueMm={letterMm} minMm={CFG.minLetterMm} maxMm={CFG.maxLetterMm} onChange={setLetterMm}
-          inputLabel="Своя висота великих літер, см"
-          note={`Від ${cmText(CFG.minLetterMm)} до ${cmText(CFG.maxLetterMm)} см. Розмір кожного рядка міняйте у полі «Розмір літер».`}
+          inputLabel={t.capHeightInput}
+          note={t.heightNote(cmText(CFG.minLetterMm), cmText(CFG.maxLetterMm))}
           extra={(
-            <label className="grid gap-1 text-sm text-[var(--muted)]">Або довжина найширшого рядка, см
+            <label className="grid gap-1 text-sm text-[var(--muted)]">{t.widestRow}
               <span className="flex min-w-0 gap-2">
                 <input id="jw-width" type="number" inputMode="decimal" step={1} min={5} value={widthInput} placeholder={cmText(layout.widthMm)}
                   onChange={(e) => setWidthInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fitWidth(); } }}
                   className={`${INPUT_CLASS} w-full min-w-0`} />
-                <button id="jw-fit" type="button" onClick={fitWidth} disabled={!widthInput || !ready} className="h-11 shrink-0 rounded-xl border-[1.5px] border-[var(--ink)] px-3 text-sm font-semibold disabled:opacity-40">Підібрати</button>
+                <button id="jw-fit" type="button" onClick={fitWidth} disabled={!widthInput || !ready} className="h-11 shrink-0 rounded-xl border-[1.5px] border-[var(--ink)] px-3 text-sm font-semibold disabled:opacity-40">{t.fit}</button>
               </span>
             </label>
           )} />
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Колір акрилу</legend>
-          <SheetSwatches sheets={JOINED_WORDS_MATERIALS} value={materialId} onChange={setMaterialId} idPrefix="jw-c" label="Колір акрилу" />
-          <span className="text-[13px] text-[var(--muted)]">{sheet.name.uk}, {sheet.thicknessMm} мм, один шар{sheet.inStock ? "" : " · під замовлення"}. Усі кольори за однією ціною.</span>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{ts.acrylicColour}</legend>
+          <SheetSwatches sheets={JOINED_WORDS_MATERIALS} value={materialId} onChange={setMaterialId} idPrefix="jw-c" label={ts.acrylicColour} />
+          <span className="text-[13px] text-[var(--muted)]">{t.colourNote(ts.sheetThickness(sheet.name[locale], sheet.thicknessMm), sheet.inStock ? "" : ts.toOrder)}</span>
         </fieldset>
 
-        <QuantityField legend="Кількість наборів" idPrefix="jw" value={qty} onChange={setQty} sets />
+        <QuantityField legend={ts.setsQuantity} idPrefix="jw" value={qty} onChange={setQty} sets />
 
         <DesignChecks checks={checks} />
 
-        <BuyPanel lines={price.lines.map((label) => ({ label }))} total={price.total} unitPrice={price.unitPrice} qty={qty} unitLabel="наб." note={dispatch}
+        <BuyPanel lines={price.lines.map((label) => ({ label }))} total={price.total} unitPrice={price.unitPrice} qty={qty} unitLabel={ts.setsShort} note={dispatch}
           state={buyState.state} canBuy={canBuy} onBuy={buy} />
       </form>
     </div>

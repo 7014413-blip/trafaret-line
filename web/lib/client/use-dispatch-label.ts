@@ -5,12 +5,13 @@
 // the plain lead time and the date replaces it after hydration.
 
 import { useEffect, useState } from "react";
+import type { Locale } from "../../types/customizer";
+import { CONSTRUCTOR } from "../i18n/dictionaries/constructor";
+import { tr } from "../i18n/translate";
 import { estimateDispatchDate, formatDispatch } from "../production";
 
-const LEAD_TIME = "виготовлення 3 робочі дні";
-
-export function useDispatchLabel(): string {
-  const [label, setLabel] = useState(LEAD_TIME);
-  useEffect(() => setLabel(formatDispatch(estimateDispatchDate(new Date()))), []);
+export function useDispatchLabel(locale: Locale = "uk"): string {
+  const [label, setLabel] = useState(tr(CONSTRUCTOR, locale).production);
+  useEffect(() => setLabel(formatDispatch(estimateDispatchDate(new Date()), locale)), [locale]);
   return label;
 }

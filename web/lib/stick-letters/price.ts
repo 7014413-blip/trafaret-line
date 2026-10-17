@@ -4,14 +4,14 @@
 // the minimum; then ONE best discount from the site scale (10+ −5 %, 50+ −10 %, 100+ −15 %, or the
 // buyer's own), rounded down. The customer sees pieces and centimetres, never m². Repeated on the server.
 
-import type { BuyerContext } from "../../types/customizer";
+import type { BuyerContext, Locale } from "../../types/customizer";
 import type { StickLettersConfig, StickLettersDesign, StickLettersLayout, StickLettersPrice } from "../../types/stick-letters";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators/pricing";
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
-import { pluralUk } from "../text/plural-uk";
 import { DEFAULT_STICK_LETTERS_CONFIG } from "./config";
 import { stickRateFor } from "./rate-for";
 import { cmText } from "../format";
+import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 /** Price of one set before discounts. */
 export function stickLettersBasePrice(
@@ -23,8 +23,9 @@ export function stickLettersBasePrice(
 }
 
 export function priceStickLetters(
-  design: StickLettersDesign, layout: StickLettersLayout, cfg: StickLettersConfig = DEFAULT_STICK_LETTERS_CONFIG, buyer?: BuyerContext,
+  design: StickLettersDesign, layout: StickLettersLayout, cfg: StickLettersConfig = DEFAULT_STICK_LETTERS_CONFIG, buyer?: BuyerContext, locale: Locale = "uk",
 ): StickLettersPrice {
+  const text = priceLines(locale);
   const quantity = Math.max(1, Math.round(design.quantity));
   const sheet = findJoinedWordsMaterial(design.materialId);
   const areaCm2 = layout.pieces.reduce((sum, p) => sum + (p.width * p.height) / 100, 0);
@@ -35,11 +36,11 @@ export function priceStickLetters(
   const unitPrice = applyDiscount(basePrice, discount.value);
   const count = layout.pieces.length;
   const lines = [
-    `${count} ${pluralUk(count, ["деталь", "деталі", "деталей"])}, увесь напис ${cmText(layout.widthMm)} × ${cmText(layout.heightMm)} см`,
-    `${sheet.name.uk}, ${cfg.thicknessMm} мм, ${adhesive ? "самоклейка на звороті" : "без самоклейки"}`,
+    text.lettersWhole(text.pieces(count), cmText(layout.widthMm), cmText(layout.heightMm)),
+    text.lettersSheet(sheet.name[locale], cfg.thicknessMm, adhesive),
   ];
-  if (cfg.stencil) lines.push("Картонний трафарет для рівної поклейки, у ціні");
-  if (discount.value) lines.push(`${discount.label}: −${Math.round(discount.value * 100)}%`);
+  if (cfg.stencil) lines.push(text.lettersStencil);
+  if (discount.value) lines.push(discountLine(discount.label, discount.value, locale));
   return {
     unitPrice, total: unitPrice * quantity, quantity, lines,
     internal: { areaCm2, basePrice, pieces: count, discountPercent: Math.round(discount.value * 100), discountLabel: discount.label },

@@ -7,6 +7,7 @@
 // Layout: lib/business-sign/layout.ts; price: lib/calculators/signage.ts (repeated on the server).
 
 import Link from "@/components/i18n/LocaleLink";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useEffect, useMemo, useState } from "react";
 import { DraftLinkButton } from "@/components/constructor/DraftLinkButton";
 import { FontOptions } from "@/components/constructor/FontOptions";
@@ -35,6 +36,9 @@ import { parseBusinessSignDraft } from "@/lib/draft/business-sign-draft";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { businessSignThumbnailSvg } from "@/lib/export/business-sign-thumbnail";
 import { cmText, formatUAH } from "@/lib/format";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
+import { SIGNAGE_SIGN } from "@/lib/i18n/dictionaries/signage-sign";
+import { tr } from "@/lib/i18n/translate";
 import { loadFont } from "@/lib/text/font-loader";
 import { useCart } from "@/store/cart-store";
 import type { BusinessSignDesign, BusinessSignLine, BusinessSignLogo, BusinessSignLogoPlace } from "@/types/business-sign";
@@ -43,15 +47,18 @@ import type { SignShape } from "@/types/signage";
 import type { LoadedFont } from "@/types/text";
 
 const CFG = DEFAULT_BUSINESS_SIGN_CONFIG;
-const SHAPES: [SignShape, string][] = [["circle", "Коло"], ["rect", "Прямокутник"], ["rounded", "Заокруглений"], ["square", "Квадрат"], ["arrow", "Стрілка"], ["pointer", "Вказівник"]];
-const PLACES: [BusinessSignLogoPlace, string][] = [["above", "Над текстом"], ["left", "Ліворуч від тексту"]];
-const HOLES: [0 | 2 | 4, string][] = [[0, "Без отворів"], [2, "2 отвори з тримачами"], [4, "4 отвори з тримачами"]];
+const SHAPES: SignShape[] = ["circle", "rect", "rounded", "square", "arrow", "pointer"];
+const PLACES: BusinessSignLogoPlace[] = ["above", "left"];
+const HOLES: (0 | 2 | 4)[] = [0, 2, 4];
 const isSquare = (shape: SignShape) => shape === "circle" || shape === "square";
 const sizeName = (shape: SignShape, w: number, h: number) => (shape === "circle" ? `Ø${cmText(w)} см` : `${cmText(w)}×${cmText(isSquare(shape) ? w : h)} см`);
 
 type LogoState = Omit<BusinessSignLogo, "fileName" | "format" | "aspect"> & { file: File; previewUrl: string; fileName: string; format: "svg" | "raster" | "pdf"; aspect: number; uploadKey: string | null };
 
 export function BusinessSignConstructor() {
+  const locale = useLocale();
+  const t = tr(SIGNAGE_SIGN, locale);
+  const s = tr(SIGNAGE, locale);
   const [shape, setShape] = useState<SignShape>("circle");
   const [widthMm, setWidthMm] = useState(500);
   const [heightMm, setHeightMm] = useState(500);
@@ -78,10 +85,10 @@ export function BusinessSignConstructor() {
   const [logoDevelopment, setLogoDevelopment] = useState(false);
   const [logoBrief, setLogoBrief] = useState("");
   const buyState = useBuyState();
-  const dispatch = useDispatchLabel();
+  const dispatch = useDispatchLabel(locale);
   const fonts = usePlaqueLines([
-    { text: "Мрія", fontId: "marck", size: 1.6 },
-    { text: "САЛОН КРАСИ", fontId: "montserrat", size: 0.6 },
+    { text: t.exampleLines[0], fontId: "marck", size: 1.6 },
+    { text: t.exampleLines[1], fontId: "montserrat", size: 0.6 },
   ], CFG.maxLines);
   const cart = useCart();
 
@@ -151,7 +158,7 @@ export function BusinessSignConstructor() {
   const linePaths = new Map<number, string>();
   fonts.measured.forEach((m, i) => { if (m) linePaths.set(i, m.pathData); });
   const sign = businessSignToSignDesign(design, layout);
-  const price = priceSign(sign, BUSINESS_SIGN_PALETTE);
+  const price = priceSign(sign, BUSINESS_SIGN_PALETTE, undefined, undefined, false, locale);
   const checks = checkSign(sign, BUSINESS_SIGN_PALETTE);
   const missing = [...new Set([...fonts.measured.flatMap((m) => m?.missing ?? []), ...layout.arcs.flatMap((a) => a.missing)])];
   const empty = !layout.lines.length && !layout.logo && !layout.arcs.length && !design.logoDevelopment;
@@ -206,7 +213,7 @@ export function BusinessSignConstructor() {
       const blob = await response.blob();
       await pickLogo(new File([blob], "pryklad-lohotypa.svg", { type: "image/svg+xml" }));
     } catch {
-      setLogoError("Не вдалося завантажити приклад. Додайте свій логотип.");
+      setLogoError(t.sampleFailed);
     }
   };
 
@@ -219,7 +226,7 @@ export function BusinessSignConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `sign|${JSON.stringify({ ...design, quantity: 0 })}|${uploadKey ?? ""}`,
-      title: `Вивіска${texts ? ` «${texts}»` : ""}${design.logo ? " з логотипом" : design.logoDevelopment ? ", розробка логотипа" : ""}, ${sizeName(shape, layout.widthMm, layout.heightMm)}`,
+      title: t.cartTitle(texts, design.logo ? "own" : design.logoDevelopment ? "development" : null, sizeName(shape, layout.widthMm, layout.heightMm)),
       materialId: "acrylic",
       widthCm: layout.widthMm / 10,
       heightCm: layout.heightMm / 10,
@@ -235,27 +242,27 @@ export function BusinessSignConstructor() {
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Превʼю вивіски" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
+      <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
         <BusinessSignPreview design={design} layout={layout} linePaths={linePaths} logoUrl={logo?.previewUrl ?? null} view={view}
-          label={`Превʼю вивіски ${sizeName(shape, layout.widthMm, layout.heightMm)}`} />
+          label={t.previewLabel(sizeName(shape, layout.widthMm, layout.heightMm))} />
         <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
-          <PlaqueChip id="bs-view-close" on={view === "close"} onClick={() => setView("close")}>Крупно</PlaqueChip>
-          <PlaqueChip id="bs-view-wall" on={view === "wall"} onClick={() => setView("wall")}>На стіні</PlaqueChip>
+          <PlaqueChip id="bs-view-close" on={view === "close"} onClick={() => setView("close")}>{s.close}</PlaqueChip>
+          <PlaqueChip id="bs-view-wall" on={view === "wall"} onClick={() => setView("wall")}>{s.onWall}</PlaqueChip>
         </div>
         <div className="flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{sizeName(shape, layout.widthMm, layout.heightMm)}{layout.lines[0] ? ` · літери від ${cmText(Math.min(...layout.lines.map((l) => l.capMm)))} см` : ""}</span>
-          <span>{base.name.uk}, {thickness} мм</span>
+          <span>{sizeName(shape, layout.widthMm, layout.heightMm)}{layout.lines[0] ? t.lettersFrom(cmText(Math.min(...layout.lines.map((l) => l.capMm)))) : ""}</span>
+          <span>{base.name[locale]}, {thickness} мм</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <ConstructorHeader kicker="Конструктор вивісок" title="3D акрилова бізнес-вивіска"
-          lead="Персоналізована вивіска з акрилу у два шари: основа і обʼємний напис, ваш логотип, дзеркальна рамка. Немає логотипа — розробимо індивідуально. Кругла від Ø30 см за 1 600 ₴.">
-          <p className="mt-1.5 mb-0 text-sm"><Link href="/vyvisky/vkazivnyky" className="underline">Табличка-стрілка 25×10 см від 450 ₴ →</Link> · <Link href="/vyvisky/ofisni-tablychky" className="underline">Офісна табличка 21×6 см від 220 ₴ →</Link> · <Link href="/vyvisky/napysy-na-plantsi" className="underline">Написи на планці, меню з акрилу →</Link> · <Link href="/vyvisky/tablychky-poverkh" className="underline">Таблички поверхів →</Link> · <Link href="/vyvisky/tablychky-na-dveri" className="underline">Таблички на двері →</Link> · <Link href="/vyvisky/nomerky" className="underline">Номерки від 65 ₴ →</Link></p>
+        <ConstructorHeader kicker={t.kicker} title={t.title}
+          lead={t.lead}>
+          <p className="mt-1.5 mb-0 text-sm"><Link href="/vyvisky/vkazivnyky" className="underline">{t.links.pointer}</Link> · <Link href="/vyvisky/ofisni-tablychky" className="underline">{t.links.office}</Link> · <Link href="/vyvisky/napysy-na-plantsi" className="underline">{t.links.joined}</Link> · <Link href="/vyvisky/tablychky-poverkh" className="underline">{t.links.floors}</Link> · <Link href="/vyvisky/tablychky-na-dveri" className="underline">{t.links.doors}</Link> · <Link href="/vyvisky/nomerky" className="underline">{t.links.numbers}</Link></p>
         </ConstructorHeader>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Форма і розмір</legend>
-          <div className="flex flex-wrap gap-2">{SHAPES.map(([v, name]) => <PlaqueChip key={v} id={`bs-shape-${v}`} on={shape === v} onClick={() => pickShape(v)}>{name}</PlaqueChip>)}</div>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.shapeSize}</legend>
+          <div className="flex flex-wrap gap-2">{SHAPES.map((v) => <PlaqueChip key={v} id={`bs-shape-${v}`} on={shape === v} onClick={() => pickShape(v)}>{t.shapes[v]}</PlaqueChip>)}</div>
           <div className="flex flex-wrap gap-2">
             {CFG.presets[shape].map((p) => (
               <PlaqueChip key={`${p.widthMm}x${p.heightMm}`} id={`bs-size-${p.widthMm}x${p.heightMm}`}
@@ -265,13 +272,13 @@ export function BusinessSignConstructor() {
             ))}
           </div>
           <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
-            <label className="grid gap-1 text-sm text-[var(--muted)]">{round ? "Діаметр, см" : "Ширина, см"}
+            <label className="grid gap-1 text-sm text-[var(--muted)]">{round ? s.diameterCm : s.widthCm}
               <input id="bs-w" type="number" inputMode="decimal" min={CFG.minSideMm / 10} max={CFG.maxSideMm / 10} value={widthInput}
                 onChange={(e) => { setWidthInput(e.target.value); const v = Number(e.target.value.replace(",", ".")); if (v > 0) setWidthMm(Math.min(CFG.maxSideMm, Math.max(CFG.minSideMm, Math.round(v * 10)))); }}
                 onBlur={() => setWidthInput(String(widthMm / 10))} className={`${INPUT_CLASS} w-full min-w-0`} />
             </label>
             {!isSquare(shape) && (
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Висота, см
+              <label className="grid gap-1 text-sm text-[var(--muted)]">{s.heightCm}
                 <input id="bs-h" type="number" inputMode="decimal" min={CFG.minSideMm / 10} max={CFG.maxSideMm / 10} value={heightInput}
                   onChange={(e) => { setHeightInput(e.target.value); const v = Number(e.target.value.replace(",", ".")); if (v > 0) setHeightMm(Math.min(CFG.maxSideMm, Math.max(CFG.minSideMm, Math.round(v * 10)))); }}
                   onBlur={() => setHeightInput(String(heightMm / 10))} className={`${INPUT_CLASS} w-full min-w-0`} />
@@ -280,35 +287,35 @@ export function BusinessSignConstructor() {
           </div>
           {(shape === "arrow" || shape === "pointer") && (
             <div className="flex flex-wrap gap-2">
-              <PlaqueChip id="bs-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>← Ліворуч</PlaqueChip>
-              <PlaqueChip id="bs-dir-right" on={direction === 1} onClick={() => setDirection(1)}>Праворуч →</PlaqueChip>
+              <PlaqueChip id="bs-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>{t.left}</PlaqueChip>
+              <PlaqueChip id="bs-dir-right" on={direction === 1} onClick={() => setDirection(1)}>{t.right}</PlaqueChip>
             </div>
           )}
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Основа</legend>
-          <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={baseId} onChange={pickBase} idPrefix="bs-base" label="Колір основи" />
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{s.base}</legend>
+          <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={baseId} onChange={pickBase} idPrefix="bs-base" label={t.baseColour} />
           <div className="flex flex-wrap gap-2">
-            {thicknesses.map((t) => <PlaqueChip key={t} id={`bs-thick-${t}`} on={thickness === t} onClick={() => setThickness(t)}>{t} мм{t > 3 ? " · доплата" : ""}</PlaqueChip>)}
+            {thicknesses.map((mm) => <PlaqueChip key={mm} id={`bs-thick-${mm}`} on={thickness === mm} onClick={() => setThickness(mm)}>{mm} мм{mm > 3 ? t.surcharge : ""}</PlaqueChip>)}
           </div>
-          <span className="text-[13px] text-[var(--muted)]">{base.name.uk}{base.inStock ? "" : " · під замовлення"}.</span>
+          <span className="text-[13px] text-[var(--muted)]">{base.name[locale]}{base.inStock ? "" : s.toOrder}.</span>
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Логотип</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{s.logo}</legend>
           <LogoFileField inputId="bs-logo" accept={SIGN_LOGO_ACCEPT} fileName={logo?.fileName ?? null} onPick={pickLogo} onRemove={() => setLogo(null)}
-            emptyHint="SVG, PDF, PNG або JPG до 10 МБ, без доплати" error={logoError}
+            emptyHint={t.logoHint} error={logoError}
             after={(
               <>
-                <button type="button" id="bs-logo-sample" onClick={trySample} className="justify-self-start text-sm underline">Приміряти приклад логотипа</button>
+                <button type="button" id="bs-logo-sample" onClick={trySample} className="justify-self-start text-sm underline">{t.trySample}</button>
                 <div className="grid min-w-0 gap-2 rounded-xl bg-[var(--surface)] p-3">
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-logo-dev" checked={logoDevelopment} onChange={(e) => setLogoDevelopment(e.target.checked)} className="accent-[var(--ink)]" />
-                    <span><b>Немає логотипа? Розробимо індивідуально</b>, у ціні вивіски</span></label>
+                    <span><b>{t.logoDevStrong}</b>{t.logoDevRest}</span></label>
                   {logoDevelopment && (
                     <textarea id="bs-logo-brief" rows={3} maxLength={500} value={logoBrief} onChange={(e) => setLogoBrief(e.target.value)}
-                      placeholder="Назва, сфера, стиль, кольори, що подобається"
+                      placeholder={t.logoBriefPlaceholder}
                       className="min-w-0 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3 text-[var(--ink)] focus:border-[var(--ink)] focus:outline-none" />
                   )}
-                  {logoDevelopment && <span className="text-[13px] text-[var(--muted)]">Дизайнер намалює 2–3 варіанти і надішле вам на вибір перед виготовленням.</span>}
+                  {logoDevelopment && <span className="text-[13px] text-[var(--muted)]">{t.logoDevNote}</span>}
                 </div>
               </>
             )}>
@@ -316,69 +323,69 @@ export function BusinessSignConstructor() {
               <>
                 {layout.lines.length > 0 && (
                   <>
-                    <div className="flex flex-wrap gap-2">{PLACES.map(([v, name]) => <PlaqueChip key={v} id={`bs-logo-${v}`} on={logo.place === v} onClick={() => setLogo({ ...logo, place: v })}>{name}</PlaqueChip>)}</div>
-                    <label className="grid gap-1 text-sm text-[var(--muted)]">Розмір логотипа
+                    <div className="flex flex-wrap gap-2">{PLACES.map((v) => <PlaqueChip key={v} id={`bs-logo-${v}`} on={logo.place === v} onClick={() => setLogo({ ...logo, place: v })}>{t.places[v]}</PlaqueChip>)}</div>
+                    <label className="grid gap-1 text-sm text-[var(--muted)]">{t.logoSize}
                       <input id="bs-logo-size" type="range" min={0.25} max={0.75} step={0.05} value={logo.share} onChange={(e) => setLogo({ ...logo, share: Number(e.target.value) })} className="accent-[var(--ink)]" />
                     </label>
                   </>
                 )}
-                <span className="text-sm text-[var(--muted)]">Колір логотипа</span>
-                <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={logo.materialId} onChange={(id) => setLogo({ ...logo, materialId: id })} idPrefix="bs-logo-c" label="Колір логотипа" size="sm" />
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />Світлий логотип на темному фоні</label>
+                <span className="text-sm text-[var(--muted)]">{t.logoColour}</span>
+                <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={logo.materialId} onChange={(id) => setLogo({ ...logo, materialId: id })} idPrefix="bs-logo-c" label={t.logoColour} size="sm" />
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />{s.logoInvert}</label>
                 <span className="text-[13px] text-[var(--muted)]">{logo.format !== "svg"
-                  ? "Картинку переведемо у вектор і надішлемо макет на погодження перед порізкою. Логотип у кількох кольорах розкладемо по шарах."
-                  : "Перед порізкою надішлемо макет на погодження. Логотип у кількох кольорах розкладемо по шарах."}</span>
+                  ? t.logoRasterNote
+                  : t.logoSvgNote}</span>
               </>
             )}
           </LogoFileField>
         </fieldset>
 
-        <PlaqueLinesEditor state={fonts} legend="Напис" idPrefix="bs" maxChars={CFG.maxLineChars} capByLine={capByLine} onRemove={onLineRemoved}
+        <PlaqueLinesEditor state={fonts} legend={s.text} idPrefix="bs" maxChars={CFG.maxLineChars} capByLine={capByLine} onRemove={onLineRemoved}
           renderExtra={(i) => (
             <div className="grid gap-1">
-              <span className="text-sm text-[var(--muted)]">Колір рядка</span>
-              <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={lines[i]?.materialId ?? "mirror-gold"} onChange={(id) => setLineSheet(i, id)} idPrefix={`bs-line-${i}-c`} label={`Колір рядка ${i + 1}`} size="sm" />
+              <span className="text-sm text-[var(--muted)]">{t.lineColour}</span>
+              <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={lines[i]?.materialId ?? "mirror-gold"} onChange={(id) => setLineSheet(i, id)} idPrefix={`bs-line-${i}-c`} label={t.lineColourOf(i + 1)} size="sm" />
             </div>
           )} />
 
         {round && (
-          <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Текст по колу</legend>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-arc" checked={arcOn} onChange={(e) => setArcOn(e.target.checked)} className="accent-[var(--ink)]" />Напис уздовж краю, як на емблемі</label>
+          <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.arcLegend}</legend>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-arc" checked={arcOn} onChange={(e) => setArcOn(e.target.checked)} className="accent-[var(--ink)]" />{t.arcToggle}</label>
             {arcOn && (
               <div className="grid min-w-0 gap-2 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3">
-                <input id="bs-arc-top" aria-label="Текст зверху" placeholder="Текст зверху" value={arcTop} maxLength={CFG.maxArcChars} onChange={(e) => setArcTop(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`} />
-                <input id="bs-arc-bottom" aria-label="Текст знизу" placeholder="Текст знизу" value={arcBottom} maxLength={CFG.maxArcChars} onChange={(e) => setArcBottom(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`} />
-                <select id="bs-arc-font" aria-label="Шрифт тексту по колу" value={arcFontId} onChange={(e) => setArcFontId(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`}><FontOptions fonts={allFonts} current={arcFontId} /></select>
-                <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={arcSheet} onChange={setArcSheet} idPrefix="bs-arc-c" label="Колір тексту по колу" size="sm" />
+                <input id="bs-arc-top" aria-label={t.arcTop} placeholder={t.arcTop} value={arcTop} maxLength={CFG.maxArcChars} onChange={(e) => setArcTop(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`} />
+                <input id="bs-arc-bottom" aria-label={t.arcBottom} placeholder={t.arcBottom} value={arcBottom} maxLength={CFG.maxArcChars} onChange={(e) => setArcBottom(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`} />
+                <select id="bs-arc-font" aria-label={t.arcFont} value={arcFontId} onChange={(e) => setArcFontId(e.target.value)} className={`${INPUT_CLASS} w-full min-w-0`}><FontOptions fonts={allFonts} current={arcFontId} /></select>
+                <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={arcSheet} onChange={setArcSheet} idPrefix="bs-arc-c" label={t.arcColour} size="sm" />
               </div>
             )}
           </fieldset>
         )}
 
         {shape !== "arrow" && shape !== "pointer" && (
-          <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Рамка</legend>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-frame" checked={frameId !== null} onChange={(e) => setFrameId(e.target.checked ? (lineSheets[0] ?? "mirror-gold") : null)} className="accent-[var(--ink)]" />Рамка вздовж краю</label>
-            {frameId !== null && <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={frameId} onChange={setFrameId} idPrefix="bs-frame-c" label="Колір рамки" size="sm" />}
+          <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.frame}</legend>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-frame" checked={frameId !== null} onChange={(e) => setFrameId(e.target.checked ? (lineSheets[0] ?? "mirror-gold") : null)} className="accent-[var(--ink)]" />{t.frameToggle}</label>
+            {frameId !== null && <SheetSwatches sheets={BUSINESS_SIGN_PALETTE} value={frameId} onChange={setFrameId} idPrefix="bs-frame-c" label={t.frameColour} size="sm" />}
           </fieldset>
         )}
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Кріплення</legend>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-adh" checked={adhesive} onChange={(e) => setAdhesive(e.target.checked)} className="accent-[var(--ink)]" />Самоклейка на звороті</label>
-          <div className="flex flex-wrap gap-2">{HOLES.map(([n, name]) => <PlaqueChip key={n} id={`bs-holes-${n}`} on={holes === n} onClick={() => setHoles(n)}>{name}</PlaqueChip>)}</div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-tpl" checked={template} onChange={(e) => setTemplate(e.target.checked)} className="accent-[var(--ink)]" />Монтажний трафарет для рівного кріплення (прорізи на 0,2 мм більші за деталі)</label>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.mounting}</legend>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-adh" checked={adhesive} onChange={(e) => setAdhesive(e.target.checked)} className="accent-[var(--ink)]" />{t.adhesive}</label>
+          <div className="flex flex-wrap gap-2">{HOLES.map((n) => <PlaqueChip key={n} id={`bs-holes-${n}`} on={holes === n} onClick={() => setHoles(n)}>{t.holes[n]}</PlaqueChip>)}</div>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="bs-tpl" checked={template} onChange={(e) => setTemplate(e.target.checked)} className="accent-[var(--ink)]" />{t.template}</label>
         </fieldset>
 
         <QuantityField idPrefix="bs" value={qty} onChange={setQty} />
 
         <DesignChecks checks={checks} errors={[
-          ...(empty ? ["Додайте напис або логотип."] : []),
-          ...(missing.length > 0 ? [`У шрифті немає символів: ${missing.join(" ")}. Оберіть інший шрифт.`] : []),
+          ...(empty ? [s.emptyDesign] : []),
+          ...(missing.length > 0 ? [s.missingChars(missing.join(" "))] : []),
         ]} />
 
-        <BuyPanel lines={price.lines} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? "менеджер підтвердить строк" : dispatch}
+        <BuyPanel lines={price.lines} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? s.managerConfirms : dispatch}
           state={buyState.state} message={buyState.message} canBuy={canBuy} onBuy={buy} />
         <DraftLinkButton link={draft.link}
-          note={logo ? "Логотип у посилання не потрапляє: на іншому пристрої додайте файл ще раз." : "Відкриє цю саму вивіску на телефоні чи іншому компʼютері."} />
+          note={logo ? t.draftNoteLogo : t.draftNote} />
       </form>
     </div>
   );

@@ -2,13 +2,14 @@
 // rounded up to 10 UAH, never below the minimum; then ONE best discount from the site scale
 // (10+ −5 %, 50+ −10 %, 100+ −15 %, or the buyer's own), rounded down. Repeated on the server.
 
-import type { BuyerContext } from "../../types/customizer";
+import type { BuyerContext, Locale } from "../../types/customizer";
 import type { OfficePlaqueConfig, OfficePlaqueDesign, OfficePlaquePrice } from "../../types/office-plaque";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators/pricing";
 import { findPlaqueBase, findPlaquePlate } from "./colours";
 import { DEFAULT_OFFICE_PLAQUE_CONFIG } from "./config";
 import { resolvePlaqueSize } from "./size";
 import { cmText } from "../format";
+import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 /** Price of one plaque of this size before discounts. */
 export function plaqueBasePrice(widthMm: number, heightMm: number, cfg: OfficePlaqueConfig = DEFAULT_OFFICE_PLAQUE_CONFIG): number {
@@ -17,8 +18,9 @@ export function plaqueBasePrice(widthMm: number, heightMm: number, cfg: OfficePl
 }
 
 export function priceOfficePlaque(
-  design: OfficePlaqueDesign, cfg: OfficePlaqueConfig = DEFAULT_OFFICE_PLAQUE_CONFIG, buyer?: BuyerContext,
+  design: OfficePlaqueDesign, cfg: OfficePlaqueConfig = DEFAULT_OFFICE_PLAQUE_CONFIG, buyer?: BuyerContext, locale: Locale = "uk",
 ): OfficePlaquePrice {
+  const text = priceLines(locale);
   const size = resolvePlaqueSize(design, cfg);
   const quantity = Math.max(1, Math.round(design.quantity));
   const base = findPlaqueBase(design.baseColourId);
@@ -27,11 +29,11 @@ export function priceOfficePlaque(
   const discount = bestLineDiscount(quantity, (size.widthMm * size.heightMm) / 1e6, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
   const lines = [
-    `Розмір ${cmText(size.widthMm)} × ${cmText(size.heightMm)} см${size.preset ? "" : " (свій)"}`,
-    `Основа ${base.name.uk.toLowerCase()}, пластина ${plate.name.uk.toLowerCase()} з гравіюванням`,
-    "Клейова основа 3M уже в ціні",
+    text.size(cmText(size.widthMm), cmText(size.heightMm), !size.preset),
+    text.officeLayers(base.name[locale].toLowerCase(), plate.name[locale].toLowerCase()),
+    text.office3m,
   ];
-  if (discount.value) lines.push(`${discount.label}: −${Math.round(discount.value * 100)}%`);
+  if (discount.value) lines.push(discountLine(discount.label, discount.value, locale));
   return {
     unitPrice, total: unitPrice * quantity, quantity, lines,
     internal: { areaCm2: (size.widthMm * size.heightMm) / 100, basePrice, discountPercent: Math.round(discount.value * 100), discountLabel: discount.label },

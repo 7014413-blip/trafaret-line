@@ -37,4 +37,13 @@ describe("pointer sign price", () => {
     const price = pricePointerSign(design({ sizeCode: "custom", widthMm: 400, heightMm: 150, quantity: 12 }));
     for (const line of price.lines) expect(line.label).not.toMatch(/м²|м2/);
   });
+
+  it("writes the breakdown in the page language", () => {
+    const uk = pricePointerSign(design({ quantity: 10 }));
+    const ru = pricePointerSign(design({ quantity: 10 }), undefined, undefined, "ru");
+    expect(ru.unitPrice).toBe(uk.unitPrice);
+    expect(uk.lines.map((l) => l.label)).toContain("Опт за кількість: −5%");
+    expect(ru.lines[0].label).toBe("Размер 25 × 10 см");
+    expect(ru.lines.map((l) => l.label)).toContain("Опт по количеству: −5%");
+  });
 });

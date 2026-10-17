@@ -4,19 +4,21 @@
 // site scale (10+ −5 %, 50+ −10 %, 100+ −15 %, or the buyer's own), rounded down, never stacked.
 // The server repeats this before the order is accepted.
 
-import type { BuyerContext } from "../../types/customizer";
+import type { BuyerContext, Locale } from "../../types/customizer";
 import type { PointerPriceLine, PointerSignConfig, PointerSignDesign, PointerSignPrice } from "../../types/pointer-sign";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators/pricing";
 import { DEFAULT_POINTER_SIGN_CONFIG } from "./config";
 import { findPointerMaterial } from "./find-material";
 import { resolvePointerSize } from "./size";
 import { cmText } from "../format";
+import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 const roundUp = (value: number, step: number) => Math.ceil(value / step - 1e-9) * step;
 
 export function pricePointerSign(
-  design: PointerSignDesign, cfg: PointerSignConfig = DEFAULT_POINTER_SIGN_CONFIG, buyer?: BuyerContext,
+  design: PointerSignDesign, cfg: PointerSignConfig = DEFAULT_POINTER_SIGN_CONFIG, buyer?: BuyerContext, locale: Locale = "uk",
 ): PointerSignPrice {
+  const text = priceLines(locale);
   const size = resolvePointerSize(design, cfg);
   const quantity = Math.max(1, Math.round(design.quantity));
   const areaM2 = (size.widthMm * size.heightMm) / 1e6;
@@ -36,14 +38,14 @@ export function pricePointerSign(
     basePrice = roundUp(Math.min(Math.max(byRate, floor), ceiling), cfg.roundTo);
   }
 
-  lines.push({ label: `Розмір ${cmText(size.widthMm)} × ${cmText(size.heightMm)} см${size.preset ? "" : " (свій)"}`, amount: 0 });
-  lines.push({ label: `Основа: ${base.name.uk.toLowerCase()} ${base.baseThicknessMm} мм`, amount: 0 });
-  lines.push({ label: `Напис: ${overlay.name.uk.toLowerCase()} ${overlay.overlayThicknessMm} мм, усі кольори вже в ціні`, amount: 0 });
-  if (design.logo) lines.push({ label: "Логотип: без доплати, макет погодимо перед порізкою", amount: 0 });
+  lines.push({ label: text.size(cmText(size.widthMm), cmText(size.heightMm), !size.preset), amount: 0 });
+  lines.push({ label: text.pointerBase(base.name[locale].toLowerCase(), base.baseThicknessMm), amount: 0 });
+  lines.push({ label: text.pointerText(overlay.name[locale].toLowerCase(), overlay.overlayThicknessMm), amount: 0 });
+  if (design.logo) lines.push({ label: text.pointerLogo, amount: 0 });
 
   const discount = bestLineDiscount(quantity, areaM2, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
-  if (discount.value) lines.push({ label: `${discount.label}: −${Math.round(discount.value * 100)}%`, amount: 0 });
+  if (discount.value) lines.push({ label: discountLine(discount.label, discount.value, locale), amount: 0 });
 
   return {
     unitPrice,

@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
+import { constructorMetadata } from "@/components/layout/constructor-route";
 import { DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { StickLettersConstructor } from "@/components/signage/StickLettersConstructor";
 
-export const metadata: Metadata = pageMeta({
-  title: "Самоклейні літери з акрилу для вивісок і написів — конструктор з ціною",
-  description: "Окремі великі й малі літери з акрилу 3 мм зі скотчем на звороті, від 2 до 20 см: написи на вітрину, стіну, двері, рекламу. Чорні, білі, дзеркальні золото, срібло, рожеве золото. Ціна кожної літери одразу.",
-  path: "/konstruktor/samoklejni-litery-dlia-vyvisok",
-});
+export const generateMetadata = constructorMetadata("/konstruktor/samoklejni-litery-dlia-vyvisok");
 
 export default function SamoklejniLiteryDliaVyvisokPage() {
   return (
