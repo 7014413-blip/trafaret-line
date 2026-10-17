@@ -275,6 +275,126 @@
    "author": "Quincy Morgan",
    "source": "https://github.com/waysidemapping/pinhead",
    "varied": true
+  },
+  "mdi:home": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:bicycle": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:motorbike": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:door": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:lightning-bolt": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:wifi": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:cellphone-charging": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:coffee": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:water": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:recycle": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:dog-side": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:fire": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:bee": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:forklift": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
+  },
+  "mdi:slide": {
+   "set": "Material Design Icons",
+   "license": "Apache-2.0",
+   "licenseUrl": "https://github.com/Templarian/MaterialDesign/blob/master/LICENSE",
+   "author": "Pictogrammers",
+   "source": "https://github.com/Templarian/MaterialDesign",
+   "varied": true
   }
  },
  "rule": "Only MIT, Apache-2.0, CC0, ISC, Unlicense, BSD-3-Clause sources are allowed; third-party images are used only as ideas, never as generator input."
