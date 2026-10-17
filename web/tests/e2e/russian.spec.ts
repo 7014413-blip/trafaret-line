@@ -7,7 +7,7 @@ test("home page in Russian links its Ukrainian version", async ({ page }) => {
   await page.goto("/ru");
   await expect(page.locator("html")).toHaveAttribute("lang", "ru");
   await expect(page.getByRole("heading", { level: 1, name: /Узор на стене/ })).toBeVisible();
-  await expect(page.locator('link[rel="alternate"][hreflang="uk-UA"]')).toHaveAttribute("href", /\/$/);
+  await expect(page.locator('link[rel="alternate"][hreflang="uk-UA"]')).toHaveAttribute("href", /^https?:\/\/[^/]+\/?$/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/ru$/);
   await page.getByRole("navigation", { name: "Язык сайта" }).getByRole("link", { name: "УКР" }).click();
   await expect(page).toHaveURL(/\/$/);
