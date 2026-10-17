@@ -6,6 +6,9 @@
 // they are left out of the request to Nova Poshta (PLAN-RABOT шаг 8.2).
 // Without a city from the list (or without the Nova Poshta key) it is a text input.
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CHECKOUT } from "@/lib/i18n/dictionaries/checkout";
+import { tr } from "@/lib/i18n/translate";
 import { useEffect, useMemo, useState } from "react";
 import { getJson } from "@/lib/client/api-client";
 import type { Parcel } from "@/types/packaging";
@@ -21,8 +24,9 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
 }) {
   const [list, setList] = useState<NpWarehouse[] | null>(null);
   const [filter, setFilter] = useState("");
+  const t = tr(CHECKOUT, useLocale());
   const lockers = parcel ? parcel.fitsPostomat : true;
-  const label = lockers ? "Відділення або поштомат" : "Відділення";
+  const label = lockers ? t.branchOrLocker : t.branch;
 
   useEffect(() => {
     if (!cityRef) {
@@ -48,8 +52,8 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
   if (!list) {
     return (
       <label className="grid gap-1 text-sm text-[var(--muted)]">{label}
-        <input id="c-wh" value={value} placeholder="Номер або вулиця" onChange={(e) => onChange(e.target.value, "")} aria-invalid={!!error} className={inputClass} />
-        {!lockers && <span className="text-[13px]">Посилка більша за комірку поштомата (40 × 60 × 30 см), тому оберіть відділення.</span>}
+        <input id="c-wh" value={value} placeholder={t.branchPlaceholder} onChange={(e) => onChange(e.target.value, "")} aria-invalid={!!error} className={inputClass} />
+        {!lockers && <span className="text-[13px]">{t.tooBigTypeBranch}</span>}
         {error && <span className="text-[13px] text-[var(--danger)]">{error}</span>}
       </label>
     );
@@ -58,8 +62,8 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
   return (
     <div className="grid gap-1 text-sm text-[var(--muted)]">
       <label htmlFor="c-wh-filter">{label}</label>
-      {!lockers && <span className="text-[13px]">Посилка більша за комірку поштомата (40 × 60 × 30 см), тому поштомати не пропонуємо.</span>}
-      <input id="c-wh-filter" value={filter} placeholder="Номер або вулиця" onChange={(e) => setFilter(e.target.value)} className={inputClass} />
+      {!lockers && <span className="text-[13px]">{t.tooBigNoLockers}</span>}
+      <input id="c-wh-filter" value={filter} placeholder={t.branchPlaceholder} onChange={(e) => setFilter(e.target.value)} className={inputClass} />
       <select id="c-wh" size={Math.min(6, Math.max(2, shown.length))} value={warehouseRef} aria-invalid={!!error}
         onChange={(e) => {
           const w = list.find((x) => x.ref === e.target.value);
@@ -68,7 +72,7 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
         className="rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-1 text-[15px] text-[var(--ink)]">
         {shown.map((w) => (
           <option key={w.ref} value={w.ref} disabled={w.fits === false}>
-            {w.category === "postomat" ? "Поштомат" : "Відділення"} №{w.number}: {w.shortAddress}{w.fits === false ? " (посилка не поміститься)" : ""}
+            {w.category === "postomat" ? t.locker : t.branch} №{w.number}: {w.shortAddress}{w.fits === false ? t.wontFit : ""}
           </option>
         ))}
       </select>

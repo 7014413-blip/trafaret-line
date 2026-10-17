@@ -14,10 +14,17 @@ import { buyerAddress } from "@/lib/account/buyer-address";
 import { SESSION_COOKIE } from "@/lib/account/session-cookie";
 import { signInErrorText } from "@/lib/account/sign-in-error-text";
 import { siteUrl } from "@/lib/seo/site-url";
+import { ACCOUNT } from "@/lib/i18n/dictionaries/account";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
 import type { AccountOrdersResponse } from "@/types/account";
+import type { LangParams } from "@/types/i18n";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Мій кабінет", robots: { index: false, follow: false } };
+
+export async function generateMetadata({ params }: { params: Promise<LangParams> }): Promise<Metadata> {
+  return { title: tr(ACCOUNT, localeOf((await params).lang)).metaTitle, robots: { index: false, follow: false } };
+}
 
 async function signedIn(session: string | undefined): Promise<AccountOrdersResponse | "expired" | "unavailable" | null> {
   if (!session) return null;
@@ -28,10 +35,12 @@ async function signedIn(session: string | undefined): Promise<AccountOrdersRespo
   }
 }
 
-export default async function Cabinet({ searchParams }: { searchParams: Promise<{ pomylka?: string }> }) {
+export default async function Cabinet({ params, searchParams }: { params: Promise<LangParams>; searchParams: Promise<{ pomylka?: string }> }) {
+  const locale = localeOf((await params).lang);
+  const t = tr(ACCOUNT, locale);
   const { pomylka } = await searchParams;
   const account = await signedIn((await cookies()).get(SESSION_COOKIE)?.value);
-  const error = typeof account === "string" ? signInErrorText(account) : signInErrorText(pomylka);
+  const error = signInErrorText(typeof account === "string" ? account : pomylka, locale);
 
   return (
     <>
@@ -42,27 +51,27 @@ export default async function Cabinet({ searchParams }: { searchParams: Promise<
           <>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">Мої замовлення</h1>
+                <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">{t.myOrders}</h1>
                 <p className="m-0 text-[var(--muted)]">
-                  {[account.customer.firstName, account.customer.lastName].filter(Boolean).join(" ") || "Ваш кабінет"}
+                  {[account.customer.firstName, account.customer.lastName].filter(Boolean).join(" ") || t.yourCabinet}
                   {account.customer.email ? ` · ${account.customer.email}` : ""}
                 </p>
               </div>
               <form action="/api/kabinet/logout" method="post">
-                <button type="submit" className="h-11 rounded-full border-[1.5px] border-[var(--ink)] px-5 font-bold hover:bg-[var(--surface)]">Вийти</button>
+                <button type="submit" className="h-11 rounded-full border-[1.5px] border-[var(--ink)] px-5 font-bold hover:bg-[var(--surface)]">{t.logout}</button>
               </form>
             </div>
             {account.orders.length ? (
-              account.orders.map((order) => <OrderCard key={order.id} order={order} />)
+              account.orders.map((order) => <OrderCard key={order.id} order={order} locale={locale} />)
             ) : (
               <section className="grid justify-items-start gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-6">
-                <p className="m-0">Тут зʼявляться замовлення, які ви оформите, коли увійшли в кабінет.</p>
-                <Link href="/catalog" className="rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)]">До каталогу</Link>
+                <p className="m-0">{t.noOrders}</p>
+                <Link href="/catalog" className="rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)]">{t.toCatalog}</Link>
               </section>
             )}
           </>
         ) : (
-          <LoginPanel providers={loginProviders()} siteUrl={siteUrl()} error={error} />
+          <LoginPanel providers={loginProviders()} siteUrl={siteUrl()} error={error} locale={locale} />
         )}
       </main>
       <SiteFooter />

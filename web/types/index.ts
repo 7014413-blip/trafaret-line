@@ -37,3 +37,4 @@ export type * from "./draft";
 export type * from "./feed";
 export type * from "./analytics";
 export type * from "./i18n";
+export type * from "./info-page";

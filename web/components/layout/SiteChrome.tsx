@@ -85,7 +85,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
           <button type="submit" className="sr-only">{t.searchSubmit}</button>
         </form>
         <div className="flex items-center gap-1.5 whitespace-nowrap text-sm sm:gap-3.5">
-          <ManagerCallButton variant="header" />
+          <ManagerCallButton variant="header" locale={locale} />
           <Link href="/kabinet" aria-label={t.cabinet} className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6" /></svg>
           </Link>

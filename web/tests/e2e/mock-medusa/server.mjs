@@ -93,7 +93,7 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { order: placeOrder(body) });
     }
     if (req.method === "POST" && url.pathname === "/store/tl-pay/wayforpay") {
-      const { order_id: orderId } = await readJson(req);
+      const { order_id: orderId, lang } = await readJson(req);
       const placed = orders.find((o) => o.order.id === orderId);
       if (!placed) return send(res, 404, { error: "not_found" });
       return send(res, 200, {
@@ -101,6 +101,7 @@ const server = http.createServer(async (req, res) => {
         fields: {
           merchantAccount: "e2e_merchant", orderReference: placed.order.number, amount: placed.order.total, currency: "UAH",
           productName: placed.body.lines.map((l) => l.title), productCount: placed.body.lines.map((l) => l.quantity), merchantSignature: "e2e-signature",
+          language: lang === "ru" ? "RU" : lang === "en" ? "EN" : "UA",
         },
       });
     }

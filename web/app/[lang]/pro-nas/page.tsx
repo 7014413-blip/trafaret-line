@@ -1,34 +1,6 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
-import { Card, InfoPage } from "@/components/layout/InfoPage";
-import { SITE } from "@/data/site";
+import { infoPageComponent, infoPageMetadata } from "@/components/layout/info-page-route";
+import { ABOUT } from "@/data/pages/pro-nas";
 
-export const metadata: Metadata = pageMeta({
-  title: "Про нас — виробник трафаретів",
-  description: "Власне лазерне виробництво трафаретів і заготовок з акрилу та ПЕТ у Борисполі. Відправка з Борисполя і Запоріжжя.",
-  path: "/pro-nas",
-});
+export const generateMetadata = infoPageMetadata(ABOUT, "/pro-nas");
 
-export default function About() {
-  return (
-    <InfoPage title="Про нас" lead="Ми самі ріжемо трафарети на власному лазерному обладнанні. Тому знаємо, як поводиться кожен матеріал, і можемо зробити рисунок будь-якого розміру.">
-      <Card>
-        <h2>Виробництво</h2>
-        <p>Лазерний верстат з робочим полем 1400 × 2000 мм. Більші трафарети робимо з частин з мітками суміщення. Матеріали: PET 0,5 мм, полістирол 1 мм, акрил 1,5–8 мм, дзеркальний і кольоровий акрил.</p>
-      </Card>
-      <Card>
-        <h2>Чому нам довіряють</h2>
-        <ul>
-          <li>Ціну видно одразу на кожному розмірі, без «уточнюйте у менеджера».</li>
-          <li>Індивідуальні трафарети: перевіряємо макет і надсилаємо превʼю до порізки.</li>
-          <li>Виготовлення 3 робочі дні, відправка з найближчого філіалу.</li>
-          <li>Опт від 10 шт. і умови для бізнесу.</li>
-        </ul>
-      </Card>
-      <Card>
-        <h2>Де ми</h2>
-        <ul>{SITE.branches.map((b) => <li key={b.city}><b>{b.city}</b>, {b.address} — {b.note}</li>)}</ul>
-      </Card>
-    </InfoPage>
-  );
-}
+export default infoPageComponent(ABOUT);

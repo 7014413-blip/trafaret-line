@@ -3,6 +3,9 @@
 // (QA 2026-10-10, m6).
 
 import type { B2BCompany } from "../../types/invoice";
+import type { Locale } from "../../types/customizer";
+import { CHECKOUT } from "../i18n/dictionaries/checkout";
+import { tr } from "../i18n/translate";
 
 export interface CheckoutFormValues {
   phone: string;
@@ -25,14 +28,15 @@ export function phoneOk(value: string): boolean {
   return /^\+?380\d{9}$/.test(v) || /^0\d{9}$/.test(v);
 }
 
-export function validateCheckout(form: CheckoutFormValues, company: B2BCompany): Partial<Record<CheckoutFieldKey, string>> {
+export function validateCheckout(form: CheckoutFormValues, company: B2BCompany, locale: Locale = "uk"): Partial<Record<CheckoutFieldKey, string>> {
+  const t = tr(CHECKOUT, locale).errors;
   const errors: Partial<Record<CheckoutFieldKey, string>> = {};
-  if (!phoneOk(form.phone)) errors.phone = "Введіть номер у форматі +380 XX XXX XX XX";
-  if (form.name.trim().split(/\s+/).filter(Boolean).length < 2) errors.name = "Вкажіть імʼя і прізвище, як у паспорті для Нової пошти";
-  if (!form.city.trim()) errors.city = "Вкажіть місто";
-  if (!form.wh.trim()) errors.wh = form.delivery === "np_courier" ? "Вкажіть адресу доставки" : "Вкажіть відділення або поштомат";
+  if (!phoneOk(form.phone)) errors.phone = t.phone;
+  if (form.name.trim().split(/\s+/).filter(Boolean).length < 2) errors.name = t.name;
+  if (!form.city.trim()) errors.city = t.city;
+  if (!form.wh.trim()) errors.wh = form.delivery === "np_courier" ? t.courierAddress : t.wh;
   if (form.payment === "invoice" && (!/^(\d{8}|\d{10})$/.test(company.code) || !company.name.trim())) {
-    errors.code = "Вкажіть код ЄДРПОУ або РНОКПП і назву для рахунку";
+    errors.code = t.code;
   }
   return errors;
 }

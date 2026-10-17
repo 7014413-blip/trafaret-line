@@ -14,12 +14,15 @@
 //     volumetric = L × W × H (cm) / 4000; billed = the larger, rounded up to 0.1 kg.
 // The numbers live in data/knowledge_base/rules_logistics.json.
 
-import type { MaterialType } from "../../types/customizer";
+import type { Locale, MaterialType } from "../../types/customizer";
 import type { PackKind, Parcel, ParcelConfig, ParcelItem } from "../../types/packaging";
 import { PARCEL_RULES } from "../knowledge-base/logistics-rules";
 import { MATERIALS } from "../materials";
 import { round3, weightBreakdown } from "./weight";
 import { cmText } from "../format";
+import { CHECKOUT } from "../i18n/dictionaries/checkout";
+import { INTL_TAG } from "../i18n/messages";
+import { tr } from "../i18n/translate";
 
 /** Parcel rules from data/knowledge_base/rules_logistics.json. */
 export const DEFAULT_PARCEL: ParcelConfig = PARCEL_RULES;
@@ -110,10 +113,11 @@ export function parcelFor(items: ParcelItem[], prefer: PackKind = "tube", cfg: P
 }
 
 /** "Коробка 52 × 32 × 3 см, 0,9 кг" for the cart and checkout. */
-export function describeParcel(parcel: Parcel): string {
-  const kg = parcel.billingKg.toLocaleString("uk-UA", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+export function describeParcel(parcel: Parcel, locale: Locale = "uk"): string {
+  const t = tr(CHECKOUT, locale);
+  const kg = parcel.billingKg.toLocaleString(INTL_TAG[locale], { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   // The carrier bills the larger of actual and volumetric weight; say which one it is (QA m12).
-  const weight = parcel.volumetricKg > parcel.actualKg ? `${kg} кг обʼємної ваги` : `${kg} кг`;
-  if (parcel.kind === "tube") return `Тубус ${cmText(parcel.lengthMm)} см, Ø ${cmText(parcel.widthMm)} см, ${weight}`;
-  return `Коробка ${cmText(parcel.lengthMm)} × ${cmText(parcel.widthMm)} × ${cmText(parcel.heightMm)} см, ${weight}`;
+  const weight = parcel.volumetricKg > parcel.actualKg ? t.volumetricKg(kg) : t.kg(kg);
+  if (parcel.kind === "tube") return t.parcelTube(cmText(parcel.lengthMm), cmText(parcel.widthMm), weight);
+  return t.parcelBox(cmText(parcel.lengthMm), cmText(parcel.widthMm), cmText(parcel.heightMm), weight);
 }

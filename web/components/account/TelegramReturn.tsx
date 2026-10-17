@@ -5,9 +5,13 @@
 
 import { useEffect, useState } from "react";
 import { useLocaleRouter } from "@/components/i18n/use-locale-router";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { ACCOUNT } from "@/lib/i18n/dictionaries/account";
+import { tr } from "@/lib/i18n/translate";
 import { readTelegramResult } from "@/lib/account/read-telegram-result";
 
 export function TelegramReturn() {
+  const t = tr(ACCOUNT, useLocale());
   const router = useLocaleRouter();
   const [failed, setFailed] = useState(false);
 
@@ -28,5 +32,5 @@ export function TelegramReturn() {
       .catch(() => setFailed(true));
   }, [router]);
 
-  return <p role="status" className="m-0 text-lg">{failed ? "Немає звʼязку. Оновіть сторінку." : "Входимо через Telegram…"}</p>;
+  return <p role="status" className="m-0 text-lg">{failed ? t.telegramFailed : t.telegramSigningIn}</p>;
 }
