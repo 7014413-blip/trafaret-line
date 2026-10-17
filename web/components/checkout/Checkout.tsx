@@ -228,7 +228,8 @@ export function Checkout() {
             <legend className="px-1.5 font-bold">Доставка</legend>
             {DELIVERY.map(([v, t]) => (
               <label key={v} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-[1.5px] px-3.5 py-3 ${form.delivery === v ? "border-[var(--ink)]" : "border-[var(--line)]"}`}>
-                <input type="radio" name="delivery" id={`d-${v}`} checked={form.delivery === v} onChange={() => set("delivery", v)} className="accent-[var(--ink)]" />{t}
+                <input type="radio" name="delivery" id={`d-${v}`} checked={form.delivery === v} onChange={() => set("delivery", v)} className="accent-[var(--ink)]" />
+                {v === "np_branch" && parcel && !parcel.fitsPostomat ? "Нова пошта: відділення" : t}
                 <small className="ml-auto text-[var(--muted)]">{form.delivery === v && quote ? formatUAH(Math.round(quote.deliveryCost)) : "за тарифом"}</small>
               </label>
             ))}
