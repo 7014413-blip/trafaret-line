@@ -31,5 +31,7 @@ module.exports = defineConfig({
         ],
       },
     },
+    // Fiscal receipts: one per order, never two (src/modules/fiscal-receipt).
+    { resolve: "./src/modules/fiscal-receipt" },
   ],
 })
