@@ -2,28 +2,12 @@
 // POST {STOREFRONT_URL}/api/vchasno-kasa/receipt (web/services/vchasno-kasa.ts), which talks
 // to Вчасно.Каса. Server-to-server, authorised with INTERNAL_API_TOKEN (the same value in
 // backend/.env and web/.env.local). The receipt tag is derived from the order number, so a
-// repeated call never issues a second receipt.
+// repeated call never issues a second receipt; the fiscal_receipt table (issue-order-receipt.ts)
+// makes sure only one call is made at a time.
 
-export interface ReceiptLine {
-  title: string;
-  quantity: number;
-  unitPrice: number;
-}
+import type { FiscalReceiptRequest, ReceiptOutcome } from "../../types/fiscal-receipt";
 
-export interface ReceiptOutcome {
-  status: "issued" | "not_configured" | "failed";
-  fiscalNumber?: string;
-  receiptUrl?: string;
-  message?: string;
-}
-
-export async function requestFiscalReceipt(input: {
-  orderNumber: string;
-  payment: "card" | "privat";
-  lines: ReceiptLine[];
-  paymentRef?: { rrn?: string; cardMask?: string; authCode?: string; system?: string };
-  customer?: { email?: string; phone?: string };
-}): Promise<ReceiptOutcome> {
+export async function requestFiscalReceipt(input: FiscalReceiptRequest): Promise<ReceiptOutcome> {
   const storefront = process.env.STOREFRONT_URL?.trim();
   const token = process.env.INTERNAL_API_TOKEN?.trim();
   if (!storefront || !token) return { status: "not_configured", message: "STOREFRONT_URL or INTERNAL_API_TOKEN is not set" };
