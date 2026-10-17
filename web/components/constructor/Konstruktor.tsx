@@ -38,24 +38,25 @@ import { FontChip } from "./FontChip";
 import { StencilPreview, type StencilView } from "./StencilPreview";
 import { WeldPreview, type WeldView } from "./WeldPreview";
 import { WeldOptionsPanel } from "./WeldOptionsPanel";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
+import { tr } from "@/lib/i18n/translate";
 
 type Mode = KonstruktorMode;
 
-const TEMPLATES = ["Своє імʼя", "Кава", "Just Married\n10.10.2026", "Обережно", "Wi-Fi", "Підʼїзд 3"];
 const WIDTHS = [21, 30, 50, 80, 100, 140];
 const WELD_WIDTHS = [10, 12, 15, 20, 25, 30];
 const STENCIL_MATS: MaterialType[] = ["pet_thin", "polystyrene", "acrylic"];
-const STENCIL_VIEWS: [StencilView, string][] = [["stencil", "Трафарет"], ["wall", "На стіні"], ["cake", "На торті"]];
-const WELD_VIEWS: [WeldView, string][] = [["piece", "Виріб"], ["cake", "На торті"]];
-const BRIDGE_STRENGTHS: [BridgeStrength, string][] = [["thin", "Тонкі"], ["normal", "Звичайні"], ["strong", "Міцні"]];
-const MODES: [Mode, string, string][] = [
-  ["stencil", "Трафарет", "Вирізаний напис, щоб наносити фарбу, какао чи пудру"],
-  ["weld", "Цілим словом", "Топпер або напис з акрилу однією деталлю"],
-];
+const STENCIL_VIEWS: StencilView[] = ["stencil", "wall", "cake"];
+const WELD_VIEWS: WeldView[] = ["piece", "cake"];
+const BRIDGE_STRENGTHS: BridgeStrength[] = ["thin", "normal", "strong"];
+const MODES: Mode[] = ["stencil", "weld"];
 
 const chip = (on: boolean) => `rounded-full border-[1.5px] px-3 py-1.5 ${on ? "border-[var(--ink)] font-bold" : "border-[var(--line)]"}`;
 
 export function Konstruktor() {
+  const locale = useLocale();
+  const t = tr(CONSTRUCTOR, locale);
   const s = useCustomizer();
   const cart = useCart();
   const [fonts, setFonts] = useState<FontEntry[]>([]);
@@ -77,7 +78,7 @@ export function Konstruktor() {
   const weldMaterials = WELD_MATERIALS.filter((id) => MATERIALS[id].colours.length > 0 && MATERIALS[id].baseSquareMeterPrice != null);
   const [weldMaterial, setWeldMaterial] = useState<MaterialType>(weldMaterials[0]);
   const [colourId, setColourId] = useState<string>(MATERIALS[weldMaterials[0]].colours[0].id);
-  const text = s.text || "КАВА І ДОБРІ\nЛЮДИ";
+  const text = s.text || t.defaultText;
 
   // The customer's own fonts (IndexedDB), shown after the shop fonts.
   const [customFonts, setCustomFonts] = useState<LoadedFont[]>([]);
@@ -222,19 +223,19 @@ export function Konstruktor() {
   const total = unit * s.quantity;
 
   const stencilErrors = s.checks.filter((c) => c.level === "error");
-  const weldProblems = weld && weld.result.pieces > 1 ? ["Не всі частини вдалося з’єднати. Збільште ширину або увімкніть планку під словом."] : [];
-  const missing = result?.missing.length ? [`Цього шрифту немає для символів: ${result.missing.join(" ")}`] : [];
+  const weldProblems = weld && weld.result.pieces > 1 ? [t.weldApart] : [];
+  const missing = result?.missing.length ? [t.missingChars(result.missing.join(" "))] : [];
   const notes = mode === "weld"
     ? [...missing, ...weldProblems]
-    : [...missing, ...s.checks.filter((c) => c.code !== "empty").map((c) => c.message.uk)];
+    : [...missing, ...s.checks.filter((c) => c.code !== "empty").map((c) => c.message[locale])];
   const canBuy = mode === "weld"
     ? !!weld && !weldBusy && weld.result.pieces === 1 && !missing.length
     : stencilErrors.length === 0 && !missing.length && !!s.cut;
 
   // Why «Купити» is not active yet (QA m3): the geometry is still being computed.
   const buyHint = canBuy ? ""
-    : mode === "weld" ? (weldBusy || !weld ? "Зʼєднуємо літери, кнопка стане активною за кілька секунд." : "")
-    : !s.cut && !cutFailed && !stencilErrors.length ? "Розраховуємо перемички, кнопка стане активною за кілька секунд." : "";
+    : mode === "weld" ? (weldBusy || !weld ? t.weldBusy : "")
+    : !s.cut && !cutFailed && !stencilErrors.length ? t.bridgesBusy : "";
 
   const buy = () => {
     if (!canBuy || !font) return;
@@ -243,7 +244,7 @@ export function Konstruktor() {
       cart.add({
         key: `w|${text}|${font.id}|${usedLineFontIds.join(",")}|${Math.round(weldW)}|${weldMaterial}|${weldColour.id}|${JSON.stringify(weldOptions)}`,
         kind: "welded",
-        title: `Напис цілим словом «${oneLine}», ${font.name}, ${weldMat.name.uk}, ${weldColour.name.uk}`,
+        title: t.cartWeld(oneLine, font.name, weldMat.name[locale], weldColour.name[locale]),
         materialId: weldMaterial,
         widthCm: Math.round(weldW) / 10,
         heightCm: Math.round(weldH) / 10,
@@ -257,7 +258,7 @@ export function Konstruktor() {
     cart.add({
       key: `k|${text}|${font.id}|${usedLineFontIds.join(",")}|${s.shape === "square" ? "sq" : ""}${sheet.widthMm}|${s.materialId}|${align}|${upper}`,
       kind: "stencil",
-      title: `Свій напис «${oneLine}», ${font.name}`,
+      title: t.cartStencil(oneLine, font.name),
       materialId: s.materialId,
       widthCm: sheet.widthMm / 10,
       heightCm: sheet.heightMm / 10,
@@ -269,99 +270,99 @@ export function Konstruktor() {
   };
 
   const preview = mode === "weld"
-    ? (weld ? <WeldPreview weld={weld.result} material={weldMat} colourHex={weldColour.hex} view={weldView} /> : null)
-    : (s.cut ? <StencilPreview sheet={sheet} cut={s.cut} material={material} view={view} showIssues={view === "stencil"} /> : null);
+    ? (weld ? <WeldPreview weld={weld.result} material={weldMat} colourHex={weldColour.hex} view={weldView} label={t.piecePreview(Math.round(weldW / 10), Math.round(weldH / 10))} /> : null)
+    : (s.cut ? <StencilPreview sheet={sheet} cut={s.cut} material={material} view={view} showIssues={view === "stencil"} label={t.stencilPreview(Math.round(sheet.widthMm / 10), Math.round(sheet.heightMm / 10))} /> : null);
 
   const footer = mode === "weld"
-    ? `${(weldW / 10).toFixed(1)} × ${(weldH / 10).toFixed(1)} см · висота літер ≈ ${Math.round(weld?.capMm ?? 0)} мм`
-    : `${(sheet.widthMm / 10).toFixed(0)} × ${(sheet.heightMm / 10).toFixed(1)} см · висота літер ≈ ${Math.round(capMm)} мм · перемичок ${s.cut?.bridges.length ?? 0}`;
+    ? t.footerWeld((weldW / 10).toFixed(1), (weldH / 10).toFixed(1), Math.round(weld?.capMm ?? 0))
+    : t.footerStencil((sheet.widthMm / 10).toFixed(0), (sheet.heightMm / 10).toFixed(1), Math.round(capMm), s.cut?.bridges.length ?? 0);
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Попередній перегляд" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] lg:sticky lg:top-24">
+      <section aria-label={t.preview} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] lg:sticky lg:top-24">
         <div role="tablist" className="flex gap-1 border-b border-[var(--line)] p-2">
-          {(mode === "weld" ? WELD_VIEWS : STENCIL_VIEWS).map(([v, label]) => {
+          {(mode === "weld" ? WELD_VIEWS : STENCIL_VIEWS).map((v) => {
             const selected = mode === "weld" ? v === weldView : v === view;
             return (
               <button key={v} role="tab" aria-selected={selected} type="button"
                 onClick={() => (mode === "weld" ? setWeldView(v as WeldView) : setView(v as StencilView))}
-                className={`flex-1 rounded-lg py-2 text-sm font-semibold ${selected ? "bg-[var(--surface)] text-[var(--ink)]" : "text-[var(--muted)]"}`}>{label}</button>
+                className={`flex-1 rounded-lg py-2 text-sm font-semibold ${selected ? "bg-[var(--surface)] text-[var(--ink)]" : "text-[var(--muted)]"}`}>{t.views[v]}</button>
             );
           })}
         </div>
         {preview ?? (
           <div className="grid aspect-[2/1] place-items-center text-[var(--muted)]">
-            {fontError ? "Не вдалося завантажити шрифти. Оновіть сторінку."
-              : cutFailed ? "Не вдалося розрахувати перемички. Змініть текст або оновіть сторінку."
-              : result ? "Розраховуємо перемички…" : "Завантаження шрифтів…"}
+            {fontError ? t.fontLoadFailed
+              : cutFailed ? t.bridgesFailed
+              : result ? t.bridgesCalculating : t.fontsLoadingLong}
           </div>
         )}
         <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--line)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
           <span>{footer}</span>
-          <span>{mode === "weld" ? `${weldMat.name.uk}, ${weldColour.name.uk}` : material.name.uk}</span>
+          <span>{mode === "weld" ? `${weldMat.name[locale]}, ${weldColour.name[locale]}` : material.name[locale]}</span>
         </div>
       </section>
 
       <form className="grid content-start gap-5" onSubmit={(e) => e.preventDefault()}>
         <header>
-          <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Конструктор</p>
-          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">Свій напис</h1>
-          <p className="m-0 mt-1 text-sm text-[var(--muted)]">Кілька написів і фігур на одному аркуші? <Link href="/konstruktor/polotno" className="font-semibold text-[var(--ink)] underline">Вільне полотно</Link></p>
+          <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">{t.kicker}</p>
+          <h1 className="m-0 mt-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,34px)] font-bold leading-tight">{t.title}</h1>
+          <p className="m-0 mt-1 text-sm text-[var(--muted)]">{t.canvasLink} <Link href="/konstruktor/polotno" className="font-semibold text-[var(--ink)] underline">{t.canvasLinkText}</Link></p>
         </header>
 
         <fieldset role="radiogroup" aria-labelledby="k-mode-legend" className="grid gap-2 sm:grid-cols-2">
-          <legend id="k-mode-legend" className={LEGEND_CLASS}>Що робимо</legend>
-          {MODES.map(([m, title, hint]) => (
+          <legend id="k-mode-legend" className={LEGEND_CLASS}>{t.whatWeMake}</legend>
+          {MODES.map((m) => (
             <label key={m} className={`grid cursor-pointer gap-0.5 rounded-xl border-[1.5px] px-3.5 py-3 ${mode === m ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
               <span className="flex items-center gap-2">
                 <input type="radio" name="k-mode" id={`k-mode-${m}`} value={m} checked={mode === m} onChange={() => setMode(m)}
                   aria-describedby={`k-mode-${m}-hint`} className="h-[18px] w-[18px] accent-[var(--ink)]" />
-                <b>{title}</b>
+                <b>{t.modes[m].title}</b>
               </span>
-              <span id={`k-mode-${m}-hint`} className="text-[13px] text-[var(--muted)]">{hint}</span>
+              <span id={`k-mode-${m}-hint`} className="text-[13px] text-[var(--muted)]">{t.modes[m].hint}</span>
             </label>
           ))}
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={LEGEND_CLASS}>Текст</legend>
-          <textarea id="k-text" rows={3} value={s.text} placeholder="КАВА І ДОБРІ&#10;ЛЮДИ" maxLength={120}
+          <legend className={LEGEND_CLASS}>{t.text}</legend>
+          <textarea id="k-text" rows={3} value={s.text} placeholder={t.defaultText} maxLength={120}
             onChange={(e) => s.set({ text: e.target.value.split("\n").slice(0, 4).join("\n") })}
             className="w-full resize-y rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3.5 py-3 text-lg focus:border-[var(--ink)] focus:outline-none" />
           <div className="flex flex-wrap gap-2">
-            {TEMPLATES.map((t) => (
-              <button key={t} type="button" onClick={() => s.set({ text: t })} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-sm">{t.replace("\n", " ")}</button>
+            {t.templates.map((template) => (
+              <button key={template} type="button" onClick={() => s.set({ text: template })} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-sm">{template.replace("\n", " ")}</button>
             ))}
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             {(["left", "center", "right"] as Align[]).map((a) => (
               <button key={a} type="button" aria-pressed={align === a} onClick={() => setAlign(a)} className={chip(align === a)}>
-                {a === "left" ? "Ліворуч" : a === "center" ? "По центру" : "Праворуч"}
+                {a === "left" ? t.alignLeft : a === "center" ? t.alignCenter : t.alignRight}
               </button>
             ))}
-            <button type="button" aria-pressed={upper} onClick={() => setUpper(!upper)} className={chip(upper)}>ВЕЛИКІ ЛІТЕРИ</button>
+            <button type="button" aria-pressed={upper} onClick={() => setUpper(!upper)} className={chip(upper)}>{t.upper}</button>
           </div>
         </fieldset>
 
         <fieldset className="grid gap-2">
-          <legend className={LEGEND_CLASS}>Шрифт</legend>
+          <legend className={LEGEND_CLASS}>{t.font}</legend>
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
             {allFonts.map((f) => <FontChip key={f.id} entry={f} text={text} active={(font?.id ?? allFonts[0]?.id) === f.id} onPick={() => s.set({ fontFamily: f.id })} />)}
           </div>
           {textLines.length > 1 && (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" id="k-per-line" checked={perLine} onChange={(e) => setPerLine(e.target.checked)} className="h-4 w-4 accent-[var(--ink)]" />
-              Різні шрифти для рядків
+              {t.perLineFonts}
             </label>
           )}
           {perLine && textLines.length > 1 && (
             <div className="grid gap-2">
               {textLines.map((line, i) => (
                 <label key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-center gap-2 text-sm">
-                  <span className="truncate">Рядок {i + 1}: «{line}»</span>
+                  <span className="truncate">{t.lineLabel(i + 1, line)}</span>
                   <select id={`k-line-font-${i}`} value={lineFontIds[i] ?? ""} onChange={(e) => setLineFont(i, e.target.value)}
                     className="h-10 rounded-lg border border-[var(--line)] bg-[var(--card)] px-2">
-                    <option value="">Як основний ({font?.name ?? "—"})</option>
+                    <option value="">{t.sameAsMain(font?.name ?? "—")}</option>
                     <FontOptions fonts={allFonts} />
                   </select>
                 </label>
@@ -380,11 +381,11 @@ export function Konstruktor() {
         {mode === "stencil" ? (
           <>
             <fieldset className="grid gap-2">
-              <legend className={LEGEND_CLASS}>Розмір</legend>
+              <legend className={LEGEND_CLASS}>{t.size}</legend>
               <div className="flex flex-wrap gap-2 text-sm">
-                <button id="k-size-width" type="button" aria-pressed={s.shape !== "square" && !byLetter} onClick={() => { setByLetter(false); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && !byLetter)}>За шириною трафарету</button>
-                <button id="k-size-letter" type="button" aria-pressed={s.shape !== "square" && byLetter} onClick={() => { setByLetter(true); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && byLetter)}>За висотою літер</button>
-                <button id="k-size-square" type="button" aria-pressed={s.shape === "square"} onClick={() => { setByLetter(false); s.set({ shape: "square", widthMm: SQUARE_STENCIL_PRESETS.some((p) => p.sideMm === s.widthMm) ? s.widthMm : 300 }); }} className={chip(s.shape === "square")}>Квадратний</button>
+                <button id="k-size-width" type="button" aria-pressed={s.shape !== "square" && !byLetter} onClick={() => { setByLetter(false); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && !byLetter)}>{t.byWidth}</button>
+                <button id="k-size-letter" type="button" aria-pressed={s.shape !== "square" && byLetter} onClick={() => { setByLetter(true); s.set({ shape: "rect" }); }} className={chip(s.shape !== "square" && byLetter)}>{t.byLetter}</button>
+                <button id="k-size-square" type="button" aria-pressed={s.shape === "square"} onClick={() => { setByLetter(false); s.set({ shape: "square", widthMm: SQUARE_STENCIL_PRESETS.some((p) => p.sideMm === s.widthMm) ? s.widthMm : 300 }); }} className={chip(s.shape === "square")}>{t.square}</button>
               </div>
               {s.shape === "square" ? (
                 <>
@@ -398,12 +399,12 @@ export function Konstruktor() {
                     ))}
                   </div>
                   <span className="text-[13px] text-[var(--muted)]">
-                    Напис вписуємо в квадрат і ставимо по центру.{s.materialId !== SQUARE_STENCIL_MATERIAL ? " Ціни квадратних розмірів для ПЕТ 0,5 мм, для цього матеріалу рахуємо за площею." : ""} Свій логотип: <Link href="/na-zamovlennia" className="underline">за вашим макетом</Link>.
+                    {t.squareNote}{s.materialId !== SQUARE_STENCIL_MATERIAL ? t.squareOtherMaterial : ""}{t.ownLogo} <Link href="/na-zamovlennia" className="underline">{t.byYourLayout}</Link>.
                   </span>
                 </>
               ) : !byLetter ? (
                 <>
-                  <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
+                  <label className="grid gap-1 text-sm text-[var(--muted)]">{t.widthCm}
                     <input id="k-width" type="number" min={10} max={400} value={Math.round(s.widthMm / 10)} onChange={(e) => s.set({ widthMm: Math.max(100, Math.min(4000, Number(e.target.value) * 10)) })}
                       className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-base text-[var(--ink)]" />
                   </label>
@@ -417,7 +418,7 @@ export function Konstruktor() {
                   </div>
                 </>
               ) : (
-                <label className="grid gap-1 text-sm text-[var(--muted)]">Висота великої літери, мм
+                <label className="grid gap-1 text-sm text-[var(--muted)]">{t.capHeightMm}
                   <input id="k-letter" type="number" min={10} max={1000} value={letterMm} onChange={(e) => setLetterMm(Math.max(10, Number(e.target.value)))}
                     className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-base text-[var(--ink)]" />
                 </label>
@@ -425,13 +426,13 @@ export function Konstruktor() {
             </fieldset>
 
             <fieldset className="grid gap-2">
-              <legend className={LEGEND_CLASS}>Матеріал</legend>
+              <legend className={LEGEND_CLASS}>{t.material}</legend>
               {STENCIL_MATS.map((id) => {
                 const m = MATERIALS[id];
                 return (
                   <label key={id} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-3 ${s.materialId === id ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
                     <input type="radio" name="k-mat" id={`k-mat-${id}`} checked={s.materialId === id} onChange={() => s.set({ materialId: id })} className="h-[18px] w-[18px] accent-[var(--ink)]" />
-                    <span><b className="block">{m.name.uk}</b><span className="text-[13px] text-[var(--muted)]">{m.note.uk}</span></span>
+                    <span><b className="block">{m.name[locale]}</b><span className="text-[13px] text-[var(--muted)]">{m.note[locale]}</span></span>
                     <em className="not-italic font-semibold tabular-nums">{formatUAH(priceStencil(sheet, m, 1).unitPrice)}</em>
                   </label>
                 );
@@ -439,23 +440,23 @@ export function Konstruktor() {
             </fieldset>
 
             <fieldset role="radiogroup" aria-labelledby="k-bridges-legend" className="grid gap-2">
-              <legend id="k-bridges-legend" className={LEGEND_CLASS}>Перемички</legend>
+              <legend id="k-bridges-legend" className={LEGEND_CLASS}>{t.bridges}</legend>
               <div className="flex flex-wrap gap-2 text-sm">
-                {BRIDGE_STRENGTHS.map(([value, label]) => (
+                {BRIDGE_STRENGTHS.map((value) => (
                   <label key={value} className={`${chip(s.bridgeStrength === value)} flex cursor-pointer items-center gap-1.5`}>
                     <input type="radio" name="k-bridges" value={value} checked={s.bridgeStrength === value} onChange={() => s.set({ bridgeStrength: value })} className="sr-only" />
-                    {label}
+                    {t.bridgeStrengths[value]}
                   </label>
                 ))}
               </div>
-              <span className="text-[13px] text-[var(--muted)]">Міцні тримають краще при частому митті, тонкі менш помітні у малюнку.</span>
+              <span className="text-[13px] text-[var(--muted)]">{t.bridgesNote}</span>
             </fieldset>
           </>
         ) : (
           <>
             <fieldset className="grid gap-2">
-              <legend className={LEGEND_CLASS}>Ширина виробу</legend>
-              <label className="grid gap-1 text-sm text-[var(--muted)]">Ширина, см
+              <legend className={LEGEND_CLASS}>{t.pieceWidth}</legend>
+              <label className="grid gap-1 text-sm text-[var(--muted)]">{t.widthCm}
                 <input id="k-weld-width" type="number" min={5} max={100} value={Math.round(weldWidthMm / 10)}
                   onChange={(e) => setWeldWidthMm(Math.max(50, Math.min(1000, Number(e.target.value) * 10)))}
                   className="h-11 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-base text-[var(--ink)]" />
@@ -471,14 +472,14 @@ export function Konstruktor() {
             <WeldOptionsPanel value={weldOptions} onChange={setWeldOptions} />
 
             <fieldset className="grid gap-2">
-              <legend className={LEGEND_CLASS}>Матеріал і колір</legend>
+              <legend className={LEGEND_CLASS}>{t.materialColour}</legend>
               {weldMaterials.map((id) => {
                 const m = MATERIALS[id];
                 return (
                   <label key={id} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-3 ${weldMaterial === id ? "border-[var(--ink)]" : "border-[var(--line)]"} bg-[var(--card)]`}>
                     <input type="radio" name="k-weld-mat" id={`k-weld-mat-${id}`} checked={weldMaterial === id}
                       onChange={() => { setWeldMaterial(id); setColourId(m.colours[0].id); }} className="h-[18px] w-[18px] accent-[var(--ink)]" />
-                    <b>{m.name.uk}</b>
+                    <b>{m.name[locale]}</b>
                     <em className="not-italic font-semibold tabular-nums">{weld ? formatUAH(priceWelded(weldW, weldH, m, 1).unitPrice) : ""}</em>
                   </label>
                 );
@@ -487,7 +488,7 @@ export function Konstruktor() {
                 {weldMat.colours.map((c) => (
                   <button key={c.id} type="button" aria-pressed={weldColour.id === c.id} onClick={() => setColourId(c.id)}
                     className={`flex items-center gap-2 rounded-full border-[1.5px] px-3 py-1.5 text-sm ${weldColour.id === c.id ? "border-[var(--ink)] font-bold" : "border-[var(--line)]"}`}>
-                    <span className="h-4 w-4 rounded-full border border-[var(--line)]" style={{ background: c.hex }} aria-hidden />{c.name.uk}
+                    <span className="h-4 w-4 rounded-full border border-[var(--line)]" style={{ background: c.hex }} aria-hidden />{c.name[locale]}
                   </button>
                 ))}
               </div>
@@ -496,23 +497,23 @@ export function Konstruktor() {
         )}
 
         <fieldset className="grid gap-2">
-          <legend className={LEGEND_CLASS}>Кількість і опт</legend>
+          <legend className={LEGEND_CLASS}>{t.quantityTiers}</legend>
           <div className="grid grid-cols-4 gap-1.5 text-center text-xs tabular-nums">
-            {tiers.map((t) => {
-              const on = s.quantity >= t.minQty && !tiers.some((x) => x.minQty > t.minQty && s.quantity >= x.minQty);
+            {tiers.map((tier) => {
+              const on = s.quantity >= tier.minQty && !tiers.some((x) => x.minQty > tier.minQty && s.quantity >= x.minQty);
               return (
-                <button type="button" key={t.minQty} onClick={() => s.set({ quantity: t.minQty })}
+                <button type="button" key={tier.minQty} onClick={() => s.set({ quantity: tier.minQty })}
                   className={`rounded-lg border-[1.5px] px-1 py-1.5 ${on ? "border-[var(--ok)] text-[var(--ink)]" : "border-dashed border-[var(--line)] text-[var(--muted)]"}`}>
-                  <b className="block text-sm text-[var(--ink)]">{formatUAH(tierPrice(t.minQty))}</b>{t.minQty === 1 ? "1 шт." : `від ${t.minQty} шт.`}
+                  <b className="block text-sm text-[var(--ink)]">{formatUAH(tierPrice(tier.minQty))}</b>{tier.minQty === 1 ? t.onePiece : t.fromQty(tier.minQty)}
                 </button>
               );
             })}
           </div>
           <div className="flex items-center gap-1.5">
-            <button type="button" aria-label="Менше" onClick={() => s.set({ quantity: s.quantity - 1 })} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">−</button>
-            <input id="k-qty" type="number" min={1} value={s.quantity} onChange={(e) => s.set({ quantity: Number(e.target.value) || 1 })} aria-label="Кількість"
+            <button type="button" aria-label={t.less} onClick={() => s.set({ quantity: s.quantity - 1 })} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">−</button>
+            <input id="k-qty" type="number" min={1} value={s.quantity} onChange={(e) => s.set({ quantity: Number(e.target.value) || 1 })} aria-label={t.quantity}
               className="h-10 w-16 rounded-lg border border-[var(--line)] bg-[var(--card)] text-center" />
-            <button type="button" aria-label="Більше" onClick={() => s.set({ quantity: s.quantity + 1 })} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">+</button>
+            <button type="button" aria-label={t.more} onClick={() => s.set({ quantity: s.quantity + 1 })} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">+</button>
           </div>
         </fieldset>
 
@@ -520,24 +521,24 @@ export function Konstruktor() {
         {mode === "stencil" && s.checks.filter((c) => c.fixWidthMm && c.fixWidthMm !== s.widthMm).slice(0, 1).map((c) => (
           <button key={c.code} type="button" onClick={() => { setByLetter(false); s.set({ widthMm: Math.min(4000, c.fixWidthMm as number) }); }}
             className="h-11 justify-self-start rounded-full px-5 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">
-            Збільшити до {Math.round((c.fixWidthMm as number) / 10)} см
+            {t.enlargeTo(Math.round((c.fixWidthMm as number) / 10))}
           </button>
         ))}
 
         <div className="hidden items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4 lg:flex">
           <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(total)}
-            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{s.quantity > 1 ? `${formatUAH(unit)} × ${s.quantity} шт. · ` : ""}виготовлення 3 робочі дні</small>
+            <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{s.quantity > 1 ? `${formatUAH(unit)} × ${s.quantity} ${t.pcs} · ` : ""}{t.production}</small>
           </div>
-          <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-50">Купити</button>
+          <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-50">{t.buy}</button>
         </div>
         {buyHint && <p id="k-buy-hint" role="status" className="m-0 text-sm text-[var(--muted)]">{buyHint}</p>}
-        <p className="m-0 text-[13px] text-[var(--muted)]">Перевіримо макет і надішлемо превʼю у Viber або Telegram до порізки. Файл для різки готуємо самі.</p>
-        <DraftLinkButton link={draft.link} note="Відкриє цей самий макет на телефоні чи іншому компʼютері. Ваші власні шрифти лишаються на цьому пристрої." />
+        <p className="m-0 text-[13px] text-[var(--muted)]">{t.checkNote}</p>
+        <DraftLinkButton link={draft.link} note={t.draftNote} />
       </form>
 
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] lg:hidden">
-        <b className="text-xl tabular-nums">{formatUAH(total)}{buyHint && <small className="block text-[12px] font-normal text-[var(--muted)]">Розраховуємо…</small>}</b>
-        <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-12 rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] disabled:opacity-50">Купити</button>
+        <b className="text-xl tabular-nums">{formatUAH(total)}{buyHint && <small className="block text-[12px] font-normal text-[var(--muted)]">{t.calculating}</small>}</b>
+        <button type="button" onClick={buy} disabled={!canBuy} aria-describedby={buyHint ? "k-buy-hint" : undefined} className="h-12 rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] disabled:opacity-50">{t.buy}</button>
       </div>
     </div>
   );

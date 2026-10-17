@@ -27,7 +27,7 @@ export function canvasPart(input: CanvasPartInput): ProductionPart {
     gridMm: 5, snapToGrid: false, showGrid: false, materialId: input.materialId, result: input.result, autoJoin: input.autoJoin,
   };
   const analysis = analyzeCanvas(elements, settings);
-  const warnings = [...new Set(analysis.issues.map((issue) => issue.message))];
+  const warnings = [...new Set(analysis.issues.map((issue) => issue.message.uk))];
   const material = MATERIALS[input.materialId];
   if (input.result === "piece") {
     if (!analysis.piece) throw new Error("canvas piece was not built");

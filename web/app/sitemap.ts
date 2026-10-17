@@ -23,14 +23,14 @@ const TRANSLATED_PAGES: { path: string; priority: number; changeFrequency: Entry
   { path: "/pro-nas", priority: 0.4, changeFrequency: "yearly" },
   { path: "/kontakty", priority: 0.5, changeFrequency: "yearly" },
   { path: "/vidguky", priority: 0.5, changeFrequency: "weekly" },
+  { path: "/konstruktor", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/konstruktor/polotno", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/zahotovky", priority: 0.8, changeFrequency: "monthly" },
 ];
 
 const STATIC_PAGES: { path: string; priority: number; changeFrequency: Entry["changeFrequency"] }[] = [
-  { path: "/konstruktor", priority: 0.9, changeFrequency: "monthly" },
-  { path: "/konstruktor/polotno", priority: 0.7, changeFrequency: "monthly" },
   { path: "/na-zamovlennia", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/zahotovky", priority: 0.8, changeFrequency: "monthly" },
   { path: "/vyvisky/vkazivnyky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/ofisni-tablychky", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/napysy-na-plantsi", priority: 0.7, changeFrequency: "monthly" },

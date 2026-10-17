@@ -6,7 +6,7 @@
 import type {
   BlankColour, BlankColourId, BlankMaterialGroup, BlankMaterialGroupId, BlankSheetOption,
 } from "../../types/blank";
-import type { LocalizedText, MaterialType } from "../../types/customizer";
+import type { Locale, LocalizedText, MaterialType } from "../../types/customizer";
 import { MATERIALS } from "../materials";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
@@ -90,17 +90,18 @@ export function blankSheetInGroup(group: BlankMaterialGroupId, current: BlankShe
 }
 
 /** Chip label of a thickness: "3 мм" for acrylic, with the material where a group mixes materials. */
-export function blankThicknessLabel(group: BlankMaterialGroupId, thicknessMm: number): string {
+export function blankThicknessLabel(group: BlankMaterialGroupId, thicknessMm: number, locale: Locale = "uk"): string {
   const mm = `${String(thicknessMm).replace(".", ",")} мм`;
   const material = blankSheetsAt(group, thicknessMm)[0]?.materialId ?? "";
-  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, полістирол` : `${mm}, акрил`;
-  if (group === "board") return material === "pet_food_board" ? `PET ${mm}` : `Полістирол ${mm}`;
+  const polystyrene = locale === "ru" ? "полистирол" : "полістирол";
+  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, акрил`;
+  if (group === "board") return material === "pet_food_board" ? `PET ${mm}` : `${polystyrene.charAt(0).toUpperCase()}${polystyrene.slice(1)} ${mm}`;
   return mm;
 }
 
 /** Customer name of a sheet: «Акрил 3 мм, прозорий», «Дзеркальний акрил 3 мм, рожеве золото». */
-export function blankSheetName(materialId: MaterialType, colourId: BlankColourId): string {
-  const name = MATERIALS[materialId].name.uk;
-  const colour = BLANK_COLOURS[colourId].name.uk.toLowerCase();
+export function blankSheetName(materialId: MaterialType, colourId: BlankColourId, locale: Locale = "uk"): string {
+  const name = MATERIALS[materialId].name[locale];
+  const colour = BLANK_COLOURS[colourId].name[locale].toLowerCase();
   return name.toLowerCase().includes(colour) ? name : `${name}, ${colour}`;
 }

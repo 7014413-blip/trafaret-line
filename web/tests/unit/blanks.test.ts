@@ -159,3 +159,9 @@ describe("writing blank prices into the catalogue", () => {
     ]);
   });
 });
+
+describe("blank titles in Russian", () => {
+  it("name the shape, material and colour in Russian", () => {
+    expect(blankTitle({ ...circle(10), shapeId: "rect", widthMm: 200, heightMm: 300 }, "ru")).toBe("Заготовка «Прямоугольник» 20×30 см, акрил 3 мм, прозрачный");
+  });
+});

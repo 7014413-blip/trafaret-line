@@ -14,6 +14,9 @@ import type { Canvas as FabricCanvas, FabricObject } from "fabric";
 import type { CanvasAnalysis, CanvasElement, CanvasSettings, CanvasTransform } from "@/types/canvas";
 import { MATERIALS } from "@/lib/materials";
 import { polygonsToPathData } from "@/lib/geometry/svg-path";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
+import { tr } from "@/lib/i18n/translate";
 
 type FabricModule = typeof import("fabric");
 
@@ -52,6 +55,7 @@ function readTransform(obj: FabricObject, element: CanvasElement, k: number): Ca
 }
 
 export function Canvas2D({ settings, elements, analysis, selectedId, onSelect, onTransform, className }: Canvas2DProps) {
+  const t = tr(CONSTRUCTOR, useLocale());
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<FabricCanvas | null>(null);
@@ -246,8 +250,8 @@ export function Canvas2D({ settings, elements, analysis, selectedId, onSelect, o
 
   return (
     <div ref={wrapRef} className={className}>
-      <canvas ref={canvasElRef} aria-label={`Полотно трафарету ${Math.round(settings.sheetWidthMm / 10)}×${Math.round(settings.sheetHeightMm / 10)} см`} />
-      {!ready && <div className="grid aspect-[3/2] place-items-center text-[var(--muted)]">Завантаження полотна…</div>}
+      <canvas ref={canvasElRef} aria-label={t.canvasLabel(Math.round(settings.sheetWidthMm / 10), Math.round(settings.sheetHeightMm / 10))} />
+      {!ready && <div className="grid aspect-[3/2] place-items-center text-[var(--muted)]">{t.canvasLoading}</div>}
     </div>
   );
 }
