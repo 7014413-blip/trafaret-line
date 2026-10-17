@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { Card, InfoPage } from "@/components/layout/InfoPage";
 import { SITE } from "@/data/site";
+import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
 
 export const metadata: Metadata = pageMeta({
   title: "Контакти",
@@ -19,6 +20,8 @@ export default function Contacts() {
     <InfoPage title="Контакти" lead="Відповідаємо у робочий час протягом 15 хвилин.">
       <Card>
         <h2>Звʼязок</h2>
+        <p>Менеджер {SITE.manager.name} відповість на питання про макет, матеріал і доставку.</p>
+        <p><ManagerCallButton variant="card" /></p>
         <ul>
           <li>Телефон, Viber, Telegram: <b className="select-all">{SITE.phone}</b></li>
           <li>E-mail: <b className="select-all">{SITE.email}</b></li>

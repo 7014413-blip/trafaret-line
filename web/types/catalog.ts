@@ -66,6 +66,8 @@ export interface RawProduct {
   metadata?: {
     catalog_type?: "ready" | "named" | "custom";
     hit?: boolean;
+    /** «Новинка» badge, set in «Простий кабінет». */
+    is_new?: boolean;
     min_price_uah?: number;
     primary_category?: string;
     image_alts?: { url: string; kind: string; uk: string; ru: string }[];
@@ -138,6 +140,7 @@ export interface CatalogProductCard {
   minPrice: number;
   sizeCount: number;
   hit: boolean;
+  isNew: boolean;
   kind: "ready" | "named" | "custom";
   categoryHandles: string[];
   materialLabels: string[];
@@ -155,6 +158,7 @@ export interface CatalogCardLite {
   minPrice: number;
   sizeCount: number;
   hit: boolean;
+  isNew: boolean;
   kind: CatalogProductCard["kind"];
   materialLabels: string[];
 }

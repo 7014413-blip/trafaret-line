@@ -87,6 +87,19 @@ export default defineMiddlewares({
       middlewares: [limitRoute({ name: "account-orders", limit: 120, windowMs: 10 * 60_000 })],
     },
     {
+      // Customer review with up to 5 photos of 3 MB as base64: 10 reviews and 60 MB per hour per address.
+      matcher: "/store/tl-reviews/order/:id",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "22mb" },
+      middlewares: [limitRoute({ name: "review", limit: 10, windowMs: 60 * 60_000, maxBytes: 60 * 1024 * 1024 })],
+    },
+    {
+      // Review form of an order: tokens are not guessed by trying (60 per hour per address).
+      matcher: "/store/tl-reviews/order/:id",
+      method: ["GET"],
+      middlewares: [limitRoute({ name: "review-form", limit: 60, windowMs: 60 * 60_000 })],
+    },
+    {
       matcher: "/store/tl-pay/wayforpay",
       method: ["POST"],
       middlewares: [limitRoute({ name: "pay", limit: 20, windowMs: 10 * 60_000 })],

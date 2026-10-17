@@ -11,6 +11,9 @@ export const SITE = {
   email: "1@topperok.com.ua", // shared mailbox with topperok.com.ua until a trafaret-line.com.ua mailbox is created
   hours: "Пн–Пт 9:00–18:00",
   viber: "viber://chat?number=+380662819720",
+  // Manager the customer calls in one tap (header, contacts, consultant chat; plan step 8.7).
+  // [default, Claude 2026-10-16] the shop number until Денис gives Наталя's own.
+  manager: { name: "Наталя", nameDative: "Наталі", phone: "+38 066 281 97 20", phoneHref: "+380662819720" },
   branches: [
     { city: "Бориспіль", address: "вул. Гостинна, 46", note: "виробництво і відправка" },
     { city: "Запоріжжя", address: "адресу уточнюємо", note: "відправка" },

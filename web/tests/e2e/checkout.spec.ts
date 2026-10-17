@@ -111,3 +111,21 @@ test("own text stencil: the order waits for «Макет перевірив»", 
   expect(order.body.layoutApproved).toBe(true);
   expect(order.body.lines).toEqual([expect.objectContaining({ kind: "stencil", previewSvg: expect.stringMatching(/^<svg/) })]);
 });
+
+test("a rigid stencil longer than a locker cell is not offered parcel lockers", async ({ page }) => {
+  // Thin PET rolls into a short tube that fits a locker; 3 mm acrylic goes flat in a 94 cm box.
+  await page.goto("/konstruktor");
+  await page.locator("#k-text").fill("КАВА");
+  await page.locator("#k-width").fill("90");
+  await page.locator("#k-mat-acrylic").check();
+  const buy = page.getByRole("button", { name: "Купити" }).first();
+  await expect(buy).toBeEnabled();
+  await buy.click();
+  await page.goto("/checkout");
+  await expect(page.getByRole("radio", { name: /^Нова пошта: відділення за/ })).toBeChecked();
+  await page.locator("#c-city").fill("Киї");
+  await page.getByRole("option", { name: KYIV.label }).click();
+  await expect(page.locator("#c-wh").getByRole("option", { name: BRANCH.option })).toBeAttached();
+  await expect(page.locator("#c-wh").getByRole("option", { name: LOCKER.option })).toHaveCount(0);
+  await expect(page.getByText(/Посилка більша за комірку поштомата/)).toBeVisible();
+});

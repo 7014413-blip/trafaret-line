@@ -18,6 +18,7 @@ export const CONSTRUCTOR_CONFIG: ConstructorConfig = {
   bridgeZoneShare: 0.6,
   bridgeLongWarnMm: 40,
   minSlotMm: 1,
+  positioningToleranceMm: 0.2, // Денис's prompt, accepted 2026-10-15 (PROEKT-SAYTU §13.2)
   weldOverlapRatio: 0.02,
   weldOverlapMinMm: 1.2,
   weldOverlapMaxOfNarrow: 0.15,

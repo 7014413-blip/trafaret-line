@@ -29,6 +29,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/povernennia", priority: 0.4, changeFrequency: "yearly" },
   { path: "/pro-nas", priority: 0.4, changeFrequency: "yearly" },
   { path: "/kontakty", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/vidguky", priority: 0.5, changeFrequency: "weekly" },
   { path: "/oferta", priority: 0.2, changeFrequency: "yearly" },
   { path: "/polityka-konfidentsiinosti", priority: 0.2, changeFrequency: "yearly" },
 ];

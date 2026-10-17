@@ -167,6 +167,10 @@ const KabinetProductPage = () => {
               <Checkbox id="k-hit" checked={form.hit} onCheckedChange={(v) => set("hit", v === true)} />
               <Label htmlFor="k-hit">Позначка «Хіт» (першим у розділі)</Label>
             </div>
+            <div className="flex items-center gap-2 pt-6">
+              <Checkbox id="k-new" checked={form.isNew} onCheckedChange={(v) => set("isNew", v === true)} />
+              <Label htmlFor="k-new">Позначка «Новинка» на картці</Label>
+            </div>
           </div>
         </Section>
 
