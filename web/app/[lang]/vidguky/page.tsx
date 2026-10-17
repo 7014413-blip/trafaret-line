@@ -8,44 +8,51 @@ import { Stars } from "@/components/reviews/Stars";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { pluralUk } from "@/lib/text/plural-uk";
 import { listReviews } from "@/services/medusa-reviews";
+import { PAGES } from "@/lib/i18n/dictionaries/pages";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
+import type { LangParams } from "@/types/i18n";
 
 export const revalidate = 300;
 
 const PAGE = 20;
 
-export const metadata: Metadata = pageMeta({
-  title: "Відгуки покупців",
-  description: "Відгуки покупців Trafaret Line з фото: трафарети, заготовки з акрилу і ПЕТ, вивіски та написи.",
-  path: "/vidguky",
-});
+type Props = { params: Promise<LangParams>; searchParams: Promise<{ page?: string }> };
 
-type Props = { searchParams: Promise<{ page?: string }> };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = localeOf((await params).lang);
+  const t = tr(PAGES, locale);
+  return pageMeta({ title: t.reviewsMetaTitle, description: t.reviewsMetaDescription, path: "/vidguky", locale });
+}
 
-export default async function ReviewsPage({ searchParams }: Props) {
+export default async function ReviewsPage({ params, searchParams }: Props) {
+  const locale = localeOf((await params).lang);
+  const t = tr(PAGES, locale);
   const page = Math.max(1, Number.parseInt((await searchParams).page ?? "1", 10) || 1);
   const list = await listReviews({ limit: PAGE, offset: (page - 1) * PAGE });
   const pages = Math.max(1, Math.ceil(list.total / PAGE));
   const { count, average } = list.summary;
   return (
-    <InfoPage title="Відгуки покупців" lead="Відгуки публікуємо після перевірки: лише від покупців, які отримали замовлення.">
+    <InfoPage title={t.reviewsTitle} lead={t.reviewsLead} locale={locale}>
       {count > 0 ? (
         <>
           <p className="flex flex-wrap items-center gap-2">
-            <Stars value={average} size={20} />
+            <Stars value={average} size={20} locale={locale} />
             <b className="tabular-nums">{String(average).replace(".", ",")}</b>
-            <span className="text-[var(--muted)]">· {count} {pluralUk(count, ["відгук", "відгуки", "відгуків"])}</span>
+            <span className="text-[var(--muted)]">· {count} {pluralUk(count, tr(CATALOG, locale).reviewForms)}</span>
           </p>
-          <ReviewList reviews={list.reviews} showProduct />
+          <ReviewList reviews={list.reviews} showProduct locale={locale} />
           {pages > 1 && (
-            <nav aria-label="Сторінки відгуків" className="flex items-center gap-3">
-              {page > 1 && <Link href={page === 2 ? "/vidguky" : `/vidguky?page=${page - 1}`} className="underline">Новіші</Link>}
-              <span className="text-[var(--muted)]">Сторінка {page} з {pages}</span>
-              {page < pages && <Link href={`/vidguky?page=${page + 1}`} className="underline">Старіші</Link>}
+            <nav aria-label={t.reviewsPages} className="flex items-center gap-3">
+              {page > 1 && <Link href={page === 2 ? "/vidguky" : `/vidguky?page=${page - 1}`} className="underline">{t.newer}</Link>}
+              <span className="text-[var(--muted)]">{t.pageOf(page, pages)}</span>
+              {page < pages && <Link href={`/vidguky?page=${page + 1}`} className="underline">{t.older}</Link>}
             </nav>
           )}
         </>
       ) : (
-        <p>Відгуки скоро зʼявляться. Після отримання замовлення ми надсилаємо посилання, щоб ви могли поділитися враженнями і фото.</p>
+        <p>{t.reviewsSoon}</p>
       )}
     </InfoPage>
   );

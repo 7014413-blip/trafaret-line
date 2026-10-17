@@ -1,38 +1,6 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
-import { Card, InfoPage } from "@/components/layout/InfoPage";
+import { infoPageComponent, infoPageMetadata } from "@/components/layout/info-page-route";
+import { DELIVERY_PAGE } from "@/data/pages/dostavka-i-oplata";
 
-export const metadata: Metadata = pageMeta({
-  title: "Доставка і оплата",
-  description: "Нова пошта, Укрпошта, курʼєр. Оплата карткою, Apple Pay, Google Pay, при отриманні або за рахунком. Виготовлення 3 робочі дні.",
-  path: "/dostavka-i-oplata",
-});
+export const generateMetadata = infoPageMetadata(DELIVERY_PAGE, "/dostavka-i-oplata");
 
-export default function Delivery() {
-  return (
-    <InfoPage title="Доставка і оплата" lead="Виготовляємо за 3 робочі дні й відправляємо з Борисполя або Запоріжжя. Точну дату відправки видно в картці товару і в кошику.">
-      <Card>
-        <h2>Доставка</h2>
-        <ul>
-          <li><b>Нова пошта</b>: відділення, поштомат або курʼєр. Вартість — за тарифом перевізника, оплачується при отриманні.</li>
-          <li><b>Укрпошта</b>: за тарифом Укрпошти.</li>
-          <li>Тонкий PET до 0,8 мм відправляємо в тубусі, жорсткі матеріали — у плоскій коробці.</li>
-          <li>Номер ТТН надсилаємо у Viber або Telegram у день відправки.</li>
-        </ul>
-      </Card>
-      <Card>
-        <h2>Оплата</h2>
-        <ul>
-          <li>Карткою онлайн, Apple Pay, Google Pay (WayForPay).</li>
-          <li>Накладений платіж при отриманні на Новій пошті.</li>
-          <li>За рахунком для ФОП і ТОВ, без ПДВ.</li>
-        </ul>
-        <p>Фіскальний чек надходить на телефон або e-mail після оплати.</p>
-      </Card>
-      <Card>
-        <h2>Строки</h2>
-        <p>Виготовлення до 3 робочих днів. Замовлення після 14:00 рахуємо з наступного робочого дня. Великі й складені трафарети, вивіски під замовлення — строк підтверджує менеджер.</p>
-      </Card>
-    </InfoPage>
-  );
-}
+export default infoPageComponent(DELIVERY_PAGE);

@@ -18,6 +18,11 @@ type Entry = MetadataRoute.Sitemap[number];
 const TRANSLATED_PAGES: { path: string; priority: number; changeFrequency: Entry["changeFrequency"] }[] = [
   { path: "/", priority: 1, changeFrequency: "daily" },
   { path: "/catalog", priority: 0.9, changeFrequency: "daily" },
+  { path: "/dostavka-i-oplata", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/povernennia", priority: 0.4, changeFrequency: "yearly" },
+  { path: "/pro-nas", priority: 0.4, changeFrequency: "yearly" },
+  { path: "/kontakty", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/vidguky", priority: 0.5, changeFrequency: "weekly" },
 ];
 
 const STATIC_PAGES: { path: string; priority: number; changeFrequency: Entry["changeFrequency"] }[] = [
@@ -36,11 +41,6 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: Entry["ch
   { path: "/vyvisky/tablychky-poverkh", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/tablychky-na-dveri", priority: 0.7, changeFrequency: "monthly" },
   { path: "/vyvisky/nomerky", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/dostavka-i-oplata", priority: 0.5, changeFrequency: "monthly" },
-  { path: "/povernennia", priority: 0.4, changeFrequency: "yearly" },
-  { path: "/pro-nas", priority: 0.4, changeFrequency: "yearly" },
-  { path: "/kontakty", priority: 0.5, changeFrequency: "yearly" },
-  { path: "/vidguky", priority: 0.5, changeFrequency: "weekly" },
   { path: "/oferta", priority: 0.2, changeFrequency: "yearly" },
   { path: "/polityka-konfidentsiinosti", priority: 0.2, changeFrequency: "yearly" },
 ];

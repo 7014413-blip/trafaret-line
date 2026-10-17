@@ -77,3 +77,14 @@ test("card payment opens WayForPay in Russian and returns to the Russian thank-y
   await page.goto(back.headers().location);
   await expect(page.getByText("Оплата получена.")).toBeVisible();
 });
+
+test("info pages, the cabinet and the missing-page answer speak Russian under /ru/", async ({ page }) => {
+  await page.goto("/ru/kontakty");
+  await expect(page.getByRole("heading", { level: 1, name: "Контакты" })).toBeVisible();
+  await expect(page.locator('link[rel="alternate"][hreflang="uk-UA"]')).toHaveAttribute("href", /\/kontakty$/);
+  await page.goto("/ru/kabinet");
+  await expect(page.getByRole("heading", { name: "Вход в кабинет" })).toBeVisible();
+  const missing = await page.goto("/ru/net-takoi-stranitsy");
+  expect(missing?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Такой страницы нет" })).toBeVisible();
+});

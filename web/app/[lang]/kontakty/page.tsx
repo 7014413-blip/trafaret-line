@@ -1,40 +1,24 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
-import { Card, InfoPage } from "@/components/layout/InfoPage";
-import { SITE } from "@/data/site";
-import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
+import { InfoPage } from "@/components/layout/InfoPage";
+import { infoPageMetadata } from "@/components/layout/info-page-route";
+import { CONTACTS_PAGE } from "@/data/pages/kontakty";
 import { organizationJsonLd } from "@/lib/seo/organization-json-ld";
 import { jsonLdText } from "@/lib/seo/json-ld";
 import { siteUrl } from "@/lib/seo/site-url";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
+import type { LangParams } from "@/types/i18n";
 
-export const metadata: Metadata = pageMeta({
-  title: "Контакти",
-  description: `Телефон ${SITE.phone}, Viber, Telegram. Бориспіль і Запоріжжя. ${SITE.hours}.`,
-  path: "/kontakty",
-});
+type Props = { params: Promise<LangParams> };
 
-export default function Contacts() {
+export const generateMetadata = infoPageMetadata(CONTACTS_PAGE, "/kontakty");
+
+export default async function Contacts({ params }: Props) {
+  const locale = localeOf((await params).lang);
+  const page = tr(CONTACTS_PAGE, locale);
   const ld = organizationJsonLd(siteUrl());
   return (
-    <InfoPage title="Контакти" lead="Відповідаємо у робочий час протягом 15 хвилин.">
-      <Card>
-        <h2>Звʼязок</h2>
-        <p>Менеджер {SITE.manager.name} відповість на питання про макет, матеріал і доставку.</p>
-        <p><ManagerCallButton variant="card" /></p>
-        <ul>
-          <li>Телефон, Viber, Telegram: <b className="select-all">{SITE.phone}</b></li>
-          <li>E-mail: <b className="select-all">{SITE.email}</b></li>
-          <li>Графік: {SITE.hours}</li>
-        </ul>
-      </Card>
-      <Card>
-        <h2>Філіали</h2>
-        <ul>{SITE.branches.map((b) => <li key={b.city}><b>{b.city}</b>, {b.address} — {b.note}</li>)}</ul>
-      </Card>
-      <Card>
-        <h2>Ми в соцмережах</h2>
-        <ul>{Object.entries(SITE.social).map(([k, v]) => <li key={k}><a href={v} target="_blank" rel="noopener" className="underline">{k[0].toUpperCase() + k.slice(1)}</a></li>)}</ul>
-      </Card>
+    <InfoPage title={page.title} lead={page.lead} locale={locale}>
+      {page.body}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(ld) }} />
     </InfoPage>
   );

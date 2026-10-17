@@ -5,6 +5,10 @@ import Image from "next/image";
 import type { AccountOrder, AccountOrderStage } from "@/types/account";
 import { formatUAH } from "@/lib/format";
 import { RepeatOrderButton } from "./RepeatOrderButton";
+import { ACCOUNT } from "@/lib/i18n/dictionaries/account";
+import { tr } from "@/lib/i18n/translate";
+import type { Locale } from "@/types/customizer";
+import { INTL_TAG } from "@/lib/i18n/messages";
 
 const STAGE_CLASS: Record<AccountOrderStage, string> = {
   accepted: "bg-[var(--surface)]",
@@ -14,23 +18,25 @@ const STAGE_CLASS: Record<AccountOrderStage, string> = {
   cancelled: "bg-[var(--surface)] text-[var(--muted)] line-through",
 };
 
-const dateText = (iso: string) => new Date(iso).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Kyiv" });
+const dateText = (iso: string, locale: Locale) => new Date(iso).toLocaleDateString(INTL_TAG[locale], { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Kyiv" });
 
-export function OrderCard({ order }: { order: AccountOrder }) {
+export function OrderCard({ order, locale = "uk" }: { order: AccountOrder; locale?: Locale }) {
+  const t = tr(ACCOUNT, locale);
+  const server = (text: string) => t.serverTexts[text] ?? text;
   const repeatable = order.items.flatMap((item) => (item.repeat ? [item.repeat] : []));
   return (
-    <article aria-label={`Замовлення ${order.number}`} className="grid gap-4 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-5">
+    <article aria-label={t.order(order.number)} className="grid gap-4 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-5">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="m-0 text-lg font-bold">Замовлення {order.number}</h2>
-          <p className="m-0 text-sm text-[var(--muted)]">{dateText(order.createdAt)} · {formatUAH(order.total)}</p>
+          <h2 className="m-0 text-lg font-bold">{t.order(order.number)}</h2>
+          <p className="m-0 text-sm text-[var(--muted)]">{dateText(order.createdAt, locale)} · {formatUAH(order.total)}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${STAGE_CLASS[order.stage]}`}>{order.statusText}</span>
+        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${STAGE_CLASS[order.stage]}`}>{server(order.statusText)}</span>
       </header>
       {order.ttn && (
         <p className="m-0">
           ТТН <b className="tabular-nums">{order.ttn}</b>
-          {order.trackingUrl && <> · <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">Де посилка?</a></>}
+          {order.trackingUrl && <> · <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">{t.whereParcel}</a></>}
         </p>
       )}
       <ul className="m-0 grid list-none gap-3 p-0">
@@ -42,15 +48,15 @@ export function OrderCard({ order }: { order: AccountOrder }) {
             <div className="min-w-0">
               <p className="m-0 font-medium">{item.title}</p>
               <p className="m-0 text-sm text-[var(--muted)]">
-                {item.quantity} шт. × {formatUAH(item.unitPrice)}
-                {item.priceNow != null && item.priceNow !== item.unitPrice && <> · зараз {formatUAH(item.priceNow)}</>}
+                {item.quantity} {t.pieces} × {formatUAH(item.unitPrice)}
+                {item.priceNow != null && item.priceNow !== item.unitPrice && <> · {t.now} {formatUAH(item.priceNow)}</>}
               </p>
-              {item.repeatProblem && <p className="m-0 text-sm">{item.repeatProblem}</p>}
+              {item.repeatProblem && <p className="m-0 text-sm">{server(item.repeatProblem)}</p>}
             </div>
           </li>
         ))}
       </ul>
-      <RepeatOrderButton lines={repeatable} number={order.number} />
+      <RepeatOrderButton lines={repeatable} number={order.number} locale={locale} />
     </article>
   );
 }

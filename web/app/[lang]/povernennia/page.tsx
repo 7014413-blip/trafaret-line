@@ -1,33 +1,6 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
-import { Card, InfoPage } from "@/components/layout/InfoPage";
+import { infoPageComponent, infoPageMetadata } from "@/components/layout/info-page-route";
+import { RETURNS_PAGE } from "@/data/pages/povernennia";
 
-export const metadata: Metadata = pageMeta({
-  title: "Обмін і повернення",
-  description: "Готові трафарети — обмін і повернення 14 днів. Індивідуальні вироби — заміна або повернення коштів, якщо брак.",
-  path: "/povernennia",
-});
+export const generateMetadata = infoPageMetadata(RETURNS_PAGE, "/povernennia");
 
-export default function Returns() {
-  return (
-    <InfoPage title="Обмін і повернення" lead="Хочемо, щоб трафарет працював. Якщо щось не так, напишіть нам — вирішимо швидко.">
-      <Card>
-        <h2>Готові трафарети з каталогу</h2>
-        <p>Обмін або повернення протягом 14 днів після отримання, якщо виріб не використовувався і має товарний вигляд. Доставку повернення оплачує покупець, якщо причина не в браку.</p>
-      </Card>
-      <Card>
-        <h2>Індивідуальні вироби</h2>
-        <p>Трафарети з вашим текстом, за вашим макетом і вивіски виготовляються саме для вас, тому повертаються лише при браку: переробимо безкоштовно або повернемо кошти. До порізки ми надсилаємо превʼю на погодження.</p>
-      </Card>
-      <Card>
-        <h2>Як оформити</h2>
-        <ul>
-          <li>Напишіть у Viber або Telegram номер замовлення і фото виробу.</li>
-          <li>Відповімо протягом робочого дня і запропонуємо рішення.</li>
-          <li>Гроші повертаємо тим самим способом оплати, з чеком повернення.</li>
-        </ul>
-        <p className="text-[13px] text-[var(--muted)]">Умови буде звірено з юристом перед запуском.</p>
-      </Card>
-    </InfoPage>
-  );
-}
+export default infoPageComponent(RETURNS_PAGE);
