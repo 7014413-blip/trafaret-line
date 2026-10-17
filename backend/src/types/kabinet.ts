@@ -22,6 +22,8 @@ export interface KabinetListItem {
   categories: string[]
   variantCount: number
   hit: boolean
+  /** «Новинка» badge on the catalogue card. */
+  isNew: boolean
   availability: ProductAvailability
   updatedAt: string
 }
@@ -75,6 +77,8 @@ export interface KabinetProduct {
   status: KabinetStatus
   availability: ProductAvailability
   hit: boolean
+  /** «Новинка» badge on the catalogue card. */
+  isNew: boolean
   categoryIds: string[]
   images: KabinetImage[]
   sizes: string[]
@@ -95,6 +99,8 @@ export interface KabinetProductInput {
   status: KabinetStatus
   availability: ProductAvailability
   hit: boolean
+  /** «Новинка» badge on the catalogue card. */
+  isNew: boolean
   categoryIds: string[]
   images: KabinetImage[]
   sizes: string[]

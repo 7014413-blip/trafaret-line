@@ -6,19 +6,11 @@
 import { expect, test } from "@playwright/test";
 import { BRANCH, DELIVERY, KYIV, LOCKER } from "./support/nova-poshta";
 import { addRoseStencil, clearOrders, receivedOrders } from "./support/shop";
+import { fillContactsAndDelivery } from "./support/checkout-form";
 
 test.beforeEach(async ({ request }) => {
   await clearOrders(request);
 });
-
-async function fillContactsAndDelivery(page: import("@playwright/test").Page): Promise<void> {
-  await page.locator("#c-phone").fill("+380 67 123 45 67");
-  await page.locator("#c-name").fill("Олена Коваленко");
-  await page.locator("#c-city").fill("Киї");
-  await page.getByRole("option", { name: KYIV.label }).click();
-  await expect(page.locator("#c-wh").getByRole("option", { name: LOCKER.option })).toBeAttached();
-  await page.locator("#c-wh").selectOption(BRANCH.ref);
-}
 
 test("cart opens checkout with the same lines", async ({ page }) => {
   await addRoseStencil(page);

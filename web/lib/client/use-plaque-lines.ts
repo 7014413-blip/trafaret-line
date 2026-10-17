@@ -18,11 +18,15 @@ const FALLBACK_FONT = "montserrat";
 export interface PlaqueLinesState {
   lines: PlaqueTextLine[];
   setLine: (index: number, patch: Partial<PlaqueTextLine>) => void;
+  /** Replaces every line at once (a layout opened from a link). */
+  replaceLines: (lines: PlaqueTextLine[]) => void;
   addLine: () => void;
   removeLine: (index: number) => void;
   maxLines: number;
   allFonts: FontEntry[];
   customFonts: LoadedFont[];
+  /** The shop fonts and the customer's fonts are both listed (a font id missing from them is unknown here). */
+  fontsListed: boolean;
   onFontAdded: (font: LoadedFont) => void;
   onFontRemoved: (id: string) => void;
   measured: (MeasuredPlaqueLine | null)[];
@@ -37,11 +41,23 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
   const [shopFonts, setShopFonts] = useState<FontEntry[]>([]);
   const [customFonts, setCustomFonts] = useState<LoadedFont[]>([]);
   const [loaded, setLoaded] = useState<Record<string, LoadedFont>>({});
+  const [shopListed, setShopListed] = useState(false);
+  const [customListed, setCustomListed] = useState(false);
 
   useEffect(() => {
-    loadFontManifest().then(setShopFonts).catch(() => setShopFonts([]));
-    listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([]));
+    loadFontManifest().then(setShopFonts).catch(() => setShopFonts([])).finally(() => setShopListed(true));
+    listCustomFonts().then((list) => { list.forEach(registerLoadedFont); setCustomFonts(list); }).catch(() => setCustomFonts([])).finally(() => setCustomListed(true));
   }, []);
+  const fontsListed = shopListed && customListed;
+
+  // A line whose font is not on this device (the customer's own font in a link opened elsewhere)
+  // gets the fallback font, so the line is measured and the layout can be bought.
+  useEffect(() => {
+    if (!fontsListed || !shopFonts.length) return;
+    const known = (id: string) => shopFonts.some((f) => f.id === id) || customFonts.some((f) => f.id === id);
+    if (lines.every((l) => known(l.fontId))) return;
+    setLines((list) => list.map((l) => (known(l.fontId) ? l : { ...l, fontId: FALLBACK_FONT })));
+  }, [fontsListed, shopFonts, customFonts, lines]);
 
   // Load every font a line uses (each line may have its own).
   useEffect(() => {
@@ -69,14 +85,20 @@ export function usePlaqueLines(initial: PlaqueTextLine[], maxLines: number): Pla
     setLines((list) => list.map((l, k) => (k === index ? { ...l, ...patch } : l)));
   }, []);
 
+  const replaceLines = useCallback((next: PlaqueTextLine[]) => {
+    if (next.length) setLines(next.slice(0, maxLines));
+  }, [maxLines]);
+
   return {
     lines,
     setLine,
+    replaceLines,
     addLine: () => setLines((list) => (list.length >= maxLines ? list : [...list, { text: "", fontId: list[list.length - 1]?.fontId ?? FALLBACK_FONT, size: 0.8 }])),
     removeLine: (index) => setLines((list) => (list.length > 1 ? list.filter((_, k) => k !== index) : list)),
     maxLines,
     allFonts,
     customFonts,
+    fontsListed,
     onFontAdded: (font) => { registerLoadedFont(font); setCustomFonts((list) => [...list.filter((f) => f.id !== font.id), font]); },
     onFontRemoved: (id) => {
       setCustomFonts((list) => list.filter((f) => f.id !== id));

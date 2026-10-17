@@ -2,13 +2,7 @@
 // session cookie as the admin itself.
 
 import type { OrderFile, OrderFilesResult } from "../../types/order-files"
-
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, { credentials: "include", headers: { accept: "application/json" }, ...init })
-  const data = (await response.json().catch(() => ({}))) as T & { message?: string }
-  if (!response.ok) throw new Error(data.message || `Помилка сервера (${response.status})`)
-  return data
-}
+import { adminJson as call } from "./admin-json"
 
 export function loadOrderFiles(orderId: string): Promise<{ orderNumber: string; files: OrderFile[]; problems: string[] }> {
   return call(`/admin/tl-orders/${encodeURIComponent(orderId)}/files`)

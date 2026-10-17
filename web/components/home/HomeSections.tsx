@@ -12,6 +12,7 @@ import { formatUAH } from "@/lib/format";
 import { pluralUk } from "@/lib/text/plural-uk";
 import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import type { MaterialType, SheetSize } from "@/types/customizer";
+import { CardBadges } from "@/components/catalog/CardBadges";
 
 /* ---------- Left catalog rail with fly-out subcategories ---------- */
 export function CatalogRail({ categories }: { categories: CategoryLink[] }) {
@@ -45,7 +46,7 @@ function ProductCard({ p }: { p: CatalogCardLite }) {
     <Link href={`/p/${p.handle}`} className="group grid snap-start content-start gap-2.5">
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--card)] transition-shadow group-hover:shadow-[0_10px_28px_rgba(15,23,42,.12)]">
         {p.image && <Image src={p.image.url} alt={p.image.alt} fill sizes="(max-width:640px) 50vw, 25vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" />}
-        {p.hit && <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--card)] px-2.5 py-1 text-xs font-bold text-[var(--ink)]">Хіт</span>}
+        <CardBadges hit={p.hit} isNew={p.isNew} />
         <span aria-hidden className="absolute bottom-2.5 right-2.5 grid h-11 w-11 place-items-center rounded-full bg-[var(--buy)] text-xl font-bold text-[var(--buy-fg)]">+</span>
       </div>
       <h3 className="m-0 text-[15px] font-medium leading-snug">{p.title}</h3>

@@ -1,6 +1,6 @@
 "use client";
 
-// Trust bar, sticky header (logo, catalog, search, phone, cart; the RU/EN switch returns
+// Trust bar, sticky header (logo, catalog, search, phone, cabinet, cart; the RU/EN switch returns
 // together with the translated pages, QA 2026-10-10),
 // direction tabs, footer and the mobile bottom navigation.
 
@@ -9,11 +9,12 @@ import { useEffect, useState } from "react";
 import { DIRECTIONS } from "@/data/home";
 import { SITE } from "@/data/site";
 import { CartButton, CartHost } from "@/components/cart/CartHost";
+import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
 
 const SEARCH_HINTS = ["мандала", "цифри 10 см", "напис на торт", "піксель ЗСУ", "акрил 3 мм коло", "номер підʼїзду"];
 const INFO_LINKS = [
   ["Про нас", "/pro-nas"], ["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"],
-  ["Для бізнесу", "/business"], ["Контакти", "/kontakty"],
+  ["Для бізнесу", "/business"], ["Відгуки", "/vidguky"], ["Контакти", "/kontakty"],
 ] as const;
 
 export function TrustBar() {
@@ -52,7 +53,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
       className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)] bg-[var(--bg)] transition-transform duration-200"
       style={{ transform: hidden ? "translateY(-60px)" : undefined }}
     >
-      <div className="mx-auto grid max-w-[1320px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-2 md:grid-cols-[auto_auto_minmax(0,1fr)_auto] md:min-h-[68px] lg:px-8">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-4 px-4 py-2 md:grid-cols-[auto_auto_minmax(0,1fr)_auto] md:min-h-[68px] md:gap-x-4 lg:px-8">
         <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-[family-name:var(--font-display)] text-lg font-bold">
           <span aria-hidden className="grid h-[30px] w-[30px] place-items-center rounded-lg border-2 border-dashed border-[var(--ink)] text-sm">✂</span>
           Trafaret Line
@@ -74,11 +75,11 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
           />
           <button type="submit" className="sr-only">Знайти</button>
         </form>
-        <div className="flex items-center gap-3.5 whitespace-nowrap text-sm">
-          <div className="hidden leading-tight xl:grid">
-            <b className="text-[15px]">{SITE.phone}</b>
-            <small className="text-[var(--muted)]">Viber · Telegram</small>
-          </div>
+        <div className="flex items-center gap-1.5 whitespace-nowrap text-sm sm:gap-3.5">
+          <ManagerCallButton variant="header" />
+          <Link href="/kabinet" aria-label="Мій кабінет" className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6" /></svg>
+          </Link>
           <CartButton />
         </div>
       </div>
@@ -122,7 +123,7 @@ export function SiteFooter() {
         </div>
         {col("Каталог", [["Трафарети", "/catalog"], ["Заготовки з акрилу і PET", "/blanks"], ["Заготовки у свій розмір", "/zahotovky"], ["Свій напис", "/konstruktor"], ["Вільне полотно", "/konstruktor/polotno"]])}
         {col("Покупцям", [["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"], ["За вашим макетом", "/na-zamovlennia"], ["Вивіски", "/vyvisky"], ["Таблички-вказівники", "/vyvisky/vkazivnyky"], ["Офісні таблички", "/vyvisky/ofisni-tablychky"], ["Написи на планці", "/vyvisky/napysy-na-plantsi"], ["Таблички поверхів", "/vyvisky/tablychky-poverkh"], ["Таблички на двері", "/vyvisky/tablychky-na-dveri"], ["Номерки", "/vyvisky/nomerky"], ["Ініціали на торт", "/konstruktor/inicialy-na-tort"], ["Самоклейні літери", "/konstruktor/samoklejni-litery"], ["Акрилові цифри і літери", "/konstruktor/akrylovi-tsyfry-i-litery"], ["Літери для вивісок", "/konstruktor/samoklejni-litery-dlia-vyvisok"]])}
-        {col("Компанія", [["Про нас", "/pro-nas"], ["Для бізнесу", "/business"], ["Контакти", "/kontakty"], ["Публічна оферта", "/oferta"], ["Політика конфіденційності", "/polityka-konfidentsiinosti"]])}
+        {col("Компанія", [["Про нас", "/pro-nas"], ["Для бізнесу", "/business"], ["Відгуки", "/vidguky"], ["Контакти", "/kontakty"], ["Публічна оферта", "/oferta"], ["Політика конфіденційності", "/polityka-konfidentsiinosti"]])}
       </div>
     </footer>
   );

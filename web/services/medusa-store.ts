@@ -22,7 +22,7 @@ const CARD_FIELDS = [
   "*variants", "*variants.calculated_price", "*variants.options", "*variants.options.option",
 ].join(",");
 
-function base(): { url: string; key: string } {
+export function base(): { url: string; key: string } {
   const url = process.env.MEDUSA_INTERNAL_URL ?? process.env.NEXT_PUBLIC_MEDUSA_URL;
   const key = process.env.NEXT_PUBLIC_MEDUSA_PK;
   if (!url || !key) throw new UpstreamError("internal", "NEXT_PUBLIC_MEDUSA_URL and NEXT_PUBLIC_MEDUSA_PK must be set");
@@ -34,7 +34,7 @@ function base(): { url: string; key: string } {
  * 5 minutes; "no-store" is for big product pages whose mapped result is cached instead
  * (the data cache refuses entries over 2 MB and would refetch on every request).
  */
-async function storeGet<T>(path: string, params: Record<string, string | string[] | number | undefined>, cache: "revalidate" | "no-store" = "revalidate"): Promise<T> {
+export async function storeGet<T>(path: string, params: Record<string, string | string[] | number | undefined>, cache: "revalidate" | "no-store" = "revalidate"): Promise<T> {
   const { url, key } = base();
   const query = new URLSearchParams();
   for (const [name, value] of Object.entries(params)) {

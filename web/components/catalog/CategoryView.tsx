@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import { formatUAH } from "@/lib/format";
 import { pluralUk } from "@/lib/text/plural-uk";
+import { CardBadges } from "@/components/catalog/CardBadges";
 
 const KIND_LABEL: Record<CatalogCardLite["kind"], string> = {
   ready: "Готовий малюнок",
@@ -112,7 +113,7 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
                   <Link href={`/p/${p.handle}`} className="group grid content-start gap-2">
                     <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--card)] transition-shadow group-hover:shadow-[0_10px_28px_rgba(15,23,42,.12)]">
                       {p.image && <Image src={p.image.url} alt={p.image.alt} fill sizes="(max-width:640px) 50vw, (max-width:1280px) 33vw, 25vw" priority={i < 4} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" />}
-                      {p.hit && <span className="absolute top-2 left-2 rounded-full bg-[var(--ink)] px-2.5 py-1 text-xs font-bold text-[var(--bg)]">Хіт</span>}
+                      <CardBadges hit={p.hit} isNew={p.isNew} />
                     </div>
                     <h3 className="m-0 text-[15px] font-medium leading-snug">{p.title}</h3>
                     <div className="text-[13px] text-[var(--muted)]">{KIND_LABEL[p.kind]} · {p.sizeCount} {pluralUk(p.sizeCount, ["розмір", "розміри", "розмірів"])}</div>

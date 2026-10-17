@@ -2,6 +2,8 @@
 // checkout; older orders by creation time), as the production files need it.
 
 import type { OrderForFiles, QueryGraph } from "../../types/order-files";
+import { sortOrderItems } from "./sort-items";
+import { catalogLineSources } from "../masters/catalog-line-sources";
 
 interface RawItem {
   id: string;
@@ -10,8 +12,6 @@ interface RawItem {
   created_at?: string | Date;
   metadata?: Record<string, unknown> | null;
 }
-
-const positionOf = (item: RawItem) => (typeof item.metadata?.position === "number" ? item.metadata.position : Number.MAX_SAFE_INTEGER);
 
 /** The order, or null when there is no order with this id. */
 export async function loadOrderForFiles(graph: QueryGraph, orderId: string): Promise<OrderForFiles | null> {
@@ -22,12 +22,16 @@ export async function loadOrderForFiles(graph: QueryGraph, orderId: string): Pro
   });
   const order = data[0] as { id: string; display_id: number; metadata?: Record<string, unknown> | null; items?: RawItem[] } | undefined;
   if (!order) return null;
-  const items = [...(order.items ?? [])].sort((a, b) =>
-    positionOf(a) - positionOf(b) || String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")) || a.id.localeCompare(b.id));
+  const items = sortOrderItems(order.items ?? []);
+  const variantOf = (item: RawItem) => (item.metadata?.kind === "catalog" && typeof item.metadata.variantId === "string" ? item.metadata.variantId : null);
+  const catalog = await catalogLineSources(graph, items.map(variantOf).filter((id): id is string => !!id));
   return {
     id: order.id,
     displayId: order.display_id,
     approvedAt: typeof order.metadata?.layoutApprovedAt === "string" ? order.metadata.layoutApprovedAt : null,
-    items: items.map((item) => ({ title: item.title, quantity: Number(item.quantity), metadata: item.metadata ?? null })),
+    items: items.map((item) => {
+      const variantId = variantOf(item);
+      return { title: item.title, quantity: Number(item.quantity), metadata: item.metadata ?? null, catalog: variantId ? catalog.get(variantId) ?? null : null };
+    }),
   };
 }

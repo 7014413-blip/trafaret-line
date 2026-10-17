@@ -46,7 +46,7 @@ export function products(origin) {
       { id: "opt_material", title: "Матеріал", values: MATERIALS.map((m) => ({ value: m.label })) },
     ],
     variants: variants(),
-    metadata: { catalog_type: "ready", hit: true, primary_category: "food-tort" },
+    metadata: { catalog_type: "ready", hit: true, is_new: true, primary_category: "food-tort" },
     updated_at: "2026-10-15T00:00:00.000Z",
   }];
 }
