@@ -7,13 +7,15 @@
 // their keys the fields stay plain inputs.
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useState } from "react";
 import { cartTotals, toCartLine, useCart } from "@/store/cart-store";
 import { cartLineItem, itemsValue } from "@/lib/analytics/analytics-item";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { currentAttribution } from "@/lib/client/attribution-storage";
 import { savePendingPurchase } from "@/lib/client/pending-purchase";
+import { localePath } from "@/lib/i18n/locale-path";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { formatUAH } from "@/lib/format";
 import { SITE } from "@/data/site";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
@@ -48,6 +50,7 @@ type PlacedOrder = { number: string; date: string; id: string; total: number; in
 const formatDate = (iso: string) => new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "long" }).format(new Date(`${iso}T12:00:00`));
 
 export function Checkout() {
+  const locale = useLocale();
   const { items, clear } = useCart();
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
@@ -209,7 +212,7 @@ export function Checkout() {
         Для індивідуальних виробів спершу надішлемо превʼю макета на погодження.
       </p>
       {form.payment === "invoice" && (
-        <a href={`/rakhunok/${done.id}?t=${encodeURIComponent(done.invoiceToken ?? "")}`} className="font-semibold underline">Відкрити рахунок на оплату (можна зберегти в PDF)</a>
+        <a href={localePath(locale, `/rakhunok/${done.id}?t=${encodeURIComponent(done.invoiceToken ?? "")}`)} className="font-semibold underline">Відкрити рахунок на оплату (можна зберегти в PDF)</a>
       )}
       <Link href="/" className="mt-2 rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)]">На головну</Link>
     </div>

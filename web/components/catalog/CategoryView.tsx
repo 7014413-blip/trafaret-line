@@ -6,7 +6,7 @@
 // work over the whole section. On phones the filters open from a chip row as a bottom sheet.
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useState } from "react";
 import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import { formatUAH } from "@/lib/format";

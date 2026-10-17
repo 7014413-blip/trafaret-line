@@ -2,7 +2,7 @@
 // search; the page is not indexed (endless query combinations).
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { CategoryView } from "@/components/catalog/CategoryView";
 import { searchProducts } from "@/services/medusa-store";

@@ -1,7 +1,7 @@
 // «Відгуки»: every published review of the shop, newest first, 20 per page (ТЗ §4.10, §15).
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { InfoPage } from "@/components/layout/InfoPage";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import { Stars } from "@/components/reviews/Stars";

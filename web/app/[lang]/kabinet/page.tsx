@@ -3,7 +3,7 @@
 // come from Medusa for that session on every visit (never cached, never indexed).
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { cookies, headers } from "next/headers";
 import { SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { LoginPanel } from "@/components/account/LoginPanel";

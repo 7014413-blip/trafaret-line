@@ -3,7 +3,7 @@
 // its own LocalizedText; this file holds only interface text used by the components.
 // In the app, load the dictionary on the server (next-intl or a plain import) and pass
 // `locale` to client components so each language ships only its own strings.
-import type { Locale } from "../types/customizer";
+import type { Locale } from "../../types/customizer";
 
 const uk = {
   cart: {

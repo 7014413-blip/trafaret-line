@@ -11,6 +11,7 @@ import type { AnalyticsWindow } from "@/types/analytics";
 import { linkEvent } from "@/lib/analytics/link-event";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { rememberAttribution } from "@/lib/client/attribution-storage";
+import { splitLocalePath } from "@/lib/i18n/locale-path";
 
 const CONSTRUCTOR_PATHS = /^\/(konstruktor|vyvisky|zahotovky|na-zamovlennia)(\/|$)/;
 
@@ -38,7 +39,7 @@ export function AnalyticsListeners() {
   }, []);
 
   useEffect(() => {
-    if (!CONSTRUCTOR_PATHS.test(pathname)) return;
+    if (!CONSTRUCTOR_PATHS.test(splitLocalePath(pathname).path)) return;
     let started = false;
     const onChange = (event: Event) => {
       if (started || !(event.target as Element | null)?.closest?.("main")) return;

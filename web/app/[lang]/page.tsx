@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { pageMeta } from "@/lib/seo/page-meta";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { IDEAS, RAIL_TABS, SCENARIOS } from "@/data/home";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { BlanksCalculator, CatalogRail, ProductRail, type RailTab } from "@/components/home/HomeSections";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { Gallery, ProductBuyBox } from "@/components/catalog/ProductBuyBox";

@@ -4,7 +4,7 @@
 // (published products from Medusa, hits first) and the blanks price calculator.
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useMemo, useRef, useState } from "react";
 import { MATERIALS } from "@/lib/materials";
 import { priceBlank } from "@/lib/calculators/pricing";

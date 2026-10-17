@@ -4,7 +4,7 @@
 // together with the translated pages, QA 2026-10-10),
 // direction tabs, footer and the mobile bottom navigation.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useState } from "react";
 import { DIRECTIONS } from "@/data/home";
 import { SITE } from "@/data/site";

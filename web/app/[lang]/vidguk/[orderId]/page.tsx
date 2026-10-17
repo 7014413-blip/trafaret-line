@@ -2,7 +2,7 @@
 // Not for search engines; a wrong or old link explains what to do.
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { InfoPage } from "@/components/layout/InfoPage";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { reviewOrder } from "@/services/medusa-reviews";

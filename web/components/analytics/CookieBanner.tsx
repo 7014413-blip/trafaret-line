@@ -4,7 +4,7 @@
 // «Прийняти» turns on GA4, Google Ads and Meta cookies; «Лише необхідні» keeps them off and
 // Google gets only cookieless pings. The footer button «Налаштування cookies» opens it again.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useState } from "react";
 import type { ConsentChoice } from "@/types/analytics";
 import { siteAnalyticsConfig } from "@/lib/analytics/analytics-config";

@@ -7,7 +7,7 @@
 //                   letters are welded together (lib/geometry/weld.ts).
 // Prices come from lib/calculators/pricing.ts (the server repeats them); m² is never shown.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { LEGEND_CLASS } from "@/components/ui/form-classes";
 import { FontOptions } from "@/components/constructor/FontOptions";
 import { useEffect, useMemo, useState } from "react";

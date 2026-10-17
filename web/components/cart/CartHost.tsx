@@ -5,7 +5,7 @@
 // into <body>: inside the sticky header it would stay under the constructors' sticky buy
 // bars (the header's z-index caps it) and move with the header when it hides on scroll.
 
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/components/i18n/use-locale-router";
 import { useEffect, useState } from "react";
 import { cartLineItem, itemsValue } from "@/lib/analytics/analytics-item";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -20,7 +20,7 @@ const UPSELLS = [
 ];
 
 export function CartHost() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { items, open, setOpen, setQty, remove, add } = useCart();
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []); // the cart lives in localStorage: render after hydration

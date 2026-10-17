@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { PurchaseOnReturn } from "@/components/analytics/PurchaseOnReturn";

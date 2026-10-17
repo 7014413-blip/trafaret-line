@@ -1,7 +1,7 @@
 // Category page (server component) for /<section>/ and /<section>/<sub>/: texts and SEO
 // from the category metadata, products from Medusa, subcategories as chips.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { CategoryView } from "@/components/catalog/CategoryView";

@@ -8,7 +8,7 @@
 // No m² anywhere.
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CatalogImage, CatalogProduct, CatalogVariant } from "@/types/catalog";
 import { DEFAULT_PRICING, priceCatalogVariant } from "@/lib/calculators/pricing";

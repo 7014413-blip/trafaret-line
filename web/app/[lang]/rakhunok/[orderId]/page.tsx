@@ -2,7 +2,7 @@
 // buyer gets the signed link after checkout; "Зберегти PDF" uses the browser's print to PDF.
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import { buildInvoice } from "@/lib/invoice/build-invoice";
 import { formatMoney2 } from "@/lib/format";

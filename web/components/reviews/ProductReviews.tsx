@@ -1,7 +1,7 @@
 // «Відгуки» on a product page: the average, the latest reviews and a link to all of them.
 // Before the first review the block invites the buyer to leave one after the purchase.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import type { ReviewListResponse } from "@/types/reviews";
 import { pluralUk } from "@/lib/text/plural-uk";
 import { ReviewList } from "./ReviewList";

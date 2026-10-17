@@ -9,7 +9,7 @@ import { cmText, formatUAH } from "../../lib/format";
 import { isFlexible, parcelFor } from "../../lib/calculators/packaging";
 import type { PackKind } from "../../types/packaging";
 import type { CartLine, Locale, Upsell } from "../../types/customizer";
-import { msg } from "../../lib/i18n";
+import { msg } from "../../lib/i18n/messages";
 import { useFocusTrap } from "../../lib/useFocusTrap";
 
 /**

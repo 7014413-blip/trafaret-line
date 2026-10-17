@@ -1,7 +1,7 @@
 // Ukrainian 404 page with the site header, search and the main sections (QA 2026-10-10, m8).
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 
 export const metadata: Metadata = { title: "Сторінку не знайдено", robots: { index: false, follow: true } };

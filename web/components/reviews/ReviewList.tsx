@@ -2,7 +2,7 @@
 // answer. On the «Відгуки» page each review also links to its product.
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import type { PublicReview } from "@/types/reviews";
 import { formatReviewDate } from "@/lib/reviews/format-review-date";
 import { Stars } from "./Stars";

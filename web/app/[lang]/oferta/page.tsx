@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo/page-meta";
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { Card, InfoPage } from "@/components/layout/InfoPage";
 import { SITE } from "@/data/site";
 
