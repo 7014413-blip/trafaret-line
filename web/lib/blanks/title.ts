@@ -2,6 +2,7 @@
 // «Заготовка «Коло» Ø10 см, акрил 3 мм, прозорий».
 
 import type { BlankDesign } from "../../types/blank";
+import type { Locale } from "../../types/customizer";
 import { blankShape } from "./shapes";
 import { blankSheetName } from "./sheets";
 import { blankSheetMm } from "./size";
@@ -17,10 +18,11 @@ export function blankSizeText(design: Pick<BlankDesign, "shapeId" | "widthMm" | 
   return `${cm(size.widthMm)}×${cm(size.heightMm)} см`;
 }
 
-export function blankTitle(design: BlankDesign): string {
+/** The title in the page language; the server writes the Ukrainian one into the order. */
+export function blankTitle(design: BlankDesign, locale: Locale = "uk"): string {
   const shape = blankShape(design.shapeId);
-  const sheet = blankSheetName(design.materialId, design.colourId);
+  const sheet = blankSheetName(design.materialId, design.colourId, locale);
   // «Акрил 3 мм» → «акрил 3 мм», but «PET 0,5 мм» keeps its capitals.
   const lowered = /^\p{Lu}\p{Ll}/u.test(sheet) ? `${sheet.charAt(0).toLowerCase()}${sheet.slice(1)}` : sheet;
-  return `Заготовка «${shape.name.uk}» ${blankSizeText(design)}, ${lowered}`;
+  return `Заготовка «${shape.name[locale]}» ${blankSizeText(design)}, ${lowered}`;
 }

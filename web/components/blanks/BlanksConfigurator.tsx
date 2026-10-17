@@ -25,12 +25,17 @@ import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { blankThumbnailSvg } from "@/lib/export/blank-thumbnail";
 import { formatUAH } from "@/lib/format";
 import { useCart } from "@/store/cart-store";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { BLANKS } from "@/lib/i18n/dictionaries/blanks";
+import { tr } from "@/lib/i18n/translate";
 import type { BlankDesign, BlankShapeId, BlankSheetOption, BlankSizeValue } from "@/types/blank";
 
 const FIRST_SHAPE: BlankShapeId = "circle";
 const FIRST_SIZE: BlankSizeValue = { preset: 3, ...presetMm(10) };
 
 export function BlanksConfigurator() {
+  const locale = useLocale();
+  const t = tr(BLANKS, locale);
   const [shapeId, setShapeId] = useState<BlankShapeId>(FIRST_SHAPE);
   const [size, setSize] = useState<BlankSizeValue>(FIRST_SIZE);
   const [sheet, setSheet] = useState<BlankSheetOption>(() => blankSheetAt("clear", 3, "clear"));
@@ -55,7 +60,7 @@ export function BlanksConfigurator() {
     cart.add({
       // Same blank = same cart line (quantities add up), whatever the quantity chosen here.
       key: `blank|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: blankTitle(design),
+      title: blankTitle(design, locale),
       materialId: design.materialId,
       widthCm: design.widthMm / 10,
       heightCm: design.heightMm / 10,
@@ -69,26 +74,25 @@ export function BlanksConfigurator() {
   };
 
   const lines = [
-    { label: `Ціна за шт.: ${formatUAH(price.unitPrice)}${price.discount ? ` (−${Math.round(price.discount * 100)}%)` : ""}` },
-    { label: `Упаковка ${price.packQty} шт.: ${formatUAH(price.packPrice)}` },
+    { label: t.unitPrice(formatUAH(price.unitPrice), price.discount ? ` (−${Math.round(price.discount * 100)}%)` : "") },
+    { label: t.pack(price.packQty, formatUAH(price.packPrice)) },
   ];
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Схема заготовки" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] lg:sticky lg:top-24">
+      <section aria-label={t.schemeRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] lg:sticky lg:top-24">
         <div className="p-4">
           <BlankScheme shape={shape} widthMm={cut.widthMm} heightMm={cut.heightMm} colour={colour}
-            label={`Схема заготовки «${shape.name.uk}» ${blankSizeText(design)}`} />
+            label={t.schemeLabel(shape.name[locale], blankSizeText(design))} />
         </div>
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{shape.name.uk} · {blankSizeText(design)}</span>
-          <span>{blankTitle(design).split(", ").slice(1).join(", ")}</span>
+          <span>{shape.name[locale]} · {blankSizeText(design)}</span>
+          <span>{blankTitle(design, locale).split(", ").slice(1).join(", ")}</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <ConstructorHeader kicker="Заготовки" title="Заготовки з акрилу, дзеркального пластику і PET"
-          lead="Оберіть форму, розмір, матеріал і колір. Ріжемо лазером за 3 робочі дні, ціна за штуку одразу, опт від 10 шт." />
+        <ConstructorHeader kicker={t.kicker} title={t.title} lead={t.lead} />
 
         <BlankShapePicker value={shapeId} onChange={chooseShape} />
         <BlankSizePicker shape={shape} value={size} onChange={setSize} priceOf={unitOf} />

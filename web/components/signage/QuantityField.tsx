@@ -5,11 +5,14 @@
 
 import { FIELDSET_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
 import { nextTierHint } from "@/lib/calculators/pricing";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
+import { tr } from "@/lib/i18n/translate";
 
 const MAX_QTY = 9999;
 const clampQty = (value: number) => Math.max(1, Math.min(MAX_QTY, Math.round(value) || 1));
 
-export function QuantityField({ legend = "Кількість", idPrefix, value, onChange, sets = false, tierQuantity }: {
+export function QuantityField({ legend, idPrefix, value, onChange, sets = false, tierQuantity }: {
   legend?: string;
   idPrefix: string;
   value: number;
@@ -19,17 +22,18 @@ export function QuantityField({ legend = "Кількість", idPrefix, value, 
   /** Pieces the discount counts (a series of plaques counts every plaque); the quantity by default. */
   tierQuantity?: number;
 }) {
+  const t = tr(CONSTRUCTOR, useLocale());
   const hint = nextTierHint(tierQuantity ?? value);
-  const scale = sets ? "Від 10 наборів −5%, від 50 −10%, від 100 −15%." : "Від 10 шт −5%, від 50 шт −10%, від 100 шт −15%.";
+  const scale = sets ? t.scaleSets : t.scalePieces;
   return (
-    <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{legend}</legend>
+    <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{legend ?? t.quantity}</legend>
       <div className="flex items-center gap-1.5">
-        <button type="button" aria-label="Менше" onClick={() => onChange(clampQty(value - 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">−</button>
-        <input id={`${idPrefix}-qty`} type="number" min={1} max={MAX_QTY} value={value} onChange={(e) => onChange(clampQty(Number(e.target.value)))} aria-label="Кількість"
+        <button type="button" aria-label={t.less} onClick={() => onChange(clampQty(value - 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">−</button>
+        <input id={`${idPrefix}-qty`} type="number" min={1} max={MAX_QTY} value={value} onChange={(e) => onChange(clampQty(Number(e.target.value)))} aria-label={t.quantity}
           className="h-10 w-16 rounded-lg border border-[var(--line)] bg-[var(--card)] text-center" />
-        <button type="button" aria-label="Більше" onClick={() => onChange(clampQty(value + 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">+</button>
+        <button type="button" aria-label={t.more} onClick={() => onChange(clampQty(value + 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] text-lg">+</button>
       </div>
-      <span className="text-[13px] text-[var(--muted)]">{scale}{hint ? ` Додайте ще ${hint.addQty} шт., щоб отримати −${Math.round(hint.nextDiscount * 100)}%.` : ""}</span>
+      <span className="text-[13px] text-[var(--muted)]">{scale}{hint ? t.addForDiscount(hint.addQty, Math.round(hint.nextDiscount * 100)) : ""}</span>
     </fieldset>
   );
 }

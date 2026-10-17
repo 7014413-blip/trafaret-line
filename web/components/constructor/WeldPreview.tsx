@@ -9,7 +9,7 @@ import { polygonsToPathData } from "@/lib/geometry/svg-path";
 
 export type WeldView = "piece" | "cake";
 
-export function WeldPreview({ weld, material, colourHex, view }: { weld: WeldResult; material: MaterialOption; colourHex: string; view: WeldView }) {
+export function WeldPreview({ weld, material, colourHex, view, label }: { weld: WeldResult; material: MaterialOption; colourHex: string; view: WeldView; label: string }) {
   const w = weld.bbox.maxX - weld.bbox.minX;
   const h = weld.bbox.maxY - weld.bbox.minY;
   const pad = Math.max(w, h) * 0.08;
@@ -18,7 +18,7 @@ export function WeldPreview({ weld, material, colourHex, view }: { weld: WeldRes
   const d = polygonsToPathData(weld.shapes);
   return (
     <svg viewBox={`${-pad} ${-pad} ${w + pad * 2} ${h + pad * 2}`} className="block h-auto max-h-[60vh] w-full" role="img"
-      aria-label={`Превʼю виробу ${Math.round(w / 10)}×${Math.round(h / 10)} см`}>
+      aria-label={label}>
       <defs>
         <linearGradient id="weld-mirror" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={colourHex} />

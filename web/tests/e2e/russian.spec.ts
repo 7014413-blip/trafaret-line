@@ -88,3 +88,30 @@ test("info pages, the cabinet and the missing-page answer speak Russian under /r
   expect(missing?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "Такой страницы нет" })).toBeVisible();
 });
+
+test("the blanks configurator speaks Russian and puts a Russian line in the cart", async ({ page }) => {
+  await page.goto("/ru/zahotovky");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Заготовки из акрила");
+  await expect(page.getByText("Цена за шт.: 30 ₴")).toBeVisible();
+  await page.locator("#bl-shape-heart").click();
+  await page.getByRole("button", { name: /^20 см/ }).click();
+  await page.locator("#bl-group-mirror").click();
+  await page.locator("#bl-thickness-3").click();
+  await page.locator("#bl-colour-rose").click();
+  await expect(page.getByRole("img", { name: "Схема заготовки «Сердце» 20 см" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Цена за штуку от количества" })).toContainText("от 10 шт.−5%311 ₴");
+  await page.getByRole("button", { name: "В корзину" }).first().click();
+  await expect(page.getByRole("dialog", { name: "Корзина" })).toContainText("Заготовка «Сердце» 20 см, зеркальный акрил 3 мм, розовое золото");
+  await expect(page.locator("body")).not.toContainText("м²");
+});
+
+test("the own-text constructor speaks Russian", async ({ page }) => {
+  await page.goto("/ru/konstruktor");
+  await expect(page.getByRole("heading", { level: 1, name: "Своя надпись" })).toBeVisible();
+  await expect(page.locator('link[rel="alternate"][hreflang="uk-UA"]')).toHaveAttribute("href", /\/konstruktor$/);
+  await page.locator("#k-text").fill("КОФЕ");
+  const buy = page.getByRole("button", { name: "Купить" }).first();
+  await expect(buy).toBeEnabled();
+  await buy.click();
+  await expect(page.getByRole("dialog", { name: "Корзина" })).toContainText("Своя надпись «КОФЕ»");
+});

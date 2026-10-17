@@ -4,6 +4,7 @@
 // thin material, thin slots, letters too small for the material.
 
 import type { CanvasAnalysis, CanvasElement, CanvasIssue, CanvasSettings } from "../../types/canvas";
+import type { LocalizedText } from "../../types/customizer";
 import type { LaserConfig, Polygon, StencilCutResult, Vec2, WeldResult } from "../../types/geometry";
 import { bboxOf, pointInPolygon } from "../calculators/geometry";
 import { MATERIALS } from "../materials";
@@ -13,6 +14,14 @@ import { bridgeWidthFor, DEFAULT_LASER, laserFor } from "./laser-config";
 import { solidConnectorMm, solidPiece } from "./solid-piece";
 import { thinParts } from "./thin-zones";
 import { placePolygons } from "./transform";
+
+const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
+
+const thinPart = (mm: number): LocalizedText => t(
+  `Тонке місце, менше ${mm} мм: може зламатися`,
+  `Тонкое место, меньше ${mm} мм: может сломаться`,
+  `Thin spot under ${mm} mm: it may break`,
+);
 
 /** Smallest cap height among text elements, mm (drives the bridge width). */
 function smallestCapMm(elements: CanvasElement[]): number {
@@ -41,11 +50,15 @@ function analyzePiece(placed: CanvasAnalysis["placed"], settings: CanvasSettings
   if (piece.pieces > 1) {
     issues.push({
       kind: "pieces_apart", level: "error", at: [piece.bbox.minX, piece.bbox.minY],
-      message: `Виріб розпадеться на ${piece.pieces} частини. Увімкніть «З'єднати автоматично» або зсуньте елементи до дотику`,
+      message: t(
+        `Виріб розпадеться на ${piece.pieces} частини. Увімкніть «З'єднати автоматично» або зсуньте елементи до дотику`,
+        `Изделие распадётся на ${piece.pieces} части. Включите «Соединить автоматически» или сдвиньте элементы до касания`,
+        `The piece falls apart into ${piece.pieces} parts. Turn on «Join automatically» or move the elements until they touch`,
+      ),
     });
   }
   for (const zone of thinParts(piece.shapes, laser.minPartMm, "material", laser)) {
-    issues.push({ kind: "thin_part", level: "warning", at: zone.at, elementId: elementAt(zone.at, placed), message: `Тонке місце, менше ${laser.minPartMm} мм: може зламатися` });
+    issues.push({ kind: "thin_part", level: "warning", at: zone.at, elementId: elementAt(zone.at, placed), message: thinPart(laser.minPartMm) });
   }
   return piece;
 }
@@ -80,9 +93,9 @@ export function analyzeCanvas(elements: CanvasElement[], settings: CanvasSetting
     const outsideSheet = box.minX < 0 || box.minY < 0 || box.maxX > settings.sheetWidthMm || box.maxY > settings.sheetHeightMm;
     const outsideMargin = box.minX < m || box.minY < m || box.maxX > settings.sheetWidthMm - m || box.maxY > settings.sheetHeightMm - m;
     if (outsideSheet) {
-      issues.push({ kind: "overlap_sheet_edge", level: "error", elementId: item.elementId, at: [box.minX, box.minY], message: "Елемент виходить за край аркуша" });
+      issues.push({ kind: "overlap_sheet_edge", level: "error", elementId: item.elementId, at: [box.minX, box.minY], message: t("Елемент виходить за край аркуша", "Элемент выходит за край листа", "The element goes past the sheet edge") });
     } else if (outsideMargin) {
-      issues.push({ kind: "out_of_margin", level: "warning", elementId: item.elementId, at: [box.minX, box.minY], message: `Елемент ближче ${m} мм до краю: трафарет може порватися` });
+      issues.push({ kind: "out_of_margin", level: "warning", elementId: item.elementId, at: [box.minX, box.minY], message: t(`Елемент ближче ${m} мм до краю: трафарет може порватися`, `Элемент ближе ${m} мм к краю: трафарет может порваться`, `The element is closer than ${m} mm to the edge: the stencil may tear`) });
     }
   }
 
@@ -92,17 +105,21 @@ export function analyzeCanvas(elements: CanvasElement[], settings: CanvasSetting
     if (cap < minCap) {
       issues.push({
         kind: "letter_too_small", level: "warning", elementId: element.id, at: [element.transform.x, element.transform.y],
-        message: `Літери ${Math.round(cap)} мм, для матеріалу «${material.name.uk}» краще від ${minCap} мм`,
+        message: t(
+          `Літери ${Math.round(cap)} мм, для матеріалу «${material.name.uk}» краще від ${minCap} мм`,
+          `Буквы ${Math.round(cap)} мм, для материала «${material.name.ru}» лучше от ${minCap} мм`,
+          `Letters are ${Math.round(cap)} mm; «${material.name.en}» cuts cleanly from ${minCap} mm`,
+        ),
       });
     }
   }
 
   for (const island of cut.islands.filter((i) => !i.connected)) {
     const at: Vec2 = [(island.bbox.minX + island.bbox.maxX) / 2, (island.bbox.minY + island.bbox.maxY) / 2];
-    issues.push({ kind: "island_unbridged", level: "error", at, elementId: elementAt(at, placed), message: "Внутрішня деталь не тримається: збільште елемент" });
+    issues.push({ kind: "island_unbridged", level: "error", at, elementId: elementAt(at, placed), message: t("Внутрішня деталь не тримається: збільште елемент", "Внутренняя деталь не держится: увеличьте элемент", "An inner part is not held: make the element bigger") });
   }
   for (const bridge of cut.bridges.filter((b) => b.lengthMm > laser.maxBridgeLengthMm)) {
-    issues.push({ kind: "bridge_long", level: "warning", at: bridge.from, elementId: elementAt(bridge.from, placed), message: `Перемичка ${Math.round(bridge.lengthMm)} мм: деталь може прогинатися` });
+    issues.push({ kind: "bridge_long", level: "warning", at: bridge.from, elementId: elementAt(bridge.from, placed), message: t(`Перемичка ${Math.round(bridge.lengthMm)} мм: деталь може прогинатися`, `Перемычка ${Math.round(bridge.lengthMm)} мм: деталь может прогибаться`, `Bridge ${Math.round(bridge.lengthMm)} mm: the part may bend`) });
   }
   for (const zone of cut.thinZones) {
     const inside = placed.some((p) => p.groups.flat().some((poly) => pointInPolygon(zone.at, poly)));
@@ -111,7 +128,11 @@ export function analyzeCanvas(elements: CanvasElement[], settings: CanvasSetting
       level: "warning",
       at: zone.at,
       elementId: inside ? elementAt(zone.at, placed) : undefined,
-      message: zone.kind === "material" ? `Тонке місце, менше ${laser.minPartMm} мм: може зламатися` : `Вузький проріз, менше ${laser.minSlotMm} мм: фарба може не пройти`,
+      message: zone.kind === "material" ? thinPart(laser.minPartMm) : t(
+        `Вузький проріз, менше ${laser.minSlotMm} мм: фарба може не пройти`,
+        `Узкий прорез, меньше ${laser.minSlotMm} мм: краска может не пройти`,
+        `Narrow slot under ${laser.minSlotMm} mm: paint may not get through`,
+      ),
     });
   }
 

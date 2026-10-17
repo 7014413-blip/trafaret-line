@@ -16,12 +16,14 @@ const PAINT: Record<Exclude<StencilView, "stencil">, { surface: string; paint: s
   cake: { surface: "#f3e4cc", paint: "#5b331e" },
 };
 
-export function StencilPreview({ sheet, cut, material, view, showIssues }: {
+export function StencilPreview({ sheet, cut, material, view, showIssues, label }: {
   sheet: SheetSize;
   cut: StencilCutResult;
   material: MaterialOption;
   view: StencilView;
   showIssues: boolean;
+  /** Accessible name in the page language. */
+  label: string;
 }) {
   const pad = Math.max(sheet.widthMm, sheet.heightMm) * 0.06;
   const box = { x: -pad, y: -pad, w: sheet.widthMm + pad * 2, h: sheet.heightMm + pad * 2 };
@@ -32,7 +34,7 @@ export function StencilPreview({ sheet, cut, material, view, showIssues }: {
 
   return (
     <svg viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`} className="block h-auto max-h-[60vh] w-full" role="img"
-      aria-label={`Превʼю трафарету ${Math.round(sheet.widthMm / 10)}×${Math.round(sheet.heightMm / 10)} см`}>
+      aria-label={label}>
       {view === "stencil" ? (
         <>
           <rect x={box.x} y={box.y} width={box.w} height={box.h} fill={BACKDROP} />

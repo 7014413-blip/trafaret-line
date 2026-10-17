@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo/page-meta";
+import { constructorMetadata } from "@/components/layout/constructor-route";
 import { DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { Konstruktor } from "@/components/constructor/Konstruktor";
 
-export const metadata: Metadata = pageMeta({
-  title: "Свій напис на трафареті — конструктор з превʼю і ціною",
-  description: "Впишіть текст, оберіть шрифт, розмір і матеріал. Перемички в літерах ставимо автоматично, ціна одразу. Виготовлення 3 робочі дні.",
-  path: "/konstruktor",
-});
+export const generateMetadata = constructorMetadata("/konstruktor");
 
 export default function KonstruktorPage() {
   return (

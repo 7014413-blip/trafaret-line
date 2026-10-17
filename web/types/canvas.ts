@@ -3,7 +3,7 @@
 // so the cut file is rebuilt exactly from the stored state.
 
 import type { Polygon, StencilCutResult, Vec2, WeldResult } from "./geometry";
-import type { MaterialType } from "./customizer";
+import type { LocalizedText, MaterialType } from "./customizer";
 
 export type CanvasElementKind = "text" | "shape" | "upload";
 
@@ -82,7 +82,7 @@ export interface CanvasIssue {
   /** Element the issue belongs to, when known. */
   elementId?: string;
   at?: Vec2;
-  message: string;
+  message: LocalizedText;
 }
 
 export interface CanvasAnalysis {

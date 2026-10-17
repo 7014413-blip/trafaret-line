@@ -6,8 +6,12 @@ import { useEffect, useState } from "react";
 import { loadFont, type FontEntry } from "@/lib/text/font-loader";
 import { textToDesign, type TextDesignResult } from "@/lib/text/text-layout";
 import { useInView } from "@/lib/client/use-in-view";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
+import { tr } from "@/lib/i18n/translate";
 
 export function FontChip({ entry, text, active, onPick }: { entry: FontEntry; text: string; active: boolean; onPick: () => void }) {
+  const sample = tr(CONSTRUCTOR, useLocale()).sampleText;
   const [result, setResult] = useState<TextDesignResult | null>(null);
   // The font file is downloaded only when its chip scrolls into view (QA m13).
   const [ref, visible] = useInView<HTMLButtonElement>();
@@ -17,7 +21,7 @@ export function FontChip({ entry, text, active, onPick }: { entry: FontEntry; te
     let live = true;
     loadFont(entry)
       .then((font) => {
-        if (live) setResult(textToDesign(font, text.split("\n")[0] || "Напис", { align: "center" }));
+        if (live) setResult(textToDesign(font, text.split("\n")[0] || sample, { align: "center" }));
       })
       .catch(() => {
         if (live) setResult(null);
@@ -25,7 +29,7 @@ export function FontChip({ entry, text, active, onPick }: { entry: FontEntry; te
     return () => {
       live = false;
     };
-  }, [entry, text, visible, active]);
+  }, [entry, text, sample, visible, active]);
 
   const viewBox = result ? `-4 -4 ${result.design.bboxMm.w + 8} ${result.design.bboxMm.h + 8}` : "0 0 100 40";
   return (
