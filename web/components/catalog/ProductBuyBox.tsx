@@ -15,6 +15,7 @@ import { DEFAULT_PRICING, priceCatalogVariant } from "@/lib/calculators/pricing"
 import { formatUAH } from "@/lib/format";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { materialForCode } from "@/lib/catalog/material-map";
+import { variantFromSearch } from "@/lib/catalog/variant-from-search";
 import { useCart } from "@/store/cart-store";
 
 export function Gallery({ images, title }: { images: CatalogImage[]; title: string }) {
@@ -79,6 +80,14 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
   useEffect(() => {
     onVariantChange?.(variant);
   }, [variant, onVariantChange]);
+
+  // A link from the product feed or an ad (?variant=) opens the page on that size and material.
+  useEffect(() => {
+    const linked = variantFromSearch(window.location.search, p.variants);
+    if (!linked) return;
+    setSize(linked.sizeLabel);
+    setMaterial(linked.materialLabel);
+  }, [p.variants]);
 
   // Products made in a constructor (pointer signs): the button opens it with the chosen size.
   const makeHref = p.constructorPath ? `${p.constructorPath}${variant?.sizeCode ? `?size=${encodeURIComponent(variant.sizeCode)}` : ""}` : null;

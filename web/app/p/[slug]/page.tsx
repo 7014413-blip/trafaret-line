@@ -10,6 +10,7 @@ import { listReviews } from "@/services/medusa-reviews";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { reviewJsonLd } from "@/lib/reviews/review-json-ld";
 import { jsonLdText } from "@/lib/seo/json-ld";
+import { schemaAvailability } from "@/lib/seo/schema-availability";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { siteUrl } from "@/lib/seo/site-url";
@@ -41,7 +42,7 @@ export default async function ProductPage({ params }: Props) {
     brand: { "@type": "Brand", name: "Trafaret Line" }, image: p.images.map((i) => i.url), variesBy: ["https://schema.org/size", "https://schema.org/material"],
     hasVariant: p.variants.map((v) => ({
       "@type": "Product", name: `${p.title}, ${v.sizeLabel}, ${v.materialLabel}`, sku: v.sku ?? v.id, size: v.sizeLabel, material: v.materialLabel,
-      offers: { "@type": "Offer", price: v.price, priceCurrency: "UAH", availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition", url: `${BASE}/p/${p.handle}` },
+      offers: { "@type": "Offer", price: v.price, priceCurrency: "UAH", availability: schemaAvailability(p.availability), itemCondition: "https://schema.org/NewCondition", url: `${BASE}/p/${p.handle}` },
     })),
     ...reviewJsonLd(reviews),
   };

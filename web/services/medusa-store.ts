@@ -142,6 +142,21 @@ export async function listProductHandles(): Promise<{ handle: string; updatedAt:
   return out;
 }
 
+/** Every published product with its variants and prices (product feed), read 100 at a time. */
+export async function listAllProducts(): Promise<CatalogProduct[]> {
+  const region = await uahRegionId();
+  const out: CatalogProduct[] = [];
+  const limit = 100;
+  for (let offset = 0; offset < 20_000; offset += limit) {
+    const page = await storeGet<{ products: RawProduct[]; count: number }>("/store/products", {
+      fields: PRODUCT_FIELDS, region_id: region, limit, offset,
+    });
+    out.push(...page.products.map(mapProduct));
+    if (offset + limit >= page.count) break;
+  }
+  return out;
+}
+
 /** One published product by handle, null when it does not exist or is a draft. */
 export async function productByHandle(handle: string): Promise<CatalogProduct | null> {
   const region = await uahRegionId();
