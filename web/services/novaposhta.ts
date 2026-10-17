@@ -72,7 +72,7 @@ export function parcelFits(warehouse: Pick<NpWarehouse, "maxDimensionsMm" | "max
 
 /** Branches and parcel lockers of a city, optionally filtered by number or street. */
 export async function listWarehouses(
-  cityRef: string, query = "", limit = 50, parcel?: { lengthMm: number; widthMm: number; heightMm: number; weightKg: number },
+  cityRef: string, query = "", limit = 50, parcel?: { lengthMm: number; widthMm: number; heightMm: number; weightKg: number }, lockers = true,
 ): Promise<NpWarehouse[]> {
   const raw = await npCall<NpRawWarehouse>("AddressGeneral", "getWarehouses", {
     CityRef: cityRef, FindByString: query, Page: "1", Limit: String(limit), Language: "UA",
@@ -91,7 +91,7 @@ export async function listWarehouses(
     };
     warehouse.fits = parcel ? parcelFits(warehouse, parcel) : null;
     return warehouse;
-  });
+  }).filter((warehouse) => lockers || warehouse.category !== "postomat");
 }
 
 let senderCityRef: string | null = null;

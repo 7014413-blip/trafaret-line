@@ -2,6 +2,8 @@
 
 // Branch / parcel locker of the chosen city. Points where the parcel does not fit
 // (size or weight from lib/calculators/packaging.ts) are shown but cannot be picked.
+// A parcel larger than a locker cell (40 × 60 × 30 см, knowledge base) gets no lockers at all:
+// they are left out of the request to Nova Poshta (PLAN-RABOT шаг 8.2).
 // Without a city from the list (or without the Nova Poshta key) it is a text input.
 
 import { useEffect, useMemo, useState } from "react";
@@ -19,6 +21,8 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
 }) {
   const [list, setList] = useState<NpWarehouse[] | null>(null);
   const [filter, setFilter] = useState("");
+  const lockers = parcel ? parcel.fitsPostomat : true;
+  const label = lockers ? "Відділення або поштомат" : "Відділення";
 
   useEffect(() => {
     if (!cityRef) {
@@ -26,9 +30,9 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
       return;
     }
     const controller = new AbortController();
-    const size = parcel ? `&l=${parcel.lengthMm}&w=${parcel.widthMm}&h=${parcel.heightMm}&kg=${parcel.billingKg}` : "";
+    const size = parcel ? `&l=${parcel.lengthMm}&w=${parcel.widthMm}&h=${parcel.heightMm}&kg=${parcel.billingKg}${parcel.fitsPostomat ? "" : "&lockers=0"}` : "";
     getJson<{ warehouses: NpWarehouse[] }>(`/api/novaposhta/warehouses?cityRef=${cityRef}${size}`, controller.signal)
-      .then((result) => setList(result.ok ? result.data.warehouses : null))
+      .then((result) => setList(result.ok ? result.data.warehouses.filter((w) => !parcel || parcel.fitsPostomat || w.category !== "postomat") : null))
       .catch(() => undefined);
     return () => controller.abort();
   }, [cityRef, parcel]);
@@ -43,8 +47,9 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
 
   if (!list) {
     return (
-      <label className="grid gap-1 text-sm text-[var(--muted)]">Відділення або поштомат
+      <label className="grid gap-1 text-sm text-[var(--muted)]">{label}
         <input id="c-wh" value={value} placeholder="Номер або вулиця" onChange={(e) => onChange(e.target.value, "")} aria-invalid={!!error} className={inputClass} />
+        {!lockers && <span className="text-[13px]">Посилка більша за комірку поштомата (40 × 60 × 30 см), тому оберіть відділення.</span>}
         {error && <span className="text-[13px] text-[var(--danger)]">{error}</span>}
       </label>
     );
@@ -52,7 +57,8 @@ export function WarehouseField({ cityRef, value, warehouseRef, parcel, error, on
 
   return (
     <div className="grid gap-1 text-sm text-[var(--muted)]">
-      <label htmlFor="c-wh-filter">Відділення або поштомат</label>
+      <label htmlFor="c-wh-filter">{label}</label>
+      {!lockers && <span className="text-[13px]">Посилка більша за комірку поштомата (40 × 60 × 30 см), тому поштомати не пропонуємо.</span>}
       <input id="c-wh-filter" value={filter} placeholder="Номер або вулиця" onChange={(e) => setFilter(e.target.value)} className={inputClass} />
       <select id="c-wh" size={Math.min(6, Math.max(2, shown.length))} value={warehouseRef} aria-invalid={!!error}
         onChange={(e) => {
