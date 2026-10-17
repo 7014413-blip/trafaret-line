@@ -9,7 +9,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { cartTotals, useCart } from "@/store/cart-store";
+import { cartTotals, toCartLine, useCart } from "@/store/cart-store";
+import { cartLineItem, itemsValue } from "@/lib/analytics/analytics-item";
+import { trackEvent } from "@/lib/analytics/track-event";
+import { currentAttribution } from "@/lib/client/attribution-storage";
+import { savePendingPurchase } from "@/lib/client/pending-purchase";
 import { formatUAH } from "@/lib/format";
 import { SITE } from "@/data/site";
 import { estimateDispatchDate, formatDispatch } from "@/lib/production";
@@ -57,6 +61,13 @@ export function Checkout() {
   const [sending, setSending] = useState(false);
   const [quote, setQuote] = useState<NpPriceResult | null>(null);
   const { lines, total } = cartTotals(ready ? items : []);
+  // GA4 items of the cart with the unit prices after the quantity discount.
+  const analyticsItems = () => useCart.getState().items.map((line, index) => cartLineItem({ ...line, unitPrice: toCartLine(line).unitPrice }, index));
+  useEffect(() => {
+    if (!ready) return;
+    const started = analyticsItems();
+    if (started.length) trackEvent("begin_checkout", { value: itemsValue(started), items: started });
+  }, [ready]);
   // «Лист погодження макета»: lines made to the customer's layout are sent only after «Макет перевірив».
   const toApprove = (ready ? items : []).filter(needsLayoutApproval);
   const [approved, setApproved] = useState(false);
@@ -109,6 +120,10 @@ export function Checkout() {
       el?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
+    const ordered = analyticsItems();
+    const orderedValue = itemsValue(ordered);
+    trackEvent("add_shipping_info", { value: orderedValue, shipping_tier: form.delivery, items: ordered });
+    trackEvent("add_payment_info", { value: orderedValue, payment_type: form.payment, items: ordered });
     setSending(true);
     try {
       const accountToken = await checkoutAccountToken();
@@ -129,6 +144,7 @@ export function Checkout() {
           layoutApproved: toApprove.length ? approved : undefined,
           website: honeypot,
           accountToken: accountToken ?? undefined,
+          utm: currentAttribution(new Date()),
         }),
       });
       const data = await r.json();
@@ -152,10 +168,13 @@ export function Checkout() {
       // The order exists now: the cart is cleared so a retry never creates a second order.
       clear();
       if (form.payment === "card") {
+        // The purchase is reported when the buyer returns with the payment approved (PurchaseOnReturn).
+        savePendingPurchase({ orderId: placed.id, orderNumber: placed.number, value: placed.total, paymentType: form.payment, items: ordered });
         // «Дякуємо» only after WayForPay confirms; if the payment cannot start, say so and offer a retry.
         if (!(await startWayForPay(placed.id))) setPayFailed(placed);
         return;
       }
+      trackEvent("purchase", { transaction_id: placed.number, value: placed.total, payment_type: form.payment, items: ordered });
       setDone(placed);
     } catch {
       setErrors({ server: "Немає звʼязку з магазином. Спробуйте ще раз за хвилину." });

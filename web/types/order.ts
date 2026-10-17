@@ -10,6 +10,7 @@ import type { JoinedWordsDesign } from "./joined-words";
 import type { LayeredPlaqueDesign } from "./layered-plaque";
 import type { InitialsDesign } from "./initials";
 import type { StickLettersDesign } from "./stick-letters";
+import type { Attribution } from "./analytics";
 import type { BlankDesign } from "./blank";
 import type { B2BCompany } from "./invoice";
 import type { PackKind } from "./packaging";
@@ -91,7 +92,8 @@ export interface OrderDraft {
   noCall?: boolean;
   /** «Макет перевірив»: required when a line is made to the customer's layout (lib/validation/layout-approval.ts). */
   layoutApproved?: boolean;
-  utm?: Record<string, string>;
+  /** Where the buyer came from (UTM, gclid, fbclid): saved in the order for the CRM. */
+  utm?: Attribution;
   /** Signed cabinet token (lib/account/account-token.ts): the order goes to the signed-in customer. */
   accountToken?: string;
   /** Honeypot: a field hidden from people; bots fill it and the order is refused. */

@@ -1,5 +1,6 @@
 // Security headers for every storefront response (QA 2026-10-10, m7). The CSP allows only
-// this site, the Medusa backend (API and product photos) and the WayForPay payment form.
+// this site, the Medusa backend (API and product photos), the WayForPay payment form and the
+// analytics tags (Google Tag Manager with GA4 and Google Ads, the Meta pixel; plan step 9).
 // Next.js inlines its bootstrap scripts, so script-src keeps 'unsafe-inline'; development
 // additionally needs 'unsafe-eval' for fast refresh.
 
@@ -8,15 +9,20 @@ export interface HeaderEntry {
   value: string;
 }
 
+const GOOGLE_TAGS = ["https://www.googletagmanager.com", "https://*.google-analytics.com", "https://*.analytics.google.com", "https://*.g.doubleclick.net", "https://www.google.com", "https://www.google.com.ua"];
+const META_TAGS = ["https://connect.facebook.net", "https://www.facebook.com"];
+
 export function contentSecurityPolicy(medusaOrigin: string, production: boolean): string {
   const directives: [string, string[]][] = [
     ["default-src", ["'self'"]],
-    ["script-src", ["'self'", "'unsafe-inline'", ...(production ? [] : ["'unsafe-eval'"])]],
+    ["script-src", ["'self'", "'unsafe-inline'", ...(production ? [] : ["'unsafe-eval'"]), "https://www.googletagmanager.com", "https://connect.facebook.net"]],
     ["style-src", ["'self'", "'unsafe-inline'"]],
-    ["img-src", ["'self'", "data:", "blob:", medusaOrigin]],
+    ["img-src", ["'self'", "data:", "blob:", medusaOrigin, ...GOOGLE_TAGS, ...META_TAGS]],
     ["font-src", ["'self'", "data:"]],
-    ["connect-src", ["'self'", medusaOrigin, ...(production ? [] : ["ws:"])]],
+    ["connect-src", ["'self'", medusaOrigin, ...(production ? [] : ["ws:"]), ...GOOGLE_TAGS, ...META_TAGS]],
     ["worker-src", ["'self'", "blob:"]],
+    // Google Ads conversion tags load a measurement frame.
+    ["frame-src", ["'self'", "https://td.doubleclick.net", "https://www.googletagmanager.com"]],
     ["frame-ancestors", ["'none'"]],
     ["form-action", ["'self'", "https://secure.wayforpay.com"]],
     ["base-uri", ["'self'"]],
