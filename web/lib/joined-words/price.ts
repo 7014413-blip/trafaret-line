@@ -9,6 +9,7 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { DEFAULT_JOINED_WORDS_CONFIG } from "./config";
 import { findJoinedWordsMaterial } from "./find-material";
 import { cmText } from "../format";
+import { decimal, units } from "../i18n/dictionaries/units";
 import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 /** Price of one set before discounts. */
@@ -32,8 +33,8 @@ export function priceJoinedWords(
   const rows = new Set(layout.pieces.map((p) => p.lineIndex)).size;
   const lines = [
     `${text.rows(rows)}, ${text.pieces(layout.pieces.length)}`,
-    text.wordsLongest(cmText(longest), cmText(layout.widthMm), cmText(layout.heightMm)),
-    `${sheet.name[locale]}, ${sheet.thicknessMm} мм`,
+    text.wordsLongest(cmText(longest, locale), cmText(layout.widthMm, locale), cmText(layout.heightMm, locale)),
+    `${sheet.name[locale]}, ${decimal(sheet.thicknessMm, locale)} ${units(locale).mm}`,
   ];
   if (discount.value) lines.push(discountLine(discount.label, discount.value, locale));
   return {

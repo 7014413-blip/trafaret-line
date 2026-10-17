@@ -22,7 +22,7 @@ import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { usePresetSize } from "@/lib/client/use-preset-size";
 import { plaqueThumbnailSvg } from "@/lib/export/plaque-thumbnail";
-import { cmText } from "@/lib/format";
+import { units } from "@/lib/i18n/dictionaries/units";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { SIGNAGE_PLAQUES } from "@/lib/i18n/dictionaries/signage-plaques";
 import { tr } from "@/lib/i18n/translate";
@@ -35,6 +35,7 @@ import { clampPlaqueSizeMm } from "@/lib/office-plaque/size";
 import { useCart } from "@/store/cart-store";
 import type { OfficePlaqueDesign } from "@/types/office-plaque";
 import type { PlaqueTextLine } from "@/types/plaques";
+import { cmText } from "@/lib/format";
 
 const CFG = DEFAULT_OFFICE_PLAQUE_CONFIG;
 // Fonts and sizes of the example lines; their texts come in the page language.
@@ -85,7 +86,7 @@ export function OfficePlaqueConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `plaque|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: o.cartTitle(texts, `${cmText(design.widthMm)}×${cmText(design.heightMm)}`, plate.name[locale].toLowerCase()),
+      title: o.cartTitle(texts, `${cmText(design.widthMm, locale)}×${cmText(design.heightMm, locale)}`, plate.name[locale].toLowerCase()),
       materialId: "acrylic_mirror_3",
       widthCm: design.widthMm / 10,
       heightCm: design.heightMm / 10,
@@ -101,9 +102,9 @@ export function OfficePlaqueConstructor() {
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#eceeef] lg:sticky lg:top-24">
-        <OfficePlaquePreview layout={layout} linePaths={linePaths} base={base} plate={plate} label={o.previewLabel(`${cmText(size.widthMm)}×${cmText(size.heightMm)}`)} />
+        <OfficePlaquePreview layout={layout} linePaths={linePaths} base={base} plate={plate} label={o.previewLabel(`${cmText(size.widthMm, locale)}×${cmText(size.heightMm, locale)}`)} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см{o.tape}</span>
+          <span>{cmText(size.widthMm, locale)} × {cmText(size.heightMm, locale)} {units(locale).cm}{o.tape}</span>
           <span>{o.layers(base.name[locale].toLowerCase(), plate.name[locale].toLowerCase())}</span>
         </div>
       </section>
@@ -112,7 +113,7 @@ export function OfficePlaqueConstructor() {
         <ConstructorHeader kicker={o.kicker} title={o.title} lead={o.lead} />
 
         <SizePresetPicker idPrefix="op" presets={CFG.presets} priceOf={(p) => plaqueBasePrice(p.widthMm, p.heightMm, CFG)} state={sizeState} limits={CFG} columns={3}
-          note={s.sizeRange(cmText(CFG.minWidthMm), cmText(CFG.maxWidthMm), cmText(CFG.minHeightMm), cmText(CFG.maxHeightMm))} />
+          note={s.sizeRange(cmText(CFG.minWidthMm, locale), cmText(CFG.maxWidthMm, locale), cmText(CFG.minHeightMm, locale), cmText(CFG.maxHeightMm, locale))} />
 
         <PlaqueLinesEditor state={text} legend={o.linesLegend} idPrefix="op" maxChars={CFG.maxLineChars}
           capByLine={new Map(layout.lines.map((l) => [l.index, l.capMm]))} />

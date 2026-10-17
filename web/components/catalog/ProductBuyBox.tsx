@@ -111,7 +111,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
       kind: "catalog",
       variantId: variant.id,
       basePrice: variant.price,
-      title: `${p.title}, ${variant.sizeLabel}, ${variant.materialLabel}${texts ? ` («${texts}»)` : ""}`,
+      title: `${p.title}, ${variant.sizeLabel}, ${variant.materialLabel}${texts ? t.cartTexts(texts) : ""}`,
       materialId: materialForCode(variant.materialCode),
       widthCm: sheet[0] / 10,
       heightCm: sheet[1] / 10,
@@ -154,7 +154,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
               <button key={s.label} type="button" role="radio" aria-checked={s.label === size} onClick={() => setSize(s.label)}
                 className={`grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${s.label === size ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
                 <b className="text-[15px]">{s.label}</b>
-                <span className="text-[13px] text-[var(--muted)]">{t.from} {formatUAH(cheapestFor(s.label))}</span>
+                <span className="text-[13px] text-[var(--muted)]">{t.from} {formatUAH(cheapestFor(s.label), locale)}</span>
               </button>
             ))}
           </div>
@@ -171,7 +171,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
               <label key={m} className={`grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border-[1.5px] bg-[var(--card)] px-3.5 py-3 ${m === chosenMaterial ? "border-[var(--ink)]" : "border-[var(--line)]"}`}>
                 <input type="radio" name="mat" checked={m === chosenMaterial} onChange={() => setMaterial(m)} className="h-[18px] w-[18px] accent-[var(--ink)]" />
                 <b>{m}</b>
-                <em className="not-italic font-semibold tabular-nums">{v ? formatUAH(v.price) : ""}</em>
+                <em className="not-italic font-semibold tabular-nums">{v ? formatUAH(v.price, locale) : ""}</em>
               </label>
             );
           })}
@@ -186,7 +186,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
               const on = qty >= tier.minQty && !tiers.some((x) => x.minQty > tier.minQty && qty >= x.minQty);
               return (
                 <button type="button" key={tier.minQty} onClick={() => setQty(tier.minQty)} className={`rounded-lg border-[1.5px] px-1 py-1.5 ${on ? "border-[var(--ok)]" : "border-dashed border-[var(--line)] text-[var(--muted)]"}`}>
-                  <b className="block text-sm text-[var(--ink)]">{formatUAH(priceCatalogVariant(variant.price, tier.minQty))}</b>{tier.minQty === 1 ? t.piece : t.fromPieces(tier.minQty)}
+                  <b className="block text-sm text-[var(--ink)]">{formatUAH(priceCatalogVariant(variant.price, tier.minQty), locale)}</b>{tier.minQty === 1 ? t.piece : t.fromPieces(tier.minQty)}
                 </button>
               );
             })}
@@ -195,8 +195,8 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4">
-        <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(unit * qty)}
-          <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{size} · {chosenMaterial}{qty > 1 ? ` · ${formatUAH(unit)} × ${qty}` : ""}</small>
+        <div className="text-[30px] font-extrabold leading-none tabular-nums">{formatUAH(unit * qty, locale)}
+          <small className="mt-1 block text-[13px] font-normal text-[var(--muted)]">{size} · {chosenMaterial}{qty > 1 ? ` · ${formatUAH(unit, locale)} × ${qty}` : ""}</small>
         </div>
         <div className="flex items-center gap-1">
           <button type="button" aria-label={t.less} onClick={() => setQty(Math.max(1, qty - 1))} className="h-10 w-10 rounded-lg border border-[var(--line)] bg-[var(--card)] text-lg">−</button>
@@ -223,7 +223,7 @@ export function ProductBuyBox({ p, personal, onVariantChange }: {
       </ul>
 
       <div className="fixed inset-x-0 bottom-[calc(58px+env(safe-area-inset-bottom,0px))] z-30 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 py-2 lg:hidden">
-        <b className="tabular-nums">{formatUAH(unit * qty)} · {size}</b>
+        <b className="tabular-nums">{formatUAH(unit * qty, locale)} · {size}</b>
         {makeHref && !soldOut ? (
           <Link href={makeHref} className="grid h-11 place-items-center rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)]">{t.make}</Link>
         ) : (

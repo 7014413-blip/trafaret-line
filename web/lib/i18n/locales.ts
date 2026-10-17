@@ -1,12 +1,12 @@
 // Languages the site serves and how each is written in URLs and in hreflang. Ukrainian has no
-// prefix; a language is added to SITE_LOCALES when all of its pages are translated.
+// prefix. English shows only the pages listed in data/knowledge_base/paths_en.json.
 
 import type { Locale } from "../../types/customizer";
 
 export const DEFAULT_LOCALE: Locale = "uk";
 
 /** Languages with pages on the site, in switcher order. */
-export const SITE_LOCALES: readonly Locale[] = ["uk", "ru"];
+export const SITE_LOCALES: readonly Locale[] = ["uk", "ru", "en"];
 
 /** hreflang / og:locale of each language: the shop sells in Ukraine. */
 export const LOCALE_TAGS: Record<Locale, { hreflang: string; og: string; html: string }> = {

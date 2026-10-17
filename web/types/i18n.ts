@@ -9,5 +9,18 @@ export interface LangParams {
   lang: string;
 }
 
-/** Texts of one part of the site in every language; English falls back to Ukrainian until translated. */
-export type Dictionary<T> = { uk: T; ru: T } & Partial<Record<Exclude<Locale, "uk" | "ru">, T>>;
+/** Texts of one part of the site in every language. */
+export type Dictionary<T> = Record<Locale, T>;
+
+/**
+ * English addresses (data/knowledge_base/paths_en.json): English has its own slugs, and a page
+ * has an English version only when it is listed here. Keys are Ukrainian site paths.
+ */
+export interface EnglishPaths {
+  /** Site pages: Ukrainian path → English path. */
+  pages: Record<string, string>;
+  /** Pages with an id after the prefix ("/vidguk/<order>"): Ukrainian prefix → English prefix. */
+  prefixes: Record<string, string>;
+  /** Translated categories and products ("/p/<handle>"), written by the catalogue. */
+  catalog: Record<string, string>;
+}

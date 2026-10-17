@@ -17,6 +17,7 @@ import type { Hole } from "../../types/vector";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
 import { cmText } from "../format";
 import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
+import { units } from "../i18n/dictionaries/units";
 
 /* ------------------------------------------------------------------ */
 /* Defaults                                                            */
@@ -186,10 +187,11 @@ export function thicknessExtraPerM2(s: AcrylicSheet, thicknessMm: number, cfg: S
 }
 
 const mm = (v: number) => String(Math.round(v));
-const sizeLabel = (b: SignBase) => {
+const sizeLabel = (b: SignBase, locale: Locale) => {
   const { w, h } = baseSize(b);
+  const cm = units(locale).cm;
   // Customers see centimetres (sizes in cm across the shop).
-  return b.shape === "circle" ? `Ø${cmText(w)} см` : `${cmText(w)} × ${cmText(h)} см`;
+  return b.shape === "circle" ? `Ø${cmText(w, locale)} ${cm}` : `${cmText(w, locale)} × ${cmText(h, locale)} ${cm}`;
 };
 
 /**
@@ -214,7 +216,7 @@ export function priceSign(
     // backing included [default, Claude 2026-10-10]; other sizes and shapes go by the rate.
     const preset = d.base.shape === "circle" ? cfg.circlePresetPrices[Math.round(w)] : undefined;
     unit = preset ?? areaM2 * cfg.signRatePerM2;
-    lines.push({ label: text.signBase(sizeLabel(d.base), baseSheet.name[locale].toLowerCase(), d.base.thicknessMm), amount: 0 });
+    lines.push({ label: text.signBase(sizeLabel(d.base, locale), baseSheet.name[locale].toLowerCase(), d.base.thicknessMm), amount: 0 });
     lines.push({ label: text.signLayers(d.layers.length), amount: 0 });
     const extra = areaM2 * (rate - cfg.signRatePerM2);
     if (extra > 0) { unit += extra; lines.push({ label: text.signThicker(d.base.thicknessMm, cfg.includedBaseThicknessMm), amount: roundUp(extra, cfg.roundTo) }); }

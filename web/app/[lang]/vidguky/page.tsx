@@ -6,11 +6,12 @@ import { InfoPage } from "@/components/layout/InfoPage";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import { Stars } from "@/components/reviews/Stars";
 import { pageMeta } from "@/lib/seo/page-meta";
-import { pluralUk } from "@/lib/text/plural-uk";
+import { plural } from "@/lib/text/plural";
 import { listReviews } from "@/services/medusa-reviews";
 import { PAGES } from "@/lib/i18n/dictionaries/pages";
 import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
 import { tr } from "@/lib/i18n/translate";
+import { decimal } from "@/lib/i18n/dictionaries/units";
 import { localeOf } from "@/lib/i18n/locales";
 import type { LangParams } from "@/types/i18n";
 
@@ -39,8 +40,8 @@ export default async function ReviewsPage({ params, searchParams }: Props) {
         <>
           <p className="flex flex-wrap items-center gap-2">
             <Stars value={average} size={20} locale={locale} />
-            <b className="tabular-nums">{String(average).replace(".", ",")}</b>
-            <span className="text-[var(--muted)]">· {count} {pluralUk(count, tr(CATALOG, locale).reviewForms)}</span>
+            <b className="tabular-nums">{decimal(average, locale)}</b>
+            <span className="text-[var(--muted)]">· {count} {plural(locale, count, tr(CATALOG, locale).reviewForms)}</span>
           </p>
           <ReviewList reviews={list.reviews} showProduct locale={locale} />
           {pages > 1 && (

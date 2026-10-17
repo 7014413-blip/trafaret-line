@@ -30,6 +30,7 @@ export type MonogramField = keyof MonogramInput;
 export interface MonogramText {
   uk: string;
   ru: string;
+  en: string;
 }
 
 /** A letter, the ampersand or the date, placed by the middle of its capital height. */

@@ -119,7 +119,7 @@ export default async function ProductPage({ params }: Props) {
                 <Link key={r.handle} href={`/p/${r.handle}`} className="grid content-start gap-1.5">
                   <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--card)]">{r.images[0] && <Image src={r.images[0].url} alt={r.images[0].alt} fill sizes="25vw" className="object-cover" />}</div>
                   <span className="text-sm">{r.title}</span>
-                  <b className="tabular-nums">{t.from} {formatUAH(r.minPrice)}</b>
+                  <b className="tabular-nums">{t.from} {formatUAH(r.minPrice, locale)}</b>
                 </Link>
               ))}
             </div>

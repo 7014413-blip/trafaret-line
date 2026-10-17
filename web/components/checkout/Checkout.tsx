@@ -33,6 +33,7 @@ import { CompanyFields, EMPTY_COMPANY } from "./CompanyFields";
 import { WarehouseField } from "./WarehouseField";
 import { CHECKOUT } from "@/lib/i18n/dictionaries/checkout";
 import { tr } from "@/lib/i18n/translate";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 import { INTL_TAG } from "@/lib/i18n/messages";
 import type { Locale } from "@/types/customizer";
 
@@ -203,7 +204,7 @@ export function Checkout() {
   if (done) return (
     <div className="mx-auto grid max-w-[640px] justify-items-start gap-3 px-4 py-14">
       <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">{t.thanksOrder(done.number)}</h1>
-      {done.total > 0 && <p className="m-0 text-lg">{t.orderSum} <b className="tabular-nums">{formatUAH(done.total)}</b>{form.payment === "cod" ? t.codNote : ""}.</p>}
+      {done.total > 0 && <p className="m-0 text-lg">{t.orderSum} <b className="tabular-nums">{formatUAH(done.total, locale)}</b>{form.payment === "cod" ? t.codNote : ""}.</p>}
       <p className="m-0 text-lg"><b>{done.date}</b>. {t.ttnNote}</p>
       <p className="m-0 text-[var(--muted)]">
         {t.customNote}
@@ -232,7 +233,7 @@ export function Checkout() {
   );
 
   const deliveryLine = quote
-    ? `${formatUAH(Math.round(quote.deliveryCost + quote.codFee))}${quote.deliveryDate ? `, ${t.arrives(formatDate(quote.deliveryDate, locale))}` : ""}`
+    ? `${formatUAH(Math.round(quote.deliveryCost + quote.codFee), locale)}${quote.deliveryDate ? `, ${t.arrives(formatDate(quote.deliveryDate, locale))}` : ""}`
     : t.byCarrierTariff;
 
   return (
@@ -252,7 +253,7 @@ export function Checkout() {
               <label key={v} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-[1.5px] px-3.5 py-3 ${form.delivery === v ? "border-[var(--ink)]" : "border-[var(--line)]"}`}>
                 <input type="radio" name="delivery" id={`d-${v}`} checked={form.delivery === v} onChange={() => set("delivery", v)} className="accent-[var(--ink)]" />
                 {v === "np_branch" && parcel && !parcel.fitsPostomat ? t.npBranchOnly : t.deliveryOptions[v]}
-                <small className="ml-auto text-[var(--muted)]">{form.delivery === v && quote ? formatUAH(Math.round(quote.deliveryCost)) : t.byTariff}</small>
+                <small className="ml-auto text-[var(--muted)]">{form.delivery === v && quote ? formatUAH(Math.round(quote.deliveryCost), locale) : t.byTariff}</small>
               </label>
             ))}
             <CityField value={form.city} cityRef={form.cityRef} error={errors.city}
@@ -292,7 +293,7 @@ export function Checkout() {
                   <span className="h-24 w-24 overflow-hidden rounded-lg bg-[var(--surface)]">{item.vectorSvg
                     ? <span role="img" aria-label={t.layoutOf(item.title)} className="block h-full w-full p-1.5 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: item.vectorSvg }} />
                     : <span className="grid h-full place-items-center p-1.5 text-center text-[11px] text-[var(--muted)]">{item.uploadKey ? t.yourFile : t.noPicture}</span>}</span>
-                  <span>{item.title}<br /><span className="text-[var(--muted)]">{item.widthCm} × {item.heightCm} см · {item.quantity} {t.pieces}{item.uploadKey ? ` · ${t.managerChecksFile}` : ""}</span></span>
+                  <span>{item.title}<br /><span className="text-[var(--muted)]">{decimal(item.widthCm, locale)} × {decimal(item.heightCm, locale)} {units(locale).cm} · {item.quantity} {t.pieces}{item.uploadKey ? ` · ${t.managerChecksFile}` : ""}</span></span>
                 </div>
               ))}
               <label className="flex items-start gap-2 text-sm font-semibold">
@@ -307,7 +308,7 @@ export function Checkout() {
             <label>Website<input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} /></label>
           </div>
           {errors.server && <p role="alert" className="m-0 rounded-xl bg-[var(--surface)] p-3 text-sm text-[var(--danger)]">{errors.server}</p>}
-          <button type="submit" disabled={sending || approvalMissing} aria-describedby={approvalMissing ? "c-approve-hint" : undefined} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? t.sending : t.confirm(formatUAH(total))}</button>
+          <button type="submit" disabled={sending || approvalMissing} aria-describedby={approvalMissing ? "c-approve-hint" : undefined} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? t.sending : t.confirm(formatUAH(total, locale))}</button>
           {approvalMissing && <p id="c-approve-hint" className="m-0 text-[13px] text-[var(--muted)]">{t.approvalHint}</p>}
           <p className="m-0 text-[13px] text-[var(--muted)]">{t.agreeBefore} <Link href="/oferta" className="underline">{t.offer}</Link> {t.agreeAnd} <Link href="/polityka-konfidentsiinosti" className="underline">{t.privacy}</Link>. {t.agreeAfter}</p>
         </form>
@@ -319,13 +320,13 @@ export function Checkout() {
               <span className="relative h-14 w-14 overflow-hidden rounded-lg bg-[var(--surface)]">{l.vectorSvg
                 ? <span role="img" aria-label={l.title} className="block h-full w-full p-1 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: l.vectorSvg }} />
                 : l.thumbnail && <Image src={l.thumbnail} alt="" fill sizes="56px" className="object-cover" />}</span>
-              <span>{l.title}<br /><span className="text-[var(--muted)]">{l.quantity} {t.pieces} × {formatUAH(l.unitPrice)}</span></span>
-              <b className="tabular-nums">{formatUAH(l.unitPrice * l.quantity)}</b>
+              <span>{l.title}<br /><span className="text-[var(--muted)]">{l.quantity} {t.pieces} × {formatUAH(l.unitPrice, locale)}</span></span>
+              <b className="tabular-nums">{formatUAH(l.unitPrice * l.quantity, locale)}</b>
             </div>
           ))}
           {parcel && <div className="flex justify-between gap-3 text-[13px] text-[var(--muted)]"><span>{t.parcel}</span><span className="text-right">{describeParcel(parcel, locale)}</span></div>}
           <div className="flex justify-between gap-3 text-[15px]"><span>{t.delivery}</span><span className="text-right">{deliveryLine}</span></div>
-          <div className="flex justify-between border-t border-[var(--line)] pt-2.5 text-xl font-bold"><span>{t.toPay}</span><span className="tabular-nums">{formatUAH(total)}</span></div>
+          <div className="flex justify-between border-t border-[var(--line)] pt-2.5 text-xl font-bold"><span>{t.toPay}</span><span className="tabular-nums">{formatUAH(total, locale)}</span></div>
           {quote && <p className="m-0 text-[12px] text-[var(--muted)]">{t.deliveryPaidOnReceipt}</p>}
         </aside>
       </div>

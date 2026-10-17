@@ -8,12 +8,15 @@ import type {
 } from "../../types/blank";
 import type { Locale, LocalizedText, MaterialType } from "../../types/customizer";
 import { MATERIALS } from "../materials";
+import { BLANKS } from "../i18n/dictionaries/blanks";
+import { decimal, units } from "../i18n/dictionaries/units";
+import { tr } from "../i18n/translate";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
 
 export const BLANK_GROUPS: readonly BlankMaterialGroup[] = [
   { id: "clear", name: t("Прозорий акрил", "Прозрачный акрил", "Clear acrylic"), note: t("Від 1,5 до 15 мм, глянцевий з обох боків", "От 1,5 до 15 мм, глянцевый с обеих сторон", "1.5 to 15 mm, gloss on both sides") },
-  { id: "coloured", name: t("Кольоровий акрил", "Цветной акрил", "Coloured acrylic"), note: t("Чорний, молочний і яскраві кольори", "Чёрный, молочный и яркие цвета", "Black, opal white and bright colours") },
+  { id: "coloured", name: t("Кольоровий акрил", "Цветной акрил", "Colored acrylic"), note: t("Чорний, молочний і яскраві кольори", "Чёрный, молочный и яркие цвета", "Black, opal white and bright colors") },
   { id: "mirror", name: t("Дзеркальний", "Зеркальный", "Mirror"), note: t("Акрил 2 і 3 мм або легкий полістирол 1 мм", "Акрил 2 и 3 мм или лёгкий полистирол 1 мм", "Acrylic 2 and 3 mm or light polystyrene 1 mm") },
   { id: "board", name: t("Підкладки під торт", "Подложки под торт", "Cake boards"), note: t("Прозорий PET 0,5 мм або білий полістирол 1 мм", "Прозрачный PET 0,5 мм или белый полистирол 1 мм", "Clear PET 0.5 mm or white polystyrene 1 mm") },
 ];
@@ -91,10 +94,10 @@ export function blankSheetInGroup(group: BlankMaterialGroupId, current: BlankShe
 
 /** Chip label of a thickness: "3 мм" for acrylic, with the material where a group mixes materials. */
 export function blankThicknessLabel(group: BlankMaterialGroupId, thicknessMm: number, locale: Locale = "uk"): string {
-  const mm = `${String(thicknessMm).replace(".", ",")} мм`;
+  const mm = `${decimal(thicknessMm, locale)} ${units(locale).mm}`;
   const material = blankSheetsAt(group, thicknessMm)[0]?.materialId ?? "";
-  const polystyrene = locale === "ru" ? "полистирол" : "полістирол";
-  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, акрил`;
+  const { acrylicWord: acrylic, polystyreneWord: polystyrene } = tr(BLANKS, locale);
+  if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, ${acrylic}`;
   if (group === "board") return material === "pet_food_board" ? `PET ${mm}` : `${polystyrene.charAt(0).toUpperCase()}${polystyrene.slice(1)} ${mm}`;
   return mm;
 }

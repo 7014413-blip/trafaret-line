@@ -6,17 +6,12 @@
 
 import { FIELDSET_CLASS, INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-classes";
 import { BLANK_SIZE_LIMITS_MM, clampBlankSideMm, presetMm } from "@/lib/blanks/size";
+import { blankShapeSizeText } from "@/lib/blanks/shape-size-text";
 import { cmText, formatUAH } from "@/lib/format";
 import type { BlankShape, BlankSizeValue } from "@/types/blank";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { BLANKS } from "@/lib/i18n/dictionaries/blanks";
 import { tr } from "@/lib/i18n/translate";
-
-function chipText(shape: BlankShape, widthMm: number, heightMm: number): string {
-  if (shape.sizeMode === "diameter") return `Ø${cmText(widthMm)} см`;
-  if (shape.sizeMode === "side") return `${cmText(widthMm)} см`;
-  return `${cmText(widthMm)}×${cmText(heightMm)} см`;
-}
 
 export function BlankSizePicker({ shape, value, onChange, priceOf }: {
   shape: BlankShape;
@@ -25,7 +20,8 @@ export function BlankSizePicker({ shape, value, onChange, priceOf }: {
   /** Price of one piece of this size in the chosen sheet. */
   priceOf: (widthMm: number, heightMm: number) => number;
 }) {
-  const t = tr(BLANKS, useLocale());
+  const locale = useLocale();
+  const t = tr(BLANKS, locale);
   const card = (on: boolean) => `grid min-h-14 gap-0.5 rounded-xl border-[1.5px] px-2 py-1.5 tabular-nums ${on ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`;
   const custom = value.preset == null;
   const box = shape.sizeMode === "box";
@@ -43,14 +39,14 @@ export function BlankSizePicker({ shape, value, onChange, priceOf }: {
           const size = presetMm(p);
           return (
             <button key={i} id={`bl-size-${i}`} type="button" aria-pressed={value.preset === i} onClick={() => onChange({ preset: i, ...size })} className={card(value.preset === i)}>
-              <b className="text-[15px]">{chipText(shape, size.widthMm, size.heightMm)}</b>
-              <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(size.widthMm, size.heightMm))}</span>
+              <b className="text-[15px]">{blankShapeSizeText(shape, size.widthMm, size.heightMm, locale)}</b>
+              <span className="text-[13px] text-[var(--muted)]">{formatUAH(priceOf(size.widthMm, size.heightMm), locale)}</span>
             </button>
           );
         })}
         <button id="bl-size-custom" type="button" aria-pressed={custom} onClick={() => onChange({ ...value, preset: null })} className={card(custom)}>
           <b className="text-[15px]">{t.ownSize}</b>
-          <span className="text-[13px] text-[var(--muted)]">{custom ? formatUAH(priceOf(clampBlankSideMm(value.widthMm), clampBlankSideMm(box ? value.heightMm : value.widthMm))) : t.priceAtOnce}</span>
+          <span className="text-[13px] text-[var(--muted)]">{custom ? formatUAH(priceOf(clampBlankSideMm(value.widthMm), clampBlankSideMm(box ? value.heightMm : value.widthMm)), locale) : t.priceAtOnce}</span>
         </button>
       </div>
       {custom && (
@@ -66,7 +62,7 @@ export function BlankSizePicker({ shape, value, onChange, priceOf }: {
             </label>
           )}
           <span className="col-span-2 text-[13px] text-[var(--muted)]">
-            {t.sizeRange(cmText(BLANK_SIZE_LIMITS_MM.min), cmText(BLANK_SIZE_LIMITS_MM.max))}
+            {t.sizeRange(cmText(BLANK_SIZE_LIMITS_MM.min, locale), cmText(BLANK_SIZE_LIMITS_MM.max, locale))}
             {shape.sizeMode === "side" ? t.sizeBySide : ""}
           </span>
         </div>

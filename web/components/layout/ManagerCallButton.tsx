@@ -11,6 +11,7 @@ type Variant = "header" | "card" | "chat";
 const TEXT: Dictionary<{ call: string; callManager: (name: string) => string; manager: string }> = {
   uk: { call: "Подзвонити", callManager: (name) => `Подзвонити менеджеру ${name}`, manager: "менеджер" },
   ru: { call: "Позвонить", callManager: (name) => `Позвонить менеджеру ${name}`, manager: "менеджер" },
+  en: { call: "Call", callManager: (name) => `Call ${name}, our manager`, manager: "manager" },
 };
 
 function PhoneIcon({ className }: { className: string }) {

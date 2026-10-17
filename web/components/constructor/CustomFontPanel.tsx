@@ -20,7 +20,8 @@ export function CustomFontPanel({ fonts, text, onAdded, onRemoved }: {
   onAdded: (font: LoadedFont) => void;
   onRemoved: (id: string) => void;
 }) {
-  const t = tr(CONSTRUCTOR, useLocale());
+  const locale = useLocale();
+  const t = tr(CONSTRUCTOR, locale);
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [rights, setRights] = useState(false);
@@ -32,7 +33,7 @@ export function CustomFontPanel({ fonts, text, onAdded, onRemoved }: {
     if (!file) return;
     setBusy(true);
     setError("");
-    const result = await addCustomFont(file, rights);
+    const result = await addCustomFont(file, rights, locale);
     setBusy(false);
     setLastCheck(result.check ?? null);
     if (!result.ok) { setError(t.fontErrors[result.error] ?? result.error); return; }

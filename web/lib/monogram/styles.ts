@@ -27,7 +27,7 @@ const DATE_SAMPLE = "27.09.2026";
 export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   "vine-date": {
     id: "vine-date",
-    name: { uk: "Гілочка й дуга", ru: "Веточка и дуга" },
+    name: { uk: "Гілочка й дуга", ru: "Веточка и дуга", en: "Sprig and arc" },
     fields: ["first", "second", "date"],
     sample: { first: "А", second: "Д", date: DATE_SAMPLE },
     elements: [
@@ -44,7 +44,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "wreath-date": {
     id: "wreath-date",
-    name: { uk: "Вінок", ru: "Венок" },
+    name: { uk: "Вінок", ru: "Венок", en: "Wreath" },
     fields: ["first", "second", "date"],
     sample: { first: "О", second: "М", date: DATE_SAMPLE },
     elements: [
@@ -65,7 +65,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "script-date": {
     id: "script-date",
-    name: { uk: "Каліграфія", ru: "Каллиграфия" },
+    name: { uk: "Каліграфія", ru: "Каллиграфия", en: "Calligraphy" },
     fields: ["first", "second", "date"],
     sample: { first: "Т", second: "В", date: DATE_SAMPLE },
     elements: [
@@ -79,7 +79,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "diagonal-classic": {
     id: "diagonal-classic",
-    name: { uk: "Діагональ", ru: "Диагональ" },
+    name: { uk: "Діагональ", ru: "Диагональ", en: "Diagonal" },
     fields: ["first", "second"],
     sample: { first: "A", second: "D", date: "" },
     elements: [
@@ -90,7 +90,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "diagonal-arc": {
     id: "diagonal-arc",
-    name: { uk: "Діагональ у дузі", ru: "Диагональ в дуге" },
+    name: { uk: "Діагональ у дузі", ru: "Диагональ в дуге", en: "Diagonal in an arc" },
     fields: ["first", "second"],
     sample: { first: "A", second: "D", date: "" },
     elements: [
@@ -102,7 +102,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "sprig-line": {
     id: "sprig-line",
-    name: { uk: "Гілочка й лінія", ru: "Веточка и линия" },
+    name: { uk: "Гілочка й лінія", ru: "Веточка и линия", en: "Sprig and line" },
     fields: ["first", "second"],
     sample: { first: "D", second: "J", date: "" },
     elements: [
@@ -118,7 +118,7 @@ export const MONOGRAM_STYLES: Record<MonogramStyleId, MonogramStyle> = {
   },
   "heart-line": {
     id: "heart-line",
-    name: { uk: "Серце й лінія", ru: "Сердце и линия" },
+    name: { uk: "Серце й лінія", ru: "Сердце и линия", en: "Heart and line" },
     fields: ["first", "second"],
     sample: { first: "D", second: "J", date: "" },
     elements: [

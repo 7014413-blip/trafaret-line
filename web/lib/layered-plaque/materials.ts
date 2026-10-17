@@ -10,7 +10,7 @@ const lightBases: LayeredPlaqueMaterial[] = [
     hex: "#ece6d6", mirror: false, baseThicknessMm: 3, overlayThicknessMm: 2, minLetterMm: 15, inStock: true,
   },
   {
-    id: "sage", group: "acrylic", name: { uk: "Оливково-сірий", ru: "Оливково-серый", en: "Sage grey" },
+    id: "sage", group: "acrylic", name: { uk: "Оливково-сірий", ru: "Оливково-серый", en: "Sage gray" },
     hex: "#cfd3c4", mirror: false, baseThicknessMm: 3, overlayThicknessMm: 2, minLetterMm: 15, inStock: true,
   },
 ];

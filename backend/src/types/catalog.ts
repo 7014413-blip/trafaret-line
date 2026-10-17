@@ -7,6 +7,8 @@ import type { RawHoleRules } from "../shared/types/hole"
 
 export type Lang = "uk" | "ru"
 export type Localized<T> = Record<Lang, T>
+/** Ukrainian and Russian always, English for the part of the catalogue translated so far. */
+export type WithEnglish<T> = Localized<T> & { en?: T }
 
 export interface FaqItem {
   q: string
@@ -32,6 +34,8 @@ export interface CatalogCategory {
   product_count: number
   uk: CatalogCategoryText
   ru: CatalogCategoryText
+  /** English texts; `slug` is the category's own English path segment. */
+  en?: CatalogCategoryText & { slug: string }
 }
 
 export interface CatalogProductText {
@@ -50,15 +54,17 @@ export interface CatalogSizeOption {
   code: string
   uk: string
   ru: string
+  en?: string
   sheet_mm: [number, number]
   pieces: number
-  detail: Localized<string>
+  detail: WithEnglish<string>
 }
 
 export interface CatalogMaterialOption {
   code: string
   uk: string
   ru: string
+  en?: string
 }
 
 export interface CatalogVariant {
@@ -66,13 +72,13 @@ export interface CatalogVariant {
   size: string
   material: string
   price_uah: number
-  title: Localized<string>
+  title: WithEnglish<string>
 }
 
 export interface CatalogImage {
   file: string
   kind: string
-  alt: Localized<string>
+  alt: WithEnglish<string>
 }
 
 export interface CatalogProductBlocks {
@@ -96,9 +102,11 @@ export interface CatalogProduct {
   min_price_uah: number
   uk: CatalogProductText
   ru: CatalogProductText
+  /** English texts; `slug` is the product's English address after /p/. */
+  en?: CatalogProductText & { slug: string }
   options: { size: CatalogSizeOption[]; material: CatalogMaterialOption[] }
   variants: CatalogVariant[]
-  fields: { key: string; uk: string; ru: string; def: string }[] | null
+  fields: { key: string; uk: string; ru: string; en?: string; def: string; def_en?: string }[] | null
   /** Blanks with a hanging hole the buyer places and sizes (shared/types/hole.ts). */
   hole?: RawHoleRules | null
   /** Wedding monogram products: designs with a live preview on the site (web/types/monogram.ts). */
@@ -120,8 +128,8 @@ export interface SharedBlock {
   html: string
 }
 
-export type SharedBlocks = Record<string, Localized<SharedBlock>>
-export type SharedFaq = Record<string, Localized<FaqItem[]>>
+export type SharedBlocks = Record<string, WithEnglish<SharedBlock>>
+export type SharedFaq = Record<string, WithEnglish<FaqItem[]>>
 
 /** Everything read from CATALOG_DIR/data. */
 export interface CatalogData {

@@ -1,6 +1,16 @@
 // Texts of the site frame: trust bar, header, direction tabs, footer, bottom navigation.
 
 import type { Dictionary } from "../../../types/i18n";
+import { SELLER } from "../../knowledge-base/seller-rules";
+
+/** Cookie banner and the footer button that opens it again. */
+export interface CookieTexts {
+  settings: string;
+  text: string;
+  more: string;
+  accept: string;
+  necessaryOnly: string;
+}
 
 export interface ChromeTexts {
   trust: string;
@@ -20,6 +30,9 @@ export interface ChromeTexts {
   mobileNav: string;
   bottom: [string, string, string][];
   languageNav: string;
+  cookies: CookieTexts;
+  /** Seller line of the footer: the registered name stays as registered, the tax note is translated. */
+  seller: string;
 }
 
 const PATHS = {
@@ -32,6 +45,7 @@ const PATHS = {
 
 export const CHROME: Dictionary<ChromeTexts> = {
   uk: {
+    seller: `${SELLER.legalName}, ${SELLER.taxNote}`,
     trust: "Виготовлення 3 робочі дні · Нова пошта по всій Україні · Оплата при отриманні",
     infoNav: "Інформація",
     info: [["Про нас", "/pro-nas"], ["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"], ["Для бізнесу", "/business"], ["Відгуки", "/vidguky"], ["Контакти", "/kontakty"]],
@@ -53,8 +67,16 @@ export const CHROME: Dictionary<ChromeTexts> = {
     mobileNav: "Мобільне меню",
     bottom: [["Головна", "/", PATHS.home], ["Каталог", "/catalog", PATHS.catalog], ["Свій напис", "/konstruktor", PATHS.own], ["Кошик", "/checkout", PATHS.cart], ["Контакти", "/kontakty", PATHS.contacts]],
     languageNav: "Мова сайту",
+    cookies: {
+      settings: "Налаштування cookies",
+      text: "Ми використовуємо cookies для аналітики та реклами, щоб показувати вам доречні товари. Необхідні cookies (кошик, вхід) працюють завжди.",
+      more: "Докладніше",
+      accept: "Прийняти",
+      necessaryOnly: "Лише необхідні",
+    },
   },
   ru: {
+    seller: `${SELLER.legalName}, 2 группа, без НДС`,
     trust: "Изготовление 3 рабочих дня · Новая почта по всей Украине · Оплата при получении",
     infoNav: "Информация",
     info: [["О нас", "/pro-nas"], ["Доставка и оплата", "/dostavka-i-oplata"], ["Обмен и возврат", "/povernennia"], ["Для бизнеса", "/business"], ["Отзывы", "/vidguky"], ["Контакты", "/kontakty"]],
@@ -76,5 +98,43 @@ export const CHROME: Dictionary<ChromeTexts> = {
     mobileNav: "Мобильное меню",
     bottom: [["Главная", "/", PATHS.home], ["Каталог", "/catalog", PATHS.catalog], ["Своя надпись", "/konstruktor", PATHS.own], ["Корзина", "/checkout", PATHS.cart], ["Контакты", "/kontakty", PATHS.contacts]],
     languageNav: "Язык сайта",
+    cookies: {
+      settings: "Настройки cookies",
+      text: "Мы используем cookies для аналитики и рекламы, чтобы показывать вам подходящие товары. Необходимые cookies (корзина, вход) работают всегда.",
+      more: "Подробнее",
+      accept: "Принять",
+      necessaryOnly: "Только необходимые",
+    },
+  },
+  en: {
+    seller: "FOP Berchuk Natalia Leonidivna (sole proprietor), single tax group 2, not a VAT payer",
+    trust: "Made in 3 business days · Nova Poshta delivery across Ukraine · Pay on delivery",
+    infoNav: "Information",
+    info: [["About us", "/pro-nas"], ["Delivery and payment", "/dostavka-i-oplata"], ["Exchanges and returns", "/povernennia"], ["For business", "/business"], ["Reviews", "/vidguky"], ["Contacts", "/kontakty"]],
+    catalog: "Catalog",
+    searchPrefix: "Find a stencil",
+    searchHints: ["mandala", "numbers 10 cm", "cake lettering", "pixel camo", "acrylic 3 mm circle", "entrance number"],
+    searchLabel: "Search the catalog",
+    searchSubmit: "Search",
+    cabinet: "My account",
+    directionsNav: "Sections",
+    stencils: "Stencils",
+    blanks: "Acrylic and PET",
+    footerAbout: "Stencils and blanks direct from the maker. Boryspil · Zaporizhzhia.",
+    footerColumns: [
+      { title: "Catalog", links: [["Stencils", "/catalog"], ["Acrylic and PET blanks", "/blanks"], ["Custom-size blanks", "/zahotovky"], ["Your own text", "/konstruktor"], ["Free canvas", "/konstruktor/polotno"]] },
+      { title: "For customers", links: [["Delivery and payment", "/dostavka-i-oplata"], ["Exchanges and returns", "/povernennia"], ["From your design", "/na-zamovlennia"], ["Signs", "/vyvisky"], ["Direction signs", "/vyvisky/vkazivnyky"], ["Office plaques", "/vyvisky/ofisni-tablychky"], ["Words on a bar", "/vyvisky/napysy-na-plantsi"], ["Floor signs", "/vyvisky/tablychky-poverkh"], ["Door signs", "/vyvisky/tablychky-na-dveri"], ["Number plaques", "/vyvisky/nomerky"], ["Cake initials", "/konstruktor/inicialy-na-tort"], ["Self-adhesive letters", "/konstruktor/samoklejni-litery"], ["Acrylic numbers and letters", "/konstruktor/akrylovi-tsyfry-i-litery"], ["Letters for signs", "/konstruktor/samoklejni-litery-dlia-vyvisok"]] },
+      { title: "Company", links: [["About us", "/pro-nas"], ["For business", "/business"], ["Reviews", "/vidguky"], ["Contacts", "/kontakty"], ["Public offer", "/oferta"], ["Privacy policy", "/polityka-konfidentsiinosti"]] },
+    ],
+    mobileNav: "Mobile menu",
+    bottom: [["Home", "/", PATHS.home], ["Catalog", "/catalog", PATHS.catalog], ["Your text", "/konstruktor", PATHS.own], ["Cart", "/checkout", PATHS.cart], ["Contacts", "/kontakty", PATHS.contacts]],
+    languageNav: "Site language",
+    cookies: {
+      settings: "Cookie settings",
+      text: "We use cookies for analytics and ads to show you products that fit. Essential cookies (cart, sign-in) are always on.",
+      more: "Learn more",
+      accept: "Accept",
+      necessaryOnly: "Essential only",
+    },
   },
 };

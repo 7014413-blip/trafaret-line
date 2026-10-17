@@ -36,7 +36,7 @@ export function priceStickLetters(
   const unitPrice = applyDiscount(basePrice, discount.value);
   const count = layout.pieces.length;
   const lines = [
-    text.lettersWhole(text.pieces(count), cmText(layout.widthMm), cmText(layout.heightMm)),
+    text.lettersWhole(text.pieces(count), cmText(layout.widthMm, locale), cmText(layout.heightMm, locale)),
     text.lettersSheet(sheet.name[locale], cfg.thicknessMm, adhesive),
   ];
   if (cfg.stencil) lines.push(text.lettersStencil);

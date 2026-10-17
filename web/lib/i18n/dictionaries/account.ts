@@ -19,6 +19,8 @@ export interface AccountTexts {
   noOrders: string;
   toCatalog: string;
   order: (number: string) => string;
+  /** Label before the Nova Poshta parcel number. */
+  parcelNumber: string;
   whereParcel: string;
   pieces: string;
   now: string;
@@ -46,6 +48,7 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
     noOrders: "Тут зʼявляться замовлення, які ви оформите, коли увійшли в кабінет.",
     toCatalog: "До каталогу",
     order: (number) => `Замовлення ${number}`,
+    parcelNumber: "ТТН",
     whereParcel: "Де посилка?",
     pieces: "шт.",
     now: "зараз",
@@ -76,6 +79,7 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
     noOrders: "Здесь появятся заказы, которые вы оформите, когда вошли в кабинет.",
     toCatalog: "В каталог",
     order: (number) => `Заказ ${number}`,
+    parcelNumber: "ТТН",
     whereParcel: "Где посылка?",
     pieces: "шт.",
     now: "сейчас",
@@ -100,6 +104,47 @@ export const ACCOUNT: Dictionary<AccountTexts> = {
       "Цей товар можна замовити знову через менеджера": "Этот товар можно заказать снова через менеджера",
       "Цього товару вже немає в продажу": "Этого товара уже нет в продаже",
       "Зберіть виріб заново в конструкторі: його вже не можна повторити автоматично": "Соберите изделие заново в конструкторе: его уже нельзя повторить автоматически",
+    },
+  },  en: {
+    metaTitle: "My account",
+    telegramMetaTitle: "Sign in with Telegram",
+    loginTitle: "Sign in to your account",
+    loginLead: "Your orders, their status and tracking number. Repeat any order in one click.",
+    google: "Sign in with Google",
+    telegram: "Sign in with Telegram",
+    noPassword: "No password or SMS. You can also order without an account.",
+    soon: "Account sign-in is coming soon. For now, we can tell you your order status on Viber or Telegram.",
+    myOrders: "My orders",
+    yourCabinet: "Your account",
+    logout: "Sign out",
+    noOrders: "Orders you place while signed in will appear here.",
+    toCatalog: "Back to catalog",
+    order: (number) => `Order ${number}`,
+    parcelNumber: "Tracking no.",
+    whereParcel: "Track parcel",
+    pieces: "pcs",
+    now: "now",
+    repeat: "Repeat order",
+    repeatOrder: (number) => `Repeat order ${number}`,
+    telegramFailed: "No connection. Please refresh the page.",
+    telegramSigningIn: "Signing in with Telegram…",
+    signInErrors: {
+      google: "Google did not confirm the sign-in. Please try again.",
+      telegram: "Telegram did not confirm the sign-in. Please try again.",
+      expired: "Your session has expired. Please sign in again.",
+      unavailable: "Sign-in is not working right now. Please try a bit later or message us.",
+    },
+    serverTexts: {
+      "Прийнято, виготовляємо": "Accepted, in production",
+      "Чекає на оплату": "Awaiting payment",
+      "Чекає на оплату карткою": "Awaiting card payment",
+      "Чекає на оплату за рахунком": "Awaiting payment by invoice",
+      "Оплачено, виготовляємо": "Paid, in production",
+      "Відправлено": "Shipped",
+      "Скасовано": "Canceled",
+      "Цей товар можна замовити знову через менеджера": "You can reorder this item through our manager",
+      "Цього товару вже немає в продажу": "This item is no longer available",
+      "Зберіть виріб заново в конструкторі: його вже не можна повторити автоматично": "Build this item again in the designer: it can no longer be repeated automatically",
     },
   },
 };

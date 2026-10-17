@@ -8,6 +8,7 @@ import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "../calculators
 import { findJoinedWordsMaterial } from "../joined-words/find-material";
 import { DEFAULT_INITIALS_CONFIG } from "./config";
 import { cmText } from "../format";
+import { decimal, units } from "../i18n/dictionaries/units";
 import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 export function initialsBasePrice(layout: InitialsLayout, cfg: InitialsConfig = DEFAULT_INITIALS_CONFIG): number {
@@ -25,9 +26,9 @@ export function priceInitials(
   const discount = bestLineDiscount(quantity, 0, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   const unitPrice = applyDiscount(basePrice, discount.value);
   const lines = [
-    text.initialsWhole(cmText(layout.widthMm), cmText(layout.heightMm), cmText(design.letterHeightMm)),
+    text.initialsWhole(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale), cmText(design.letterHeightMm, locale)),
     design.mode === "topper" ? text.initialsTopper : text.initialsPieces(text.pieces(layout.pieces)),
-    `${sheet.name[locale]}, ${sheet.thicknessMm} мм`,
+    `${sheet.name[locale]}, ${decimal(sheet.thicknessMm, locale)} ${units(locale).mm}`,
   ];
   if (discount.value) lines.push(discountLine(discount.label, discount.value, locale));
   return {

@@ -7,7 +7,10 @@
 
 import * as opentype from "opentype.js";
 import type { CustomFontRecord, FontFileCheck, LoadedFont } from "../../types/text";
+import type { Locale } from "../../types/customizer";
 import { checkFontBuffer, MAX_FONT_BYTES, sniffFontFormat } from "../text/font-check";
+import { CONSTRUCTOR } from "../i18n/dictionaries/constructor";
+import { tr } from "../i18n/translate";
 
 const DB = "tl-custom-fonts";
 const STORE = "fonts";
@@ -41,23 +44,27 @@ async function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => I
 
 const parsed = new Map<string, LoadedFont>();
 
-function toLoaded(stored: StoredFont): LoadedFont {
+function toLoaded(stored: StoredFont, locale: Locale): LoadedFont {
+  const group = tr(CONSTRUCTOR, locale).customFontGroup;
   const cached = parsed.get(stored.record.id);
-  if (cached) return cached;
+  if (cached) {
+    cached.group = group;
+    return cached;
+  }
   const font: LoadedFont = {
-    id: stored.record.id, name: stored.record.name, group: "Ваші шрифти", files: [], custom: true,
+    id: stored.record.id, name: stored.record.name, group, files: [], custom: true,
     faces: [opentype.parse(stored.buffer)],
   };
   parsed.set(font.id, font);
   return font;
 }
 
-/** The customer's fonts, oldest first, parsed and ready for the constructors. */
-export async function listCustomFonts(): Promise<LoadedFont[]> {
+/** The customer's fonts, oldest first, parsed and ready for the constructors; group name in the page language. */
+export async function listCustomFonts(locale: Locale = "uk"): Promise<LoadedFont[]> {
   if (typeof indexedDB === "undefined") return [];
   try {
     const all = await tx<StoredFont[]>("readonly", (store) => store.getAll() as IDBRequest<StoredFont[]>);
-    return all.sort((a, b) => a.record.addedAt.localeCompare(b.record.addedAt)).map(toLoaded);
+    return all.sort((a, b) => a.record.addedAt.localeCompare(b.record.addedAt)).map((stored) => toLoaded(stored, locale));
   } catch {
     return [];
   }
@@ -118,14 +125,14 @@ async function unpackedFont(url: string | null | undefined): Promise<ArrayBuffer
   }
 }
 
-/** Checks the file, uploads it with the rights confirmation and keeps it in this browser. */
-export async function addCustomFont(file: File, rightsConfirmed: boolean): Promise<AddFontResult> {
+/** Checks the file, uploads it with the rights confirmation and keeps it in this browser. Check errors come in the page language. */
+export async function addCustomFont(file: File, rightsConfirmed: boolean, locale: Locale = "uk"): Promise<AddFontResult> {
   if (!rightsConfirmed) return { ok: false, error: "Підтвердьте, що маєте право використовувати цей шрифт" };
   const sent = await file.arrayBuffer();
   const woff2 = sniffFontFormat(new Uint8Array(sent.slice(0, 4))) === "woff2";
   if (woff2 && sent.byteLength > MAX_FONT_BYTES) return { ok: false, error: "Файл шрифту більший за 10 МБ" };
   if (!woff2) {
-    const { font: _font, ...local } = checkFontBuffer(sent, file.name);
+    const { font: _font, ...local } = checkFontBuffer(sent, file.name, locale);
     if (!local.ok || !local.format) return { ok: false, error: local.error ?? "Шрифт не підходить", check: local };
   }
 
@@ -133,7 +140,7 @@ export async function addCustomFont(file: File, rightsConfirmed: boolean): Promi
   if (!uploaded.ok) return { ok: false, error: uploaded.error };
   const buffer = woff2 ? await unpackedFont(uploaded.data.url) : sent;
   if (!buffer) return { ok: false, error: "Не вдалося відкрити шрифт WOFF2. Спробуйте той самий шрифт у TTF або OTF" };
-  const { font: _font, ...check } = checkFontBuffer(buffer, file.name);
+  const { font: _font, ...check } = checkFontBuffer(buffer, file.name, locale);
   if (!check.ok || !check.format) return { ok: false, error: check.error ?? "Шрифт не підходить", check };
 
   const record: CustomFontRecord = {
@@ -146,5 +153,5 @@ export async function addCustomFont(file: File, rightsConfirmed: boolean): Promi
   } catch {
     // Private mode: the font works until the page is closed.
   }
-  return { ok: true, font: toLoaded(stored), check };
+  return { ok: true, font: toLoaded(stored, locale), check };
 }

@@ -1,14 +1,15 @@
 // /sitemap.xml: static pages, every catalogue category and every published product from
 // Medusa. Rebuilt hourly; when the shop is offline the static part is still served.
-// Pages already translated (home, catalogue, categories, products) are listed in every site
-// language, each with its hreflang alternates; the rest only in Ukrainian for now.
+// Translated pages are listed in every language they exist in (English only for the pages and
+// catalogue entries with an English address), each with its hreflang alternates; the rest only
+// in Ukrainian for now.
 
 import type { MetadataRoute } from "next";
 import { listCategories, listProductHandles } from "@/services/medusa-store";
 import { absoluteUrl } from "@/lib/seo/site-url";
 import { languageAlternates } from "@/lib/seo/page-meta";
 import { SITE_LOCALES } from "@/lib/i18n/locales";
-import { localePath } from "@/lib/i18n/locale-path";
+import { hasLocaleVersion, localePath } from "@/lib/i18n/locale-path";
 
 export const revalidate = 3600;
 
@@ -48,7 +49,8 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: Entry["ch
 /** Entries of a translated page in every site language. */
 function inEveryLanguage(path: string, entry: Omit<Entry, "url" | "alternates">): Entry[] {
   const languages = Object.fromEntries(Object.entries(languageAlternates(path)).map(([tag, href]) => [tag, absoluteUrl(href)]));
-  return SITE_LOCALES.map((locale) => ({ ...entry, url: absoluteUrl(localePath(locale, path)), alternates: { languages } }));
+  return SITE_LOCALES.filter((locale) => hasLocaleVersion(locale, path))
+    .map((locale) => ({ ...entry, url: absoluteUrl(localePath(locale, path)), alternates: { languages } }));
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

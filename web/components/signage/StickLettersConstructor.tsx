@@ -27,6 +27,7 @@ import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { stickLettersThumbnailSvg } from "@/lib/export/stick-letters-thumbnail";
 import { cmText, formatUAH } from "@/lib/format";
+import { units } from "@/lib/i18n/dictionaries/units";
 import { findJoinedWordsMaterial } from "@/lib/joined-words/find-material";
 import { JOINED_WORDS_MATERIALS } from "@/lib/joined-words/materials";
 import { addDigits } from "@/lib/stick-letters/add-digits";
@@ -150,7 +151,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `letters|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: t.cartTitle(tp.cartName, text, cmText(layout.widthMm), cmText(layout.heightMm), sheet.name[locale].toLowerCase(), design.adhesive, design.upper),
+      title: t.cartTitle(tp.cartName, text, cmText(layout.widthMm, locale), cmText(layout.heightMm, locale), sheet.name[locale].toLowerCase(), design.adhesive, design.upper),
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -166,7 +167,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <StickLettersPreview layout={layout} paths={paths} sheet={sheet} view={CFG.stencil ? view : "box"} label={t.previewLabel(cmText(layout.widthMm), cmText(layout.heightMm))} />
+        <StickLettersPreview layout={layout} paths={paths} sheet={sheet} view={CFG.stencil ? view : "box"} label={t.previewLabel(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale))} />
         {CFG.stencil && (
           <div className="flex gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 pt-2.5">
             <PlaqueChip id="sl-view-box" on={view === "box"} onClick={() => setView("box")}>{t.viewBox}</PlaqueChip>
@@ -174,7 +175,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
           </div>
         )}
         <div className={`flex flex-wrap justify-between gap-2 bg-[var(--card)] px-3.5 py-2.5 ${CFG.stencil ? "" : "border-t border-[var(--line)]"} text-[13px] text-[var(--muted)] tabular-nums`}>
-          <span>{cmText(layout.widthMm)} × {cmText(layout.heightMm)} см · {layout.pieces.length} {ts.piecesShort}</span>
+          <span>{cmText(layout.widthMm, locale)} × {cmText(layout.heightMm, locale)} {units(locale).cm} · {layout.pieces.length} {ts.piecesShort}</span>
           <span>{ts.sheetThickness(sheet.name[locale], CFG.thicknessMm)}</span>
         </div>
       </section>
@@ -188,7 +189,7 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
               {DIGITS.map((d) => (
                 <div key={d} className={`grid justify-items-center gap-1 rounded-xl border-[1.5px] px-1 py-2 ${digitCounts[d] > 0 ? "border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
                   <span className="text-2xl font-bold leading-none">{d}</span>
-                  <span id={`sl-d-${d}-count`} className="text-[12px] text-[var(--muted)] tabular-nums">{digitCounts[d]} шт.</span>
+                  <span id={`sl-d-${d}-count`} className="text-[12px] text-[var(--muted)] tabular-nums">{digitCounts[d]} {units(locale).pcs}</span>
                   <div className="flex gap-1">
                     <button id={`sl-d-${d}-minus`} type="button" aria-label={t.removeDigit(d)} disabled={digitCounts[d] === 0} onClick={() => minusDigit(d)}
                       className="h-8 w-8 rounded-lg border border-[var(--line)] bg-[var(--card)] disabled:opacity-30">−</button>
@@ -254,15 +255,15 @@ export function StickLettersConstructor({ product = "letters" }: { product?: Sti
                 {piecePrices.map((p) => (
                   <tr key={`${p.text}|${p.widthMm}|${p.heightMm}`} className="border-b border-[var(--line)] last:border-0">
                     <td className="py-1 pr-2 text-base font-bold">{p.text}</td>
-                    <td className="py-1 pr-2 text-[var(--muted)]">{cmText(p.widthMm)} × {cmText(p.heightMm)} см</td>
-                    <td className="py-1 pr-2 text-right text-[var(--muted)]">{p.count > 1 ? `${p.count} шт. × ${formatUAH(p.price)}` : ""}</td>
-                    <td className="py-1 text-right font-bold">{formatUAH(p.price * p.count)}</td>
+                    <td className="py-1 pr-2 text-[var(--muted)]">{cmText(p.widthMm, locale)} × {cmText(p.heightMm, locale)} {units(locale).cm}</td>
+                    <td className="py-1 pr-2 text-right text-[var(--muted)]">{p.count > 1 ? `${p.count} ${units(locale).pcs} × ${formatUAH(p.price, locale)}` : ""}</td>
+                    <td className="py-1 text-right font-bold">{formatUAH(p.price * p.count, locale)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-          {piecePrices.length > 0 && <p className="m-0 text-[12px] text-[var(--muted)]">{t.piecePricesNote(formatUAH(CFG.minPrice))}</p>}
+          {piecePrices.length > 0 && <p className="m-0 text-[12px] text-[var(--muted)]">{t.piecePricesNote(formatUAH(CFG.minPrice, locale))}</p>}
         </BuyPanel>
       </form>
     </div>

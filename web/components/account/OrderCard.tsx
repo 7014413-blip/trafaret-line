@@ -29,13 +29,13 @@ export function OrderCard({ order, locale = "uk" }: { order: AccountOrder; local
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="m-0 text-lg font-bold">{t.order(order.number)}</h2>
-          <p className="m-0 text-sm text-[var(--muted)]">{dateText(order.createdAt, locale)} · {formatUAH(order.total)}</p>
+          <p className="m-0 text-sm text-[var(--muted)]">{dateText(order.createdAt, locale)} · {formatUAH(order.total, locale)}</p>
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${STAGE_CLASS[order.stage]}`}>{server(order.statusText)}</span>
       </header>
       {order.ttn && (
         <p className="m-0">
-          ТТН <b className="tabular-nums">{order.ttn}</b>
+          {t.parcelNumber} <b className="tabular-nums">{order.ttn}</b>
           {order.trackingUrl && <> · <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">{t.whereParcel}</a></>}
         </p>
       )}
@@ -48,8 +48,8 @@ export function OrderCard({ order, locale = "uk" }: { order: AccountOrder; local
             <div className="min-w-0">
               <p className="m-0 font-medium">{item.title}</p>
               <p className="m-0 text-sm text-[var(--muted)]">
-                {item.quantity} {t.pieces} × {formatUAH(item.unitPrice)}
-                {item.priceNow != null && item.priceNow !== item.unitPrice && <> · {t.now} {formatUAH(item.priceNow)}</>}
+                {item.quantity} {t.pieces} × {formatUAH(item.unitPrice, locale)}
+                {item.priceNow != null && item.priceNow !== item.unitPrice && <> · {t.now} {formatUAH(item.priceNow, locale)}</>}
               </p>
               {item.repeatProblem && <p className="m-0 text-sm">{server(item.repeatProblem)}</p>}
             </div>

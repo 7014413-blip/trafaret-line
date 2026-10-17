@@ -30,6 +30,10 @@ const UPSELLS: Dictionary<Upsell[]> = {
     { id: "valyk", title: "Валик поролоновый 10 см", reason: "Для ровного слоя краски", price: 85 },
     { id: "klei", title: "Клей-спрей для фиксации", reason: "Трафарет не сдвигается", price: 220 },
   ],
+  en: [
+    { id: "valyk", title: "Foam roller 10 cm", reason: "For an even coat of paint", price: 85 },
+    { id: "klei", title: "Repositionable spray adhesive", reason: "Keeps the stencil from shifting", price: 220 },
+  ],
 };
 
 export function CartHost() {

@@ -8,7 +8,7 @@ export const CURRENCY = "uah"
 
 /** Uploaded media of one product plus the bookkeeping map stored in metadata.catalog_files. */
 export interface ProductMedia {
-  images: { url: string; kind: string; uk: string; ru: string }[]
+  images: { url: string; kind: string; uk: string; ru: string; en?: string }[]
   videoUrl: string | null
   designUrls: string[]
   files: UploadedFiles
@@ -21,7 +21,7 @@ export async function uploadProductMedia(product: CatalogProduct, uploader: File
   for (const image of product.images) {
     const uploaded = await uploader.upload(image.file, known)
     files[image.file] = uploaded
-    images.push({ url: uploaded.url, kind: image.kind, uk: image.alt.uk, ru: image.alt.ru })
+    images.push({ url: uploaded.url, kind: image.kind, uk: image.alt.uk, ru: image.alt.ru, ...(image.alt.en ? { en: image.alt.en } : {}) })
   }
   const video = await uploader.uploadOptional(product.video, known)
   if (video) {
@@ -72,7 +72,21 @@ export function variantData(product: CatalogProduct, variant: CatalogVariant) {
     allow_backorder: true,
     options: { [SIZE_OPTION]: size.uk, [MATERIAL_OPTION]: material.uk },
     prices: [{ amount: variant.price_uah, currency_code: CURRENCY }],
-    metadata: { size_code: size.code, material_code: material.code, sheet_mm: size.sheet_mm, pieces: size.pieces, title_ru: variant.title.ru },
+    metadata: { size_code: size.code, material_code: material.code, sheet_mm: size.sheet_mm, pieces: size.pieces, title_ru: variant.title.ru, ...(variant.title.en ? { title_en: variant.title.en } : {}) },
+  }
+}
+
+/** English texts of a translated product: title, slug and option labels (an untranslated label stays Ukrainian). */
+function englishTexts(product: CatalogProduct, en: NonNullable<CatalogProduct["en"]>) {
+  return {
+    title: en.title,
+    subtitle: en.short,
+    description: en.description_html,
+    slug: en.slug,
+    options: {
+      [SIZE_OPTION]: Object.fromEntries(product.options.size.map((s) => [s.uk, s.en ?? s.uk])),
+      [MATERIAL_OPTION]: Object.fromEntries(product.options.material.map((m) => [m.uk, m.en ?? m.uk])),
+    },
   }
 }
 
@@ -96,17 +110,18 @@ export function productData(product: CatalogProduct, media: ProductMedia, catego
       primary_category: product.primary_category,
       video: media.videoUrl,
       design_files: media.designUrls,
-      image_alts: media.images.map((i) => ({ url: i.url, kind: i.kind, uk: i.uk, ru: i.ru })),
+      image_alts: media.images.map((i) => ({ url: i.url, kind: i.kind, uk: i.uk, ru: i.ru, ...(i.en ? { en: i.en } : {}) })),
       fields: product.fields,
       hole: product.hole ?? null,
       monogram: product.monogram ?? null,
       constructor_path: product.constructor_path ?? null,
-      features: { uk: product.uk.features, ru: product.ru.features },
+      features: { uk: product.uk.features, ru: product.ru.features, ...(product.en ? { en: product.en.features } : {}) },
       faq: resolveFaq(product, catalog.sharedFaq),
       related_handles: product.related,
       seo: {
         uk: { title: product.uk.seo_title, description: product.uk.seo_description },
         ru: { title: product.ru.seo_title, description: product.ru.seo_description },
+        ...(product.en ? { en: { title: product.en.seo_title, description: product.en.seo_description } } : {}),
       },
       size_details: Object.fromEntries(product.options.size.map((s) => [s.uk, s.detail])),
       i18n: {
@@ -119,6 +134,7 @@ export function productData(product: CatalogProduct, media: ProductMedia, catego
             [MATERIAL_OPTION]: Object.fromEntries(product.options.material.map((m) => [m.uk, m.ru])),
           },
         },
+        ...(product.en ? { en: englishTexts(product, product.en) } : {}),
       },
       sources: product.sources,
       blocks: resolveBlocks(product, catalog.sharedBlocks),

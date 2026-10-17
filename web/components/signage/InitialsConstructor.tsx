@@ -22,7 +22,6 @@ import { useBuyState } from "@/lib/client/use-buy-state";
 import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { initialsThumbnailSvg } from "@/lib/export/initials-thumbnail";
-import { cmText } from "@/lib/format";
 import { checkInitials } from "@/lib/initials/check";
 import { DEFAULT_INITIALS_CONFIG } from "@/lib/initials/config";
 import { computeInitialsLayout } from "@/lib/initials/layout";
@@ -36,6 +35,7 @@ import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { SIGNAGE_LETTERS } from "@/lib/i18n/dictionaries/signage-letters";
 import { tr } from "@/lib/i18n/translate";
 import type { InitialsDesign, InitialsMode, InitialsSeparator } from "@/types/initials";
+import { cmText } from "@/lib/format";
 
 const CFG = DEFAULT_INITIALS_CONFIG;
 const SEPARATORS: [InitialsSeparator, string][] = [["bar", "S | D"], ["amp", "S & D"], ["plus", "S + D"], ["dot", "S · D"], ["none", "SD"]];
@@ -93,7 +93,7 @@ export function InitialsConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `initials|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: t.cartTitle(sep, cmText(letterMm), sheet.name[locale].toLowerCase(), mode === "topper"),
+      title: t.cartTitle(sep, cmText(letterMm, locale), sheet.name[locale].toLowerCase(), mode === "topper"),
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -109,9 +109,9 @@ export function InitialsConstructor() {
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <InitialsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm), cmText(layout.heightMm))} />
+        <InitialsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale))} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{t.summary(cmText(layout.widthMm), cmText(layout.heightMm), cmText(letterMm))}</span>
+          <span>{t.summary(cmText(layout.widthMm, locale), cmText(layout.heightMm, locale), cmText(letterMm, locale))}</span>
           <span>{ts.sheetThickness(sheet.name[locale], sheet.thicknessMm)}</span>
         </div>
       </section>

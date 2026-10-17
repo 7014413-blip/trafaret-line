@@ -10,6 +10,7 @@ import { FIELDSET_CLASS, INPUT_CLASS, LEGEND_CLASS } from "@/components/ui/form-
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { tr } from "@/lib/i18n/translate";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 
 export function LetterHeightField({ legend, idPrefix, heightsCm, valueMm, minMm, maxMm, onChange, inputLabel, note, extra }: {
   legend?: string;
@@ -25,7 +26,8 @@ export function LetterHeightField({ legend, idPrefix, heightsCm, valueMm, minMm,
   /** A second control next to the field (fit to a length). */
   extra?: React.ReactNode;
 }) {
-  const t = tr(SIGNAGE, useLocale());
+  const locale = useLocale();
+  const t = tr(SIGNAGE, locale);
   const [typed, setTyped] = useState<string | null>(null);
   const clamp = (mm: number) => Math.min(maxMm, Math.max(minMm, Math.round(mm)));
 
@@ -41,7 +43,7 @@ export function LetterHeightField({ legend, idPrefix, heightsCm, valueMm, minMm,
   return (
     <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{legend ?? t.letterHeight}</legend>
       <div className="flex flex-wrap gap-2">
-        {heightsCm.map((cm) => <PlaqueChip key={cm} id={`${idPrefix}-h-${cm}`} on={valueMm === cm * 10} onClick={() => onChange(clamp(cm * 10))}>{cm} см</PlaqueChip>)}
+        {heightsCm.map((cm) => <PlaqueChip key={cm} id={`${idPrefix}-h-${cm}`} on={valueMm === cm * 10} onClick={() => onChange(clamp(cm * 10))}>{decimal(cm, locale)} {units(locale).cm}</PlaqueChip>)}
       </div>
       {extra ? <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">{field}{extra}</div> : field}
       {note && <span className="text-[13px] text-[var(--muted)]">{note}</span>}

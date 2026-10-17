@@ -3,12 +3,13 @@
 
 import Link from "@/components/i18n/LocaleLink";
 import type { ReviewListResponse } from "@/types/reviews";
-import { pluralUk } from "@/lib/text/plural-uk";
+import { plural } from "@/lib/text/plural";
 import { ReviewList } from "./ReviewList";
 import { Stars } from "./Stars";
 import type { Locale } from "@/types/customizer";
 import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
 import { tr } from "@/lib/i18n/translate";
+import { decimal } from "@/lib/i18n/dictionaries/units";
 
 export function ProductReviews({ list, locale = "uk" }: { list: ReviewListResponse; locale?: Locale }) {
   const t = tr(CATALOG, locale);
@@ -20,8 +21,8 @@ export function ProductReviews({ list, locale = "uk" }: { list: ReviewListRespon
         {count > 0 && (
           <span className="flex items-center gap-2" data-testid="review-summary">
             <Stars value={average} locale={locale} />
-            <b className="tabular-nums">{String(average).replace(".", ",")}</b>
-            <span className="text-[var(--muted)]">· {count} {pluralUk(count, t.reviewForms)}</span>
+            <b className="tabular-nums">{decimal(average, locale)}</b>
+            <span className="text-[var(--muted)]">· {count} {plural(locale, count, t.reviewForms)}</span>
           </span>
         )}
       </div>

@@ -12,6 +12,8 @@ import type { HoleError, HoleInput, HolePosition, HoleRules } from "@/types/hole
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CATALOG, type CatalogTexts } from "@/lib/i18n/dictionaries/catalog";
 import { tr } from "@/lib/i18n/translate";
+import { decimal } from "@/lib/i18n/dictionaries/units";
+import type { Locale } from "@/types/customizer";
 import { checkHole } from "@/lib/catalog/check-hole";
 import { defaultHoleMm } from "@/lib/catalog/hole-rules";
 import { maxHoleMm } from "@/lib/catalog/hole-geometry";
@@ -20,9 +22,9 @@ import { HolePreview } from "./HolePreview";
 
 const DEFAULT_PIECE_MM = 100;
 
-const mm = (value: number) => String(value).replace(".", ",");
 
-function errorText(error: HoleError, rules: HoleRules, maxMm: number, t: CatalogTexts): string {
+function errorText(error: HoleError, rules: HoleRules, maxMm: number, t: CatalogTexts, locale: Locale): string {
+  const mm = (value: number) => decimal(value, locale);
   if (error === "diameter_not_number") return t.holeNotNumber;
   if (error === "diameter_too_small") return t.holeTooSmall(mm(rules.minMm));
   if (error === "diameter_too_large") return t.holeTooLarge(mm(maxMm));
@@ -30,7 +32,9 @@ function errorText(error: HoleError, rules: HoleRules, maxMm: number, t: Catalog
 }
 
 export function HoleProductView({ p, rules }: { p: CatalogProduct; rules: HoleRules }) {
-  const t = tr(CATALOG, useLocale());
+  const locale = useLocale();
+  const t = tr(CATALOG, locale);
+  const mm = (value: number) => decimal(value, locale);
   const [variant, setVariant] = useState<CatalogVariant | undefined>(undefined);
   const onVariantChange = useCallback((v: CatalogVariant | undefined) => setVariant(v), []);
   const pieceMm = variant?.sheetMm?.[0] ?? DEFAULT_PIECE_MM;
@@ -66,7 +70,7 @@ export function HoleProductView({ p, rules }: { p: CatalogProduct; rules: HoleRu
             className="h-11 w-32 rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] px-3 text-base tabular-nums text-[var(--ink)]" />
         </label>
         {check.error ? (
-          <span id="hole-help" role="alert" className="text-[13px] text-[var(--danger,#b91c1c)]">{errorText(check.error, rules, maxMm, t)}</span>
+          <span id="hole-help" role="alert" className="text-[13px] text-[var(--danger,#b91c1c)]">{errorText(check.error, rules, maxMm, t, locale)}</span>
         ) : (
           <span id="hole-help" className="text-[13px] text-[var(--muted)]">{t.holeHelp(mm(rules.minMm), mm(maxMm))}</span>
         )}

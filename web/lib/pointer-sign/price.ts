@@ -38,7 +38,7 @@ export function pricePointerSign(
     basePrice = roundUp(Math.min(Math.max(byRate, floor), ceiling), cfg.roundTo);
   }
 
-  lines.push({ label: text.size(cmText(size.widthMm), cmText(size.heightMm), !size.preset), amount: 0 });
+  lines.push({ label: text.size(cmText(size.widthMm, locale), cmText(size.heightMm, locale), !size.preset), amount: 0 });
   lines.push({ label: text.pointerBase(base.name[locale].toLowerCase(), base.baseThicknessMm), amount: 0 });
   lines.push({ label: text.pointerText(overlay.name[locale].toLowerCase(), overlay.overlayThicknessMm), amount: 0 });
   if (design.logo) lines.push({ label: text.pointerLogo, amount: 0 });

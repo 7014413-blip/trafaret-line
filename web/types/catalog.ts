@@ -2,6 +2,7 @@
 // what /store/product-categories and /store/products return with our metadata
 // (backend/src/scripts/import-catalog.ts); the normalised shapes are what pages use.
 
+import type { Locale } from "./customizer";
 import type { HoleRules, RawHoleRules } from "./hole";
 import type { MonogramProductConfig } from "./monogram";
 
@@ -32,10 +33,10 @@ export interface RawCategory {
   metadata?: {
     path?: string;
     image?: string;
-    seo?: { uk?: SeoText; ru?: SeoText };
-    content?: { uk?: CategoryContent; ru?: CategoryContent };
+    seo?: InLanguages<SeoText>;
+    content?: InLanguages<CategoryContent>;
     /** Names in other languages (the Medusa name is Ukrainian). */
-    i18n?: { ru?: { name?: string } };
+    i18n?: InLanguages<{ name?: string }>;
   } | null;
 }
 
@@ -45,7 +46,10 @@ export interface CategoryContent {
   faq?: FaqEntry[];
 }
 
-/** Russian texts of a product written by the catalogue import (backend/src/lib/catalog-import). */
+/** Texts of a catalogue entry per language: Ukrainian, and its translations where written. */
+export type InLanguages<T> = Partial<Record<Locale, T>>;
+
+/** Russian or English texts of a product written by the catalogue import (backend/src/lib/catalog-import). */
 export interface RawProductTranslation {
   title?: string;
   subtitle?: string;
@@ -66,7 +70,7 @@ export interface RawVariant {
   sku?: string | null;
   calculated_price?: RawPrice | null;
   options?: { value: string; option?: { title: string } | null; option_id?: string }[];
-  metadata?: { size_code?: string; material_code?: string; sheet_mm?: [number, number]; pieces?: number; title_ru?: string } | null;
+  metadata?: { size_code?: string; material_code?: string; sheet_mm?: [number, number]; pieces?: number; title_ru?: string; title_en?: string } | null;
 }
 
 export interface RawProduct {
@@ -87,15 +91,15 @@ export interface RawProduct {
     is_new?: boolean;
     min_price_uah?: number;
     primary_category?: string;
-    image_alts?: { url: string; kind: string; uk: string; ru: string }[];
-    features?: { uk?: string[]; ru?: string[] };
-    faq?: { uk?: FaqEntry[]; ru?: FaqEntry[] };
-    seo?: { uk?: SeoText; ru?: SeoText };
-    size_details?: Record<string, { uk: string; ru: string }>;
-    blocks?: { uk?: Record<string, { title: string; html: string }>; ru?: Record<string, { title: string; html: string }> };
-    i18n?: { ru?: RawProductTranslation };
+    image_alts?: { url: string; kind: string; uk: string; ru: string; en?: string }[];
+    features?: InLanguages<string[]>;
+    faq?: InLanguages<FaqEntry[]>;
+    seo?: InLanguages<SeoText>;
+    size_details?: Record<string, { uk: string; ru: string; en?: string }>;
+    blocks?: InLanguages<Record<string, { title: string; html: string }>>;
+    i18n?: InLanguages<RawProductTranslation>;
     related_handles?: string[];
-    fields?: { key: string; uk: string; ru: string; def: string }[] | null;
+    fields?: { key: string; uk: string; ru: string; en?: string; def: string; def_en?: string }[] | null;
     /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */
     constructor_path?: string | null;
     /** Set in «Простий кабінет»; missing means in stock. */

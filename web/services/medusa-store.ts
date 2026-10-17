@@ -5,6 +5,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import type { CatalogCardLite, CatalogCategory, CatalogProduct, CatalogProductCard, RawCategory, RawProduct } from "../types/catalog";
+import { categoriesInLanguage, productsInLanguage } from "../lib/catalog/in-language";
 import { mapCategory, mapProduct, mapProductCard } from "../lib/catalog/map-catalog";
 import type { Locale } from "../types/customizer";
 import { toCardLite } from "../lib/catalog/card-lite";
@@ -68,7 +69,7 @@ export async function listCategories(locale: Locale = "uk"): Promise<{ roots: Ca
   const { product_categories: raw } = await storeGet<{ product_categories: RawCategory[] }>("/store/product-categories", {
     fields: "id,name,handle,description,rank,parent_category_id,+metadata", limit: 500,
   });
-  const all = raw.map((c) => mapCategory(c, raw, locale));
+  const all = categoriesInLanguage(raw.map((c) => mapCategory(c, raw, locale)), locale);
   const roots = all.filter((c) => !c.parentHandle).sort((a, b) => a.rank - b.rank);
   return { roots, all };
 }
@@ -89,7 +90,7 @@ export async function listProducts(categoryIds: string[], locale: Locale = "uk")
     const page = await storeGet<{ products: RawProduct[]; count: number }>("/store/products", {
       fields: CARD_FIELDS, region_id: region, category_id: categoryIds, limit, offset,
     }, "no-store");
-    cards.push(...page.products.map((p) => mapProductCard(p, locale)));
+    cards.push(...productsInLanguage(page.products.map((p) => mapProductCard(p, locale)), locale));
     if (offset + limit >= page.count) break;
   }
   return cards;
@@ -109,10 +110,11 @@ export const listCategoryCards = unstable_cache(
 export const listFirstProducts = unstable_cache(
   async (categoryIds: string[], count: number, locale: Locale = "uk"): Promise<CatalogProductCard[]> => {
     const region = await uahRegionId();
+    // English has only part of the catalogue: read more, keep the translated ones.
     const { products } = await storeGet<{ products: RawProduct[] }>("/store/products", {
-      fields: CARD_FIELDS, region_id: region, category_id: categoryIds, limit: count, offset: 0,
+      fields: CARD_FIELDS, region_id: region, category_id: categoryIds, limit: locale === "en" ? 100 : count, offset: 0,
     }, "no-store");
-    return products.map((p) => mapProductCard(p, locale));
+    return productsInLanguage(products.map((p) => mapProductCard(p, locale)), locale).slice(0, count);
   },
   ["first-products-v2"],
   { revalidate: REVALIDATE_S, tags: ["catalog"] },
@@ -126,7 +128,7 @@ export async function searchProducts(text: string, count = 60, locale: Locale = 
   const { products } = await storeGet<{ products: RawProduct[] }>("/store/products", {
     fields: CARD_FIELDS, region_id: region, q, limit: count, offset: 0,
   }, "no-store");
-  return products.map((p) => toCardLite(mapProductCard(p, locale)));
+  return productsInLanguage(products.map((p) => toCardLite(mapProductCard(p, locale))), locale);
 }
 
 /** Handles and update dates of every published product (sitemap). */
@@ -162,7 +164,7 @@ export async function listAllProducts(locale: Locale = "uk"): Promise<CatalogPro
 export async function productByHandle(handle: string, locale: Locale = "uk"): Promise<CatalogProduct | null> {
   const region = await uahRegionId();
   const { products } = await storeGet<{ products: RawProduct[] }>("/store/products", { fields: PRODUCT_FIELDS, region_id: region, handle, limit: 1 });
-  return products[0] ? mapProduct(products[0], locale) : null;
+  return products[0] && productsInLanguage(products, locale).length ? mapProduct(products[0], locale) : null;
 }
 
 /** Published products by handles (related products), in the given order. */
@@ -172,6 +174,6 @@ export async function productsByHandles(handles: string[], locale: Locale = "uk"
   const { products } = await storeGet<{ products: RawProduct[] }>("/store/products", {
     fields: CARD_FIELDS, region_id: region, handle: handles, limit: handles.length,
   });
-  const cards = products.map((p) => mapProductCard(p, locale));
+  const cards = productsInLanguage(products.map((p) => mapProductCard(p, locale)), locale);
   return handles.map((h) => cards.find((c) => c.handle === h)).filter((c): c is CatalogProductCard => !!c);
 }

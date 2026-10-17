@@ -4,6 +4,9 @@
 
 import * as opentype from "opentype.js";
 import type { CustomFontFormat, FontFileCheck } from "../../types/text";
+import type { Locale } from "../../types/customizer";
+import { FONT_CHECK } from "../i18n/dictionaries/font-check";
+import { tr } from "../i18n/translate";
 
 export const MAX_FONT_BYTES = 10 * 1024 * 1024;
 
@@ -30,34 +33,35 @@ function missingOf(font: opentype.Font, alphabet: string): string[] {
   return [...alphabet].filter((ch) => font.charToGlyphIndex(ch) <= 0);
 }
 
-export function checkFontBuffer(buffer: ArrayBuffer, fileName: string): FontFileCheck & { font?: opentype.Font } {
+export function checkFontBuffer(buffer: ArrayBuffer, fileName: string, locale: Locale = "uk"): FontFileCheck & { font?: opentype.Font } {
+  const t = tr(FONT_CHECK, locale);
   const base: FontFileCheck = {
     ok: false, familyName: fileName.replace(/\.[a-z0-9]+$/i, ""), missingCyrillic: [], missingLatin: [], missingDigits: [],
     missingRussian: [], missingSigns: [], embeddingRestricted: false,
   };
-  if (buffer.byteLength === 0) return { ...base, error: "Файл порожній" };
-  if (buffer.byteLength > MAX_FONT_BYTES) return { ...base, error: "Файл шрифту більший за 10 МБ" };
+  if (buffer.byteLength === 0) return { ...base, error: t.empty };
+  if (buffer.byteLength > MAX_FONT_BYTES) return { ...base, error: t.tooBig };
   const format = sniffFontFormat(new Uint8Array(buffer));
   // WOFF2 is unpacked by the shop first (backend lib/text/woff2.ts); this check reads the result.
-  if (format === "woff2") return { ...base, error: "Файл WOFF2 потрібно спершу розпакувати" };
-  if (!format) return { ...base, error: "Це не файл шрифту. Підходять TTF, OTF, WOFF або WOFF2" };
+  if (format === "woff2") return { ...base, error: t.woff2 };
+  if (!format) return { ...base, error: t.notFont };
 
   let font: opentype.Font;
   try {
     font = opentype.parse(buffer);
   } catch {
-    return { ...base, format, error: "Файл шрифту пошкоджений або не читається" };
+    return { ...base, format, error: t.broken };
   }
   const familyName = font.names.fontFamily?.uk ?? font.names.fontFamily?.en ?? Object.values(font.names.fontFamily ?? {})[0] ?? base.familyName;
   const missingCyrillic = missingOf(font, UKRAINIAN);
   const missingLatin = missingOf(font, LATIN);
   if (missingCyrillic.length === UKRAINIAN.length && missingLatin.length === LATIN.length) {
-    return { ...base, format, familyName, error: "У шрифті немає ні українських, ні латинських літер" };
+    return { ...base, format, familyName, error: t.noLetters };
   }
   // A font of empty boxes: the letter «A»/«А» must have an outline.
   const probe = font.charToGlyphIndex("А") > 0 ? "А" : "A";
   if (!font.charToGlyph(probe).getPath(0, 0, 100).commands.length) {
-    return { ...base, format, familyName, error: "Літери в шрифті не мають контурів" };
+    return { ...base, format, familyName, error: t.noOutlines };
   }
   // OS/2 fsType bit 1 (0x0002) = Restricted License embedding.
   const fsType = Number((font.tables.os2 as { fsType?: number } | undefined)?.fsType ?? 0);

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { MATERIALS } from "../../lib/materials";
 import { nextTierHint } from "../../lib/calculators/pricing";
 import { cmText, formatUAH } from "../../lib/format";
+import { decimal } from "../../lib/i18n/dictionaries/units";
 import { isFlexible, parcelFor } from "../../lib/calculators/packaging";
 import type { PackKind } from "../../types/packaging";
 import type { CartLine, Locale, Upsell } from "../../types/customizer";
@@ -64,7 +65,7 @@ export function CartDrawer({
   const canRoll = lines.length > 0 && lines.every((l) => isFlexible(l.materialId));
   const parcel = parcelFor(lines.map((l) => ({ materialId: l.materialId, widthMm: l.widthCm * 10, heightMm: l.heightCm * 10, quantity: l.quantity })), pack);
   const cm = (mm: number) => Math.ceil(mm / 10);
-  const kg = (value: number) => (Math.ceil(value * 10) / 10).toFixed(1).replace(".", locale === "en" ? "." : ",");
+  const kg = (value: number) => decimal((Math.ceil(value * 10) / 10).toFixed(1), locale);
   // Closest quantity tier among the lines: "Додайте ще 3 шт. «…», щоб отримати −5 %".
   const tier = lines
     .map((l) => ({ l, h: nextTierHint(l.quantity) }))
@@ -75,7 +76,7 @@ export function CartDrawer({
 
   return (
     <>
-      <CartFab count={count} total={total} label={t.fab(count, formatUAH(total))} onClick={() => onOpenChange(true)} />
+      <CartFab count={count} total={total} label={t.fab(count, formatUAH(total, locale))} locale={locale} onClick={() => onOpenChange(true)} />
 
       <AnimatePresence>
         {open && (
@@ -116,7 +117,7 @@ export function CartDrawer({
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold leading-snug">{l.title}</h3>
-                        <p className="font-mono text-xs text-[var(--muted)]">{cmText(l.widthCm * 10)}×{cmText(l.heightCm * 10)} {t.cm} · {MATERIALS[l.materialId].name[locale]}</p>
+                        <p className="font-mono text-xs text-[var(--muted)]">{cmText(l.widthCm * 10, locale)}×{cmText(l.heightCm * 10, locale)} {t.cm} · {MATERIALS[l.materialId].name[locale]}</p>
                         <div className="mt-1.5 flex items-center gap-3">
                           <div className="inline-flex items-center rounded-full border-[1.5px] border-[var(--line)]">
                             <button type="button" aria-label={t.less} className="h-9 w-9" onClick={() => (l.quantity > 1 ? onQuantity(l.id, l.quantity - 1) : onRemove(l.id))}>−</button>
@@ -126,7 +127,7 @@ export function CartDrawer({
                           <button type="button" className="text-xs text-[var(--muted)] underline" onClick={() => onRemove(l.id)}>{t.remove}</button>
                         </div>
                       </div>
-                      <div className="text-right font-bold tabular-nums">{formatUAH(l.unitPrice * l.quantity)}</div>
+                      <div className="text-right font-bold tabular-nums">{formatUAH(l.unitPrice * l.quantity, locale)}</div>
                     </motion.li>
                   ))}
                 </ul>
@@ -141,7 +142,7 @@ export function CartDrawer({
                 {gift && lines.length > 0 && (
                   <Progress
                     value={Math.min(1, total / gift.thresholdUah)}
-                    text={giftLeft > 0 ? t.giftLeft(formatUAH(giftLeft), gift.title) : t.giftDone(gift.title)}
+                    text={giftLeft > 0 ? t.giftLeft(formatUAH(giftLeft, locale), gift.title) : t.giftDone(gift.title)}
                   />
                 )}
                 {parcel && (
@@ -168,7 +169,7 @@ export function CartDrawer({
                 {onAddUpsell && freshUpsells.map((u) => (
                   <div key={u.id} className="mb-2 flex items-center gap-3 rounded-xl border-[1.5px] border-[var(--line)] px-3.5 py-3">
                     <div className="min-w-0 flex-1 text-sm"><b className="block">{u.title}</b>{u.reason}</div>
-                    <button type="button" onClick={() => onAddUpsell(u)} className="h-10 whitespace-nowrap rounded-full border-[1.5px] border-[var(--ink)] px-3.5 font-semibold">+ {formatUAH(u.price)}</button>
+                    <button type="button" onClick={() => onAddUpsell(u)} className="h-10 whitespace-nowrap rounded-full border-[1.5px] border-[var(--ink)] px-3.5 font-semibold">+ {formatUAH(u.price, locale)}</button>
                   </div>
                 ))}
               </div>
@@ -186,7 +187,7 @@ export function CartDrawer({
 
                   <div className="flex items-center gap-3.5">
                     <div className="min-w-0 flex-1">
-                      <b className="block text-2xl tabular-nums">{formatUAH(total)}</b>
+                      <b className="block text-2xl tabular-nums">{formatUAH(total, locale)}</b>
                       <span className="text-[13px] text-[var(--muted)]">{dispatchText ?? productionNote ?? t.production}</span>
                     </div>
                     <button type="button" onClick={() => onCheckout(buyer)} className="h-[52px] rounded-full bg-[var(--buy)] px-7 text-[17px] font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:bg-[var(--buy-active)]">
@@ -221,7 +222,7 @@ function Progress({ value, text, action }: { value: number; text: string; action
   );
 }
 
-function CartFab({ count, total, onClick, label }: { count: number; total: number; onClick: () => void; label: string }) {
+function CartFab({ count, total, onClick, label, locale }: { count: number; total: number; onClick: () => void; label: string; locale: Locale }) {
   const [pulse, setPulse] = useState(0);
   const prev = useRef(count);
   useEffect(() => { if (count > (prev.current ?? 0)) setPulse((p) => p + 1); prev.current = count; }, [count]);
@@ -241,7 +242,7 @@ function CartFab({ count, total, onClick, label }: { count: number; total: numbe
           className="fixed bottom-[calc(16px+env(safe-area-inset-bottom,0px))] right-4 z-30 flex h-[54px] items-center gap-2.5 rounded-full bg-[var(--inv-bg)] pl-4 pr-5 font-semibold text-[var(--inv-fg)] shadow-xl tabular-nums"
         >
           <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[var(--inv-fg)] text-[13px] text-[var(--inv-bg)]">{count}</span>
-          {formatUAH(total)}
+          {formatUAH(total, locale)}
         </motion.button>
       )}
     </AnimatePresence>

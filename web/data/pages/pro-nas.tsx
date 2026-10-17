@@ -58,5 +58,31 @@ export const ABOUT: Dictionary<InfoPageContent> = {
         </Card>
       </>
     ),
+  },  en: {
+    metaTitle: "About us — stencil maker",
+    metaDescription: "Our own laser workshop in Boryspil makes stencils and acrylic and PET blanks. Shipping from Boryspil and Zaporizhzhia.",
+    title: "About us",
+    lead: "We cut our stencils ourselves on our own laser equipment. So we know how each material behaves and can make a design in any size.",
+    body: (
+      <>
+        <Card>
+          <h2>Production</h2>
+          <p>A laser cutter with a 1400 × 2000 mm work area. Larger stencils are made from parts with alignment marks. Materials: PET 0.5 mm, polystyrene 1 mm, acrylic 1.5–8 mm, mirror and colored acrylic.</p>
+        </Card>
+        <Card>
+          <h2>Why customers trust us</h2>
+          <ul>
+            <li>You see the price for every size right away, no “ask the manager”.</li>
+            <li>Custom stencils: we check your design and send a preview before cutting.</li>
+            <li>Made in 3 business days, shipped from the nearest branch.</li>
+            <li>Bulk prices from 10 pcs and terms for businesses.</li>
+          </ul>
+        </Card>
+        <Card>
+          <h2>Where we are</h2>
+          <BranchList locale="en" />
+        </Card>
+      </>
+    ),
   },
 };

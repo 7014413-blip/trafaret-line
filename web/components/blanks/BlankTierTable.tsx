@@ -8,7 +8,8 @@ import { BLANKS } from "@/lib/i18n/dictionaries/blanks";
 import { tr } from "@/lib/i18n/translate";
 
 export function BlankTierTable({ tiers, quantity }: { tiers: BlankTierPrice[]; quantity: number }) {
-  const t = tr(BLANKS, useLocale());
+  const locale = useLocale();
+  const t = tr(BLANKS, locale);
   const active = [...tiers].reverse().find((t) => quantity >= t.minQty)?.minQty;
   return (
     <table className="w-full border-collapse text-[13px] tabular-nums">
@@ -18,7 +19,7 @@ export function BlankTierTable({ tiers, quantity }: { tiers: BlankTierPrice[]; q
           <tr key={tier.minQty} className={tier.minQty === active ? "font-bold" : "text-[var(--muted)]"}>
             <td className="py-0.5">{tier.minQty === 1 ? t.onePiece : t.fromQty(tier.minQty)}</td>
             <td className="py-0.5 text-right">{tier.discount ? `−${Math.round(tier.discount * 100)}%` : ""}</td>
-            <td className="py-0.5 text-right">{formatUAH(tier.unitPrice)}</td>
+            <td className="py-0.5 text-right">{formatUAH(tier.unitPrice, locale)}</td>
           </tr>
         ))}
       </tbody>

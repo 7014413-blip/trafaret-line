@@ -5,9 +5,9 @@ import type { LocalizedText } from "../../types/customizer";
 import type { PointerSignCheck, PointerSignConfig, PointerSignDesign, PointerSignLayout } from "../../types/pointer-sign";
 import { DEFAULT_POINTER_SIGN_CONFIG } from "./config";
 import { findPointerMaterial } from "./find-material";
+import { localMm } from "../plaques/local-mm";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const mm = (v: number) => v.toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function checkPointerSign(
   design: PointerSignDesign, layout: PointerSignLayout, missingGlyphs: string[][] = [], cfg: PointerSignConfig = DEFAULT_POINTER_SIGN_CONFIG,
@@ -26,18 +26,18 @@ export function checkPointerSign(
       out.push({
         level: "error", code: "letters-too-small", lineIndex: line.index,
         message: t(
-          `Рядок ${n}: літери ${mm(line.capMm)} мм, так дрібно не виріжемо. Скоротіть текст, приберіть рядок або візьміть більший розмір.`,
-          `Строка ${n}: буквы ${mm(line.capMm)} мм, так мелко не вырежем. Сократите текст, уберите строку или возьмите больший размер.`,
-          `Line ${n}: letters are ${mm(line.capMm)} mm, too small to cut. Shorten the text, drop a line or pick a larger size.`,
+          `Рядок ${n}: літери ${localMm(line.capMm)} мм, так дрібно не виріжемо. Скоротіть текст, приберіть рядок або візьміть більший розмір.`,
+          `Строка ${n}: буквы ${localMm(line.capMm)} мм, так мелко не вырежем. Сократите текст, уберите строку или возьмите больший размер.`,
+          `Line ${n}: letters are ${localMm(line.capMm, "en")} mm, too small to cut. Shorten the text, drop a line or pick a larger size.`,
         ),
       });
     } else if (line.capMm < overlay.minLetterMm) {
       out.push({
         level: "warning", code: "letters-small", lineIndex: line.index,
         message: t(
-          `Рядок ${n}: літери ${mm(line.capMm)} мм. Тонкі елементи менеджер перевірить і за потреби трохи потовщить.`,
-          `Строка ${n}: буквы ${mm(line.capMm)} мм. Тонкие элементы менеджер проверит и при необходимости немного утолщит.`,
-          `Line ${n}: letters are ${mm(line.capMm)} mm. A manager checks thin parts and thickens them a little if needed.`,
+          `Рядок ${n}: літери ${localMm(line.capMm)} мм. Тонкі елементи менеджер перевірить і за потреби трохи потовщить.`,
+          `Строка ${n}: буквы ${localMm(line.capMm)} мм. Тонкие элементы менеджер проверит и при необходимости немного утолщит.`,
+          `Line ${n}: letters are ${localMm(line.capMm, "en")} mm. A manager checks thin parts and thickens them a little if needed.`,
         ),
       });
     }
@@ -61,7 +61,7 @@ export function checkPointerSign(
     }
   }
   if (base.id === overlay.id || base.hex.toLowerCase() === overlay.hex.toLowerCase()) {
-    out.push({ level: "warning", code: "same-colour", message: t("Основа і напис одного кольору: напис буде видно лише за обʼємом.", "Основа и надпись одного цвета: надпись будет видна только за счёт объёма.", "Base and text have the same colour: the text shows only by its relief.") });
+    out.push({ level: "warning", code: "same-colour", message: t("Основа і напис одного кольору: напис буде видно лише за обʼємом.", "Основа и надпись одного цвета: надпись будет видна только за счёт объёма.", "Base and text are the same color: the text shows only by its relief.") });
   }
   if (design.logo?.format === "raster") {
     out.push({ level: "warning", code: "raster-logo", message: t("Логотип з картинки переведемо у вектор і надішлемо макет на погодження перед порізкою.", "Логотип из картинки переведём в вектор и пришлём макет на согласование перед резкой.", "We trace the logo picture and send the layout for approval before cutting.") });

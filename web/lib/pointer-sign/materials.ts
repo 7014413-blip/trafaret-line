@@ -45,8 +45,9 @@ const polystyrene: PointerMaterial[] = [
 
 export const POINTER_MATERIALS: PointerMaterial[] = [...fromSignPalette, silverMatte, ...polystyrene];
 
-export const POINTER_MATERIAL_GROUPS: { id: PointerMaterial["group"]; name: string }[] = [
-  { id: "acrylic", name: "Акрил" },
-  { id: "mirror", name: "Дзеркальний акрил" },
-  { id: "polystyrene", name: "Полістирол" },
+/** Groups of the material picker in display order; their names are in the signage dictionary (pointerGroups). */
+export const POINTER_MATERIAL_GROUPS: { id: PointerMaterial["group"] }[] = [
+  { id: "acrylic" },
+  { id: "mirror" },
+  { id: "polystyrene" },
 ];

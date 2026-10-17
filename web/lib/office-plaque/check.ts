@@ -4,9 +4,9 @@
 import type { LocalizedText } from "../../types/customizer";
 import type { OfficePlaqueCheck, OfficePlaqueConfig, OfficePlaqueLayout } from "../../types/office-plaque";
 import { DEFAULT_OFFICE_PLAQUE_CONFIG } from "./config";
+import { localMm } from "../plaques/local-mm";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
-const mm = (v: number) => v.toLocaleString("uk-UA", { maximumFractionDigits: 1 });
 
 export function checkOfficePlaque(
   layout: OfficePlaqueLayout, missingGlyphs: string[][] = [], cfg: OfficePlaqueConfig = DEFAULT_OFFICE_PLAQUE_CONFIG,
@@ -17,14 +17,14 @@ export function checkOfficePlaque(
     const n = line.index + 1;
     if (line.capMm < cfg.absoluteMinLetterMm) {
       out.push({ level: "error", code: "letters-too-small", lineIndex: line.index, message: t(
-        `Рядок ${n}: літери ${mm(line.capMm)} мм, так дрібно гравіювання не читається. Скоротіть текст або візьміть більший розмір.`,
-        `Строка ${n}: буквы ${mm(line.capMm)} мм, так мелко гравировка не читается. Сократите текст или возьмите больший размер.`,
-        `Line ${n}: letters are ${mm(line.capMm)} mm, too small to read. Shorten the text or pick a larger size.`) });
+        `Рядок ${n}: літери ${localMm(line.capMm)} мм, так дрібно гравіювання не читається. Скоротіть текст або візьміть більший розмір.`,
+        `Строка ${n}: буквы ${localMm(line.capMm)} мм, так мелко гравировка не читается. Сократите текст или возьмите больший размер.`,
+        `Line ${n}: letters are ${localMm(line.capMm, "en")} mm, too small to read. Shorten the text or pick a larger size.`) });
     } else if (line.capMm < cfg.smallLetterMm) {
       out.push({ level: "warning", code: "letters-small", lineIndex: line.index, message: t(
-        `Рядок ${n}: літери ${mm(line.capMm)} мм, читаються лише зблизька.`,
-        `Строка ${n}: буквы ${mm(line.capMm)} мм, читаются только вблизи.`,
-        `Line ${n}: letters are ${mm(line.capMm)} mm, readable only up close.`) });
+        `Рядок ${n}: літери ${localMm(line.capMm)} мм, читаються лише зблизька.`,
+        `Строка ${n}: буквы ${localMm(line.capMm)} мм, читаются только вблизи.`,
+        `Line ${n}: letters are ${localMm(line.capMm, "en")} mm, readable only up close.`) });
     }
   }
   missingGlyphs.forEach((chars, index) => {

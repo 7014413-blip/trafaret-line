@@ -28,7 +28,7 @@ import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { usePresetSize } from "@/lib/client/use-preset-size";
 import { pointerThumbnailSvg } from "@/lib/export/pointer-thumbnail";
-import { cmText } from "@/lib/format";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { SIGNAGE_PLAQUES } from "@/lib/i18n/dictionaries/signage-plaques";
 import { tr } from "@/lib/i18n/translate";
@@ -39,6 +39,7 @@ import { findPointerMaterial } from "@/lib/pointer-sign/find-material";
 import { computePointerLayout } from "@/lib/pointer-sign/layout";
 import { pricePointerSign } from "@/lib/pointer-sign/price";
 import { useCart } from "@/store/cart-store";
+import { cmText } from "@/lib/format";
 import type {
   PointerArrowPlacement, PointerDirection, PointerLogo, PointerShape, PointerSignDesign, PointerTextLine,
 } from "@/types/pointer-sign";
@@ -128,7 +129,7 @@ export function PointerSignConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `pointer|${JSON.stringify({ ...final, quantity: 0 })}`,
-      title: p.cartTitle(texts, `${cmText(final.widthMm)}×${cmText(final.heightMm)}`),
+      title: p.cartTitle(texts, `${cmText(final.widthMm, locale)}×${cmText(final.heightMm, locale)}`),
       materialId: "acrylic_5",
       widthCm: final.widthMm / 10,
       heightCm: final.heightMm / 10,
@@ -145,10 +146,10 @@ export function PointerSignConstructor() {
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
       <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
         <PointerSignPreview layout={layout} linePaths={linePaths} base={base} overlay={overlay}
-          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={p.previewLabel(`${cmText(size.widthMm)}×${cmText(size.heightMm)}`)} />
+          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={p.previewLabel(`${cmText(size.widthMm, locale)}×${cmText(size.heightMm, locale)}`)} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см · {p.tip(direction === -1)}</span>
-          <span>{base.name[locale]} {base.baseThicknessMm} мм + {overlay.name[locale].toLowerCase()} {overlay.overlayThicknessMm} мм</span>
+          <span>{cmText(size.widthMm, locale)} × {cmText(size.heightMm, locale)} {units(locale).cm} · {p.tip(direction === -1)}</span>
+          <span>{base.name[locale]} {decimal(base.baseThicknessMm, locale)} {units(locale).mm} + {overlay.name[locale].toLowerCase()} {decimal(overlay.overlayThicknessMm, locale)} {units(locale).mm}</span>
         </div>
       </section>
 
@@ -156,7 +157,7 @@ export function PointerSignConstructor() {
         <ConstructorHeader kicker={p.kicker} title={p.title} lead={p.lead} />
 
         <SizePresetPicker idPrefix="ps" presets={CFG.presets} priceOf={(p) => p.price} state={sizeState} limits={CFG}
-          note={<>{p.sizeNoteStart(cmText(CFG.minWidthMm), cmText(CFG.maxWidthMm), Math.round(CFG.maxHeightToWidth * 100))}<Link href="/vyvisky" className="underline">{p.signConstructor}</Link>.</>} />
+          note={<>{p.sizeNoteStart(cmText(CFG.minWidthMm, locale), cmText(CFG.maxWidthMm, locale), Math.round(CFG.maxHeightToWidth * 100))}<Link href="/vyvisky" className="underline">{p.signConstructor}</Link>.</>} />
 
         <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{p.shape}</legend>
           <div className="flex flex-wrap gap-2">

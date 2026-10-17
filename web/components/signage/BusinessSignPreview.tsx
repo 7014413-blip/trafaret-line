@@ -15,6 +15,7 @@ import { PreviewSvg } from "@/components/signage/PreviewSvg";
 import { findBusinessSignSheet } from "@/lib/business-sign/palette";
 import { shadeHex } from "@/lib/business-sign/shade-hex";
 import { SIGNAGE_SIGN } from "@/lib/i18n/dictionaries/signage-sign";
+import { decimal, units } from "@/lib/i18n/dictionaries/units";
 import { tr } from "@/lib/i18n/translate";
 import type { BusinessSignDesign, BusinessSignLayout } from "@/types/business-sign";
 import type { AcrylicSheet } from "@/types/signage";
@@ -109,7 +110,8 @@ export function BusinessSignPreview({ design, layout, linePaths, logoUrl, label,
   label: string;
   view?: BusinessSignView;
 }) {
-  const t = tr(SIGNAGE_SIGN, useLocale());
+  const locale = useLocale();
+  const t = tr(SIGNAGE_SIGN, locale);
   const uid = useId().replace(/:/g, "");
   const w = layout.widthMm;
   const h = layout.heightMm;
@@ -185,7 +187,7 @@ export function BusinessSignPreview({ design, layout, linePaths, logoUrl, label,
           <rect x={px - personW / 2 + 40} y={-PERSON_HEIGHT_MM + head * 2 + 600} width={170} height={PERSON_HEIGHT_MM - head * 2 - 600} rx={70} />
           <rect x={px + personW / 2 - 210} y={-PERSON_HEIGHT_MM + head * 2 + 600} width={170} height={PERSON_HEIGHT_MM - head * 2 - 600} rx={70} />
         </g>
-        <text x={px} y={-PERSON_HEIGHT_MM - 60} textAnchor="middle" fontSize={90} fill="#64748b">1,75 м</text>
+        <text x={px} y={-PERSON_HEIGHT_MM - 60} textAnchor="middle" fontSize={90} fill="#64748b">{decimal(PERSON_HEIGHT_MM / 1000, locale)} {units(locale).m}</text>
       </svg>
     );
   }
