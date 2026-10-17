@@ -116,7 +116,7 @@ const KabinetListPage = () => {
               </Table.Cell>
               <Table.Cell>
                 <Link to={`/prostyi-kabinet/${p.id}`} className="font-medium" onClick={(e) => e.stopPropagation()}>{p.title}</Link>
-                <div className="text-ui-fg-subtle text-xs">{p.variantCount} варіантів{p.hit ? " · Хіт" : ""}</div>
+                <div className="text-ui-fg-subtle text-xs">{p.variantCount} варіантів{p.hit ? " · Хіт" : ""}{p.isNew ? " · Новинка" : ""}</div>
               </Table.Cell>
               <Table.Cell className="whitespace-nowrap">{money(p.minPrice)}</Table.Cell>
               <Table.Cell className="max-w-[220px] truncate">{p.categories.join(", ") || "—"}</Table.Cell>

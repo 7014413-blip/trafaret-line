@@ -39,6 +39,7 @@ function mergedMetadata(existing: Record<string, unknown> | null, input: Kabinet
   return {
     ...base,
     hit: input.hit,
+    is_new: input.isNew,
     availability: input.availability,
     min_price_uah: Math.min(...input.prices.map((p) => p.price)),
     features: withUk("features", input.features),

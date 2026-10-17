@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { postJson } from "@/lib/client/api-client";
 import { SITE } from "@/data/site";
+import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
 import { useCart } from "@/store/cart-store";
 import type { ChatMessage, ChatResponseBody } from "@/types/integrations";
 
@@ -89,7 +90,10 @@ export function AssistantChat() {
           className="fixed right-4 bottom-[calc(196px+env(safe-area-inset-bottom,0px))] z-40 flex max-h-[min(560px,70vh)] w-[min(380px,calc(100vw-32px))] flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] shadow-[0_18px_48px_rgba(15,23,42,.22)] lg:bottom-24">
           <header className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-4 py-3">
             <b>Консультант</b>
-            <a href={SITE.viber} className="text-sm font-semibold underline">Viber</a>
+            <span className="flex gap-3">
+              <ManagerCallButton variant="chat" />
+              <a href={SITE.viber} className="text-sm font-semibold underline">Viber</a>
+            </span>
           </header>
           <div ref={listRef} className="grid flex-1 content-start gap-2 overflow-y-auto px-4 py-3 text-[15px]">
             <p className="m-0 max-w-[85%] rounded-2xl rounded-tl-sm bg-[var(--surface)] px-3 py-2">{GREETING}</p>

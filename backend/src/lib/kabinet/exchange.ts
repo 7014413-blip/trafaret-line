@@ -29,6 +29,7 @@ export const COLUMNS = {
   status: "Статус",
   categories: "Розділи",
   hit: "Хіт",
+  isNew: "Новинка",
   subtitle: "Короткий_опис",
   description: "Опис",
   images: "Посилання_зображення",
@@ -106,6 +107,7 @@ function productRows(raw: RawProductRow, labelOf: Map<string, string>): string[]
     status: statusLabel(p.status),
     categories: p.categoryIds.map((id) => labelOf.get(id) ?? id).join(" | "),
     hit: p.hit ? "так" : "",
+    isNew: p.isNew ? "так" : "",
     subtitle: p.subtitle,
     description: p.descriptionHtml,
     images: p.images.map((i) => i.url).join(", "),
@@ -180,6 +182,10 @@ function applyRows(base: KabinetProductInput, rows: SheetRow[], categories: Kabi
     const hit = /^(так|да|1|\+|yes)$/i.test(first.get("hit").trim())
     if (hit !== input.hit) { notes.push(hit ? "позначка «Хіт»" : "без «Хіт»"); input.hit = hit }
   }
+  if (has("isNew") && first.get("isNew").trim()) {
+    const isNew = /^(так|да|1|\+|yes)$/i.test(first.get("isNew").trim())
+    if (isNew !== input.isNew) { notes.push(isNew ? "позначка «Новинка»" : "без «Новинка»"); input.isNew = isNew }
+  }
   if (text("subtitle") && text("subtitle") !== input.subtitle) { notes.push("короткий опис"); input.subtitle = text("subtitle") }
   if (text("description") && text("description") !== input.descriptionHtml) { notes.push("опис"); input.descriptionHtml = text("description") }
   const categoryIds = has("categories") ? categoryIdsFrom(first.get("categories"), categories, first.line, issues) : null
@@ -231,7 +237,7 @@ function applyRows(base: KabinetProductInput, rows: SheetRow[], categories: Kabi
 
 function newProductBase(title: string, handle: string): KabinetProductInput {
   return {
-    title, handle, subtitle: "", descriptionHtml: "", status: "draft", availability: "in_stock", hit: false,
+    title, handle, subtitle: "", descriptionHtml: "", status: "draft", availability: "in_stock", hit: false, isNew: false,
     categoryIds: [], images: [], sizes: [], materials: [], prices: [], features: [], faq: [], seo: { title: "", description: "" },
   }
 }

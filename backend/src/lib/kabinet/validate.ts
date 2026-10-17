@@ -95,6 +95,7 @@ export function validateKabinetInput(raw: unknown, isNew: boolean): ValidationRe
       status,
       availability,
       hit: body.hit === true,
+      isNew: body.isNew === true,
       categoryIds,
       images,
       sizes,

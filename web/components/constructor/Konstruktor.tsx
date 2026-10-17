@@ -26,10 +26,14 @@ import { DEFAULT_WELD } from "@/lib/geometry/weld";
 import { computeStencilCut, computeWeld } from "@/lib/client/geometry-client";
 import { stencilThumbnailSvg, weldThumbnailSvg } from "@/lib/export/cart-thumbnail";
 import { readKonstruktorMode, writeKonstruktorMode, type KonstruktorMode } from "@/lib/client/konstruktor-mode";
+import { useUrlDraft } from "@/lib/client/use-url-draft";
+import { parseKonstruktorDraft } from "@/lib/draft/konstruktor-draft";
+import type { KonstruktorDraft } from "@/types/draft";
 import type { MaterialType } from "@/types/customizer";
 import type { BridgeStrength, WeldOptions } from "@/types/geometry";
 import type { SizedWeld } from "@/types/geometry-worker";
 import { CustomFontPanel } from "./CustomFontPanel";
+import { DraftLinkButton } from "./DraftLinkButton";
 import { FontChip } from "./FontChip";
 import { StencilPreview, type StencilView } from "./StencilPreview";
 import { WeldPreview, type WeldView } from "./WeldPreview";
@@ -124,6 +128,39 @@ export function Konstruktor() {
     next[index] = id;
     return next;
   });
+
+  // The layout in the address (?draft=…): a link opens the same layout on another device.
+  const draftNow: KonstruktorDraft = {
+    mode, text, fontId: s.fontFamily, widthMm: s.widthMm, marginMm: s.marginMm, shape: s.shape === "square" ? "square" : "rect",
+    materialId: s.materialId, bridgeStrength: s.bridgeStrength, align, upper,
+    lineFontIds: perLine ? usedLineFontIds : [], byLetter, letterMm,
+    weld: {
+      widthMm: weldWidthMm, materialId: weldMaterial, colourId, overlapShare: weldOptions.overlapShare,
+      baseline: weldOptions.baseline.enabled, outline: weldOptions.outline.enabled,
+      skewers: weldOptions.skewers.count, skewerLengthMm: weldOptions.skewers.lengthMm,
+    },
+  };
+  const applyDraft = (d: KonstruktorDraft) => {
+    setMode(d.mode);
+    s.set({ text: d.text, fontFamily: d.fontId, widthMm: d.widthMm, marginMm: d.marginMm, shape: d.shape, materialId: d.materialId, bridgeStrength: d.bridgeStrength });
+    setAlign(d.align);
+    setUpper(d.upper);
+    setPerLine(d.lineFontIds.length > 0);
+    setLineFontIds(d.lineFontIds);
+    setByLetter(d.byLetter);
+    setLetterMm(d.letterMm);
+    setWeldWidthMm(d.weld.widthMm);
+    setWeldMaterial(d.weld.materialId);
+    setColourId(d.weld.colourId);
+    setWeldOptions({
+      ...DEFAULT_WELD,
+      overlapShare: d.weld.overlapShare,
+      baseline: { ...DEFAULT_WELD.baseline, enabled: d.weld.baseline },
+      outline: { ...DEFAULT_WELD.outline, enabled: d.weld.outline },
+      skewers: { ...DEFAULT_WELD.skewers, count: d.weld.skewers, lengthMm: d.weld.skewerLengthMm },
+    });
+  };
+  const draft = useUrlDraft((raw) => parseKonstruktorDraft(raw, { stencil: STENCIL_MATS, weld: weldMaterials }), applyDraft, draftNow);
 
   // Width changed: the cap height changes with it (bridge width follows the letters).
   useEffect(() => {
@@ -495,6 +532,7 @@ export function Konstruktor() {
         </div>
         {buyHint && <p id="k-buy-hint" role="status" className="m-0 text-sm text-[var(--muted)]">{buyHint}</p>}
         <p className="m-0 text-[13px] text-[var(--muted)]">Перевіримо макет і надішлемо превʼю у Viber або Telegram до порізки. Файл для різки готуємо самі.</p>
+        <DraftLinkButton link={draft.link} note="Відкриє цей самий макет на телефоні чи іншому компʼютері. Ваші власні шрифти лишаються на цьому пристрої." />
       </form>
 
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] lg:hidden">
