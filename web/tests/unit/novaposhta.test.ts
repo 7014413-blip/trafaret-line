@@ -49,6 +49,13 @@ describe("Nova Poshta", () => {
     expect(lockerSmall.fits).toBe(true);
   });
 
+  it("leaves parcel lockers out for a parcel larger than a locker cell", async () => {
+    stubFetch(answerByMethod);
+    const big = { lengthMm: 700, widthMm: 350, heightMm: 30, weightKg: 1.2 };
+    const list = await listWarehouses(KYIV_REF, "", 50, big, false);
+    expect(list.map((w) => w.category)).toEqual(["branch"]);
+  });
+
   it("quotes delivery with cash on delivery and the arrival date", async () => {
     const calls = stubFetch(answerByMethod);
     const quote = await quoteDelivery({
