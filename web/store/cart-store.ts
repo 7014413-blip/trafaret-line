@@ -21,6 +21,8 @@ import type { BlankDesign } from "../types/blank";
 import { priceBlankDesign } from "../lib/blanks/price";
 import { LAYERED_PLAQUE_CONFIGS } from "../lib/layered-plaque/configs";
 import { priceLayeredPlaque } from "../lib/layered-plaque/price";
+import { cartLineItem, itemsValue } from "../lib/analytics/analytics-item";
+import { trackEvent } from "../lib/analytics/track-event";
 
 export type NewLine = {
   key: string;            // same key = same item, quantities add up
@@ -111,6 +113,13 @@ export const toCartLine = (l: Stored): CartLine => ({
   unitPrice: unit(l), thumbnail: l.thumbnail, section: l.section ?? "interior", vectorSvg: l.vectorSvg,
 });
 
+/** add_to_cart / remove_from_cart for `quantity` pieces of a line, at the line's current unit price. */
+const trackLine = (event: "add_to_cart" | "remove_from_cart", line: Stored | undefined, quantity: number) => {
+  if (!line || quantity <= 0) return;
+  const items = [cartLineItem({ ...line, unitPrice: toCartLine(line).unitPrice, quantity }, 0)];
+  trackEvent(event, { value: itemsValue(items), items });
+};
+
 interface CartState {
   items: Stored[];
   open: boolean;
@@ -132,9 +141,20 @@ export const useCart = create<CartState>()(
           items: ex ? get().items.map((i) => (i.key === l.key ? { ...i, quantity: i.quantity + l.quantity } : i)) : [...get().items, { ...l, id: l.key }],
           open: true,
         });
+        trackLine("add_to_cart", get().items.find((i) => i.key === l.key), l.quantity);
       },
-      setQty: (id, q) => set({ items: get().items.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, Math.min(9999, Math.round(q))) } : i)) }),
-      remove: (id) => set({ items: get().items.filter((i) => i.id !== id) }),
+      setQty: (id, q) => {
+        const before = get().items.find((i) => i.id === id);
+        set({ items: get().items.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, Math.min(9999, Math.round(q))) } : i)) });
+        const after = get().items.find((i) => i.id === id);
+        if (!before || !after) return;
+        const delta = after.quantity - before.quantity;
+        trackLine(delta > 0 ? "add_to_cart" : "remove_from_cart", after, Math.abs(delta));
+      },
+      remove: (id) => {
+        trackLine("remove_from_cart", get().items.find((i) => i.id === id), get().items.find((i) => i.id === id)?.quantity ?? 0);
+        set({ items: get().items.filter((i) => i.id !== id) });
+      },
       clear: () => set({ items: [] }),
       setOpen: (open) => set({ open }),
     }),

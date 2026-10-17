@@ -14,6 +14,7 @@ export interface ReceivedOrder {
     payment: string;
     layoutApproved?: boolean;
     accountToken?: string;
+    utm?: Record<string, string>;
   };
 }
 

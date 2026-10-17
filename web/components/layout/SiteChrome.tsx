@@ -10,6 +10,7 @@ import { DIRECTIONS } from "@/data/home";
 import { SITE } from "@/data/site";
 import { CartButton, CartHost } from "@/components/cart/CartHost";
 import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
+import { CookieSettingsButton } from "@/components/analytics/CookieBanner";
 
 const SEARCH_HINTS = ["мандала", "цифри 10 см", "напис на торт", "піксель ЗСУ", "акрил 3 мм коло", "номер підʼїзду"];
 const INFO_LINKS = [
@@ -120,6 +121,7 @@ export function SiteFooter() {
           </div>
           <p className="mt-3 max-w-[34ch] opacity-80">Трафарети і заготовки від виробника. Бориспіль · Запоріжжя.</p>
           <p className="mt-2 text-[13px] opacity-70">{SITE.legal}, {SITE.tax}</p>
+          <p className="mt-2 text-[13px] opacity-70"><CookieSettingsButton /></p>
         </div>
         {col("Каталог", [["Трафарети", "/catalog"], ["Заготовки з акрилу і PET", "/blanks"], ["Заготовки у свій розмір", "/zahotovky"], ["Свій напис", "/konstruktor"], ["Вільне полотно", "/konstruktor/polotno"]])}
         {col("Покупцям", [["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"], ["За вашим макетом", "/na-zamovlennia"], ["Вивіски", "/vyvisky"], ["Таблички-вказівники", "/vyvisky/vkazivnyky"], ["Офісні таблички", "/vyvisky/ofisni-tablychky"], ["Написи на планці", "/vyvisky/napysy-na-plantsi"], ["Таблички поверхів", "/vyvisky/tablychky-poverkh"], ["Таблички на двері", "/vyvisky/tablychky-na-dveri"], ["Номерки", "/vyvisky/nomerky"], ["Ініціали на торт", "/konstruktor/inicialy-na-tort"], ["Самоклейні літери", "/konstruktor/samoklejni-litery"], ["Акрилові цифри і літери", "/konstruktor/akrylovi-tsyfry-i-litery"], ["Літери для вивісок", "/konstruktor/samoklejni-litery-dlia-vyvisok"]])}

@@ -11,6 +11,8 @@ import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { reviewJsonLd } from "@/lib/reviews/review-json-ld";
 import { jsonLdText } from "@/lib/seo/json-ld";
 import { schemaAvailability } from "@/lib/seo/schema-availability";
+import { variantItem } from "@/lib/analytics/analytics-item";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { siteUrl } from "@/lib/seo/site-url";
@@ -46,6 +48,10 @@ export default async function ProductPage({ params }: Props) {
     })),
     ...reviewJsonLd(reviews),
   };
+
+  // «view_item» with the cheapest variant: the price the card in the catalogue showed.
+  const cheapest = [...p.variants].sort((a, b) => a.price - b.price)[0];
+  const viewed = cheapest ? variantItem(p, cheapest) : null;
 
   const sections: { title: string; html: string }[] = [
     { title: "Опис", html: p.descriptionHtml },
@@ -111,6 +117,7 @@ export default async function ProductPage({ params }: Props) {
           </section>
         )}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(ld) }} />
+        {viewed && <TrackEvent name="view_item" params={{ value: viewed.price, items: [viewed] }} />}
       </main>
       <SiteFooter />
       <BottomNav />

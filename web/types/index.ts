@@ -35,3 +35,4 @@ export type * from "./account";
 export type * from "./reviews";
 export type * from "./draft";
 export type * from "./feed";
+export type * from "./analytics";

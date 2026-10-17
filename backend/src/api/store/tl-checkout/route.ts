@@ -31,6 +31,7 @@ import { cleanText } from "../../../lib/orders/clean-text";
 import { priceLine } from "../../../lib/orders/price-line";
 import { variantPrices } from "../../../lib/orders/variant-prices";
 import { readAccountToken } from "../../../shared/lib/account/account-token";
+import { cleanAttribution } from "../../../shared/lib/analytics/attribution";
 
 // LiqPay / Privat24 is accepted again once its payment route exists.
 const PAYMENTS: ReadonlySet<PaymentMethod> = new Set<PaymentMethod>(["card", "cod", "invoice"]);
@@ -143,7 +144,7 @@ export async function POST(req: MedusaRequest<OrderDraft>, res: MedusaResponse) 
       contactEmail: body.contact.email ? cleanText(body.contact.email, 200) : null,
       // When the customer ticked «Макет перевірив» (the approval sheet in the order folder shows it).
       layoutApprovedAt: body.lines.some(needsLayoutApproval) ? new Date().toISOString() : null,
-      utm: body.utm ?? {},
+      utm: cleanAttribution(body.utm),
     },
   } });
 
