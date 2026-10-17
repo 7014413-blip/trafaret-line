@@ -6,7 +6,7 @@
 // of the small arrow. Preview and price change at once; sizes in cm, prices in UAH only.
 // Layout: lib/pointer-sign/layout.ts, price: lib/pointer-sign/price.ts (repeated on the server).
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useState } from "react";
 import { BuyPanel } from "@/components/signage/BuyPanel";
 import { ConstructorHeader } from "@/components/signage/ConstructorHeader";

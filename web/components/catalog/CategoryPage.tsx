@@ -1,7 +1,7 @@
 // Category page (server component) for /<section>/ and /<section>/<sub>/: texts and SEO
 // from the category metadata, products from Medusa, subcategories as chips.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { notFound } from "next/navigation";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { CategoryView } from "@/components/catalog/CategoryView";
@@ -9,25 +9,32 @@ import { categoryByPath, listCategories, listCategoryCards } from "@/services/me
 import { pageMeta } from "@/lib/seo/page-meta";
 import { toCategoryLink } from "@/lib/catalog/card-lite";
 import { siteUrl } from "@/lib/seo/site-url";
+import { listItems } from "@/lib/analytics/analytics-item";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
+import { localePath } from "@/lib/i18n/locale-path";
+import type { Locale } from "@/types/customizer";
 
 const BASE = siteUrl();
 
-export async function CategoryPage({ segments }: { segments: string[] }) {
-  const category = await categoryByPath(segments);
+export async function CategoryPage({ segments, locale }: { segments: string[]; locale: Locale }) {
+  const t = tr(CATALOG, locale);
+  const category = await categoryByPath(segments, locale);
   if (!category) notFound();
-  const { all } = await listCategories();
+  const { all } = await listCategories(locale);
   const parent = category.parentHandle ? all.find((c) => c.handle === category.parentHandle) ?? null : null;
   const ids = [category.id, ...category.children.map((c) => c.id)];
-  const products = await listCategoryCards(ids);
+  const products = await listCategoryCards(ids, locale);
 
   const crumbs = [
-    { name: "Головна", path: "/" },
+    { name: t.home, path: "/" },
     ...(parent ? [{ name: parent.name, path: parent.path }] : []),
     { name: category.name, path: category.path },
   ];
   const ld = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
-    itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: `${BASE}${c.path}` })),
+    itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: `${BASE}${localePath(locale, c.path)}` })),
   };
 
   return (
@@ -36,7 +43,7 @@ export async function CategoryPage({ segments }: { segments: string[] }) {
       <SiteHeader />
       <DirectionTabs />
       <main className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8">
-        <nav aria-label="Хлібні крихти" className="mb-3 flex flex-wrap gap-1.5 text-[13px] text-[var(--muted)]">
+        <nav aria-label={t.breadcrumbs} className="mb-3 flex flex-wrap gap-1.5 text-[13px] text-[var(--muted)]">
           {crumbs.slice(0, -1).map((c) => <span key={c.path}><Link href={c.path} className="hover:text-[var(--ink)]">{c.name}</Link> ›</span>)}
           <span>{category.name}</span>
         </nav>
@@ -52,6 +59,7 @@ export async function CategoryPage({ segments }: { segments: string[] }) {
         )}
 
         <CategoryView products={products} subcategories={toCategoryLink(category).children} />
+        {products.length > 0 && <TrackEvent name="view_item_list" params={{ item_list_name: category.name, items: listItems(products, category.name) }} />}
 
         {(category.bodyHtml || category.faq.length > 0) && (
           <section className="mt-10 grid max-w-[80ch] gap-2.5">
@@ -76,9 +84,9 @@ export async function CategoryPage({ segments }: { segments: string[] }) {
 }
 
 /** Metadata of a category page. */
-export async function categoryMetadata(segments: string[]) {
-  const category = await categoryByPath(segments);
+export async function categoryMetadata(segments: string[], locale: Locale) {
+  const category = await categoryByPath(segments, locale);
   if (!category) return {};
   // SEO titles from the catalogue already end with "| Trafaret Line": no site suffix.
-  return pageMeta({ title: category.seo.title, absoluteTitle: true, description: category.seo.description, path: category.path, image: category.image });
+  return pageMeta({ title: category.seo.title, absoluteTitle: true, description: category.seo.description, path: category.path, image: category.image, locale });
 }

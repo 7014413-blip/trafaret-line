@@ -33,8 +33,25 @@ export interface RawCategory {
     path?: string;
     image?: string;
     seo?: { uk?: SeoText; ru?: SeoText };
-    content?: { uk?: { intro?: string; body_html?: string; faq?: FaqEntry[] } };
+    content?: { uk?: CategoryContent; ru?: CategoryContent };
+    /** Names in other languages (the Medusa name is Ukrainian). */
+    i18n?: { ru?: { name?: string } };
   } | null;
+}
+
+export interface CategoryContent {
+  intro?: string;
+  body_html?: string;
+  faq?: FaqEntry[];
+}
+
+/** Russian texts of a product written by the catalogue import (backend/src/lib/catalog-import). */
+export interface RawProductTranslation {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  /** Option title → Ukrainian value → translated value. */
+  options?: Record<string, Record<string, string>>;
 }
 
 export interface RawPrice {
@@ -49,7 +66,7 @@ export interface RawVariant {
   sku?: string | null;
   calculated_price?: RawPrice | null;
   options?: { value: string; option?: { title: string } | null; option_id?: string }[];
-  metadata?: { size_code?: string; material_code?: string; sheet_mm?: [number, number]; pieces?: number } | null;
+  metadata?: { size_code?: string; material_code?: string; sheet_mm?: [number, number]; pieces?: number; title_ru?: string } | null;
 }
 
 export interface RawProduct {
@@ -71,11 +88,12 @@ export interface RawProduct {
     min_price_uah?: number;
     primary_category?: string;
     image_alts?: { url: string; kind: string; uk: string; ru: string }[];
-    features?: { uk?: string[] };
-    faq?: { uk?: FaqEntry[] };
-    seo?: { uk?: SeoText };
+    features?: { uk?: string[]; ru?: string[] };
+    faq?: { uk?: FaqEntry[]; ru?: FaqEntry[] };
+    seo?: { uk?: SeoText; ru?: SeoText };
     size_details?: Record<string, { uk: string; ru: string }>;
-    blocks?: { uk?: Record<string, { title: string; html: string }> };
+    blocks?: { uk?: Record<string, { title: string; html: string }>; ru?: Record<string, { title: string; html: string }> };
+    i18n?: { ru?: RawProductTranslation };
     related_handles?: string[];
     fields?: { key: string; uk: string; ru: string; def: string }[] | null;
     /** Product made in a site constructor (e.g. "/vyvisky/vkazivnyky"): the card leads there. */

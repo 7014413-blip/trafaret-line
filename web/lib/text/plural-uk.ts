@@ -1,4 +1,5 @@
-// Ukrainian plural form: 1 дизайн, 2 дизайни, 5 дизайнів, 21 дизайн, 11 дизайнів.
+// Ukrainian plural form: 1 дизайн, 2 дизайни, 5 дизайнів, 21 дизайн, 11 дизайнів. Russian
+// follows the same rule (1 размер, 2 размера, 5 размеров), so it uses this function too.
 
 export function pluralUk(count: number, forms: readonly [one: string, few: string, many: string]): string {
   const n = Math.abs(Math.trunc(count));

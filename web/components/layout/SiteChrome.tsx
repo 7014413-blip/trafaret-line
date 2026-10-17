@@ -1,43 +1,52 @@
 "use client";
 
-// Trust bar, sticky header (logo, catalog, search, phone, cabinet, cart; the RU/EN switch returns
-// together with the translated pages, QA 2026-10-10),
-// direction tabs, footer and the mobile bottom navigation.
+// Trust bar with the language switch, sticky header (logo, catalog, search, phone, cabinet,
+// cart), direction tabs, footer and the mobile bottom navigation, in the page language.
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useState } from "react";
 import { DIRECTIONS } from "@/data/home";
 import { SITE } from "@/data/site";
 import { CartButton, CartHost } from "@/components/cart/CartHost";
 import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
+import { CookieSettingsButton } from "@/components/analytics/CookieBanner";
+import { LanguageSwitch } from "@/components/i18n/LanguageSwitch";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { localePath } from "@/lib/i18n/locale-path";
+import { tr } from "@/lib/i18n/translate";
+import { CHROME } from "@/lib/i18n/dictionaries/chrome";
 
-const SEARCH_HINTS = ["мандала", "цифри 10 см", "напис на торт", "піксель ЗСУ", "акрил 3 мм коло", "номер підʼїзду"];
-const INFO_LINKS = [
-  ["Про нас", "/pro-nas"], ["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"],
-  ["Для бізнесу", "/business"], ["Відгуки", "/vidguky"], ["Контакти", "/kontakty"],
-] as const;
+const useChrome = () => {
+  const locale = useLocale();
+  return { locale, t: tr(CHROME, locale) };
+};
 
 export function TrustBar() {
+  const { t } = useChrome();
   return (
     <div className="bg-[var(--ink)] text-[var(--bg)] text-[13px]">
       <div className="mx-auto flex min-h-[34px] max-w-[1320px] flex-wrap items-center justify-center gap-x-4 px-4 text-center lg:justify-between lg:px-8">
-        <span>Виготовлення 3 робочі дні · Нова пошта по всій Україні · Оплата при отриманні</span>
-        <nav aria-label="Інформація" className="hidden gap-5 lg:flex">
-          {INFO_LINKS.map(([t, h]) => (
-            <Link key={h} href={h} className="inline-flex min-h-[28px] items-center px-1 opacity-80 hover:opacity-100">{t}</Link>
-          ))}
-        </nav>
+        <span>{t.trust}</span>
+        <div className="flex items-center gap-5">
+          <nav aria-label={t.infoNav} className="hidden gap-5 lg:flex">
+            {t.info.map(([title, h]) => (
+              <Link key={h} href={h} className="inline-flex min-h-[28px] items-center px-1 opacity-80 hover:opacity-100">{title}</Link>
+            ))}
+          </nav>
+          <LanguageSwitch label={t.languageNav} />
+        </div>
       </div>
     </div>
   );
 }
 
 export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
+  const { locale, t } = useChrome();
   const [hint, setHint] = useState(0);
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const id = setInterval(() => setHint((h) => (h + 1) % SEARCH_HINTS.length), 2500);
+    const id = setInterval(() => setHint((h) => (h + 1) % t.searchHints.length), 2500);
     let last = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
@@ -46,7 +55,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { clearInterval(id); window.removeEventListener("scroll", onScroll); };
-  }, []);
+  }, [t.searchHints.length]);
 
   return (
     <header
@@ -59,9 +68,9 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
           Trafaret Line
         </Link>
         <Link href="/catalog" className="hidden h-11 items-center gap-2 rounded-full bg-[var(--buy)] px-[18px] font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] md:flex">
-          <span aria-hidden>▦</span> Каталог
+          <span aria-hidden>▦</span> {t.catalog}
         </Link>
-        <form action="/poshuk" method="get" role="search" className="order-3 col-span-full flex h-[46px] w-full min-w-0 items-center gap-2.5 rounded-xl border-[1.5px] border-transparent bg-[var(--surface)] px-3.5 focus-within:border-[var(--ink)] focus-within:bg-[var(--card)] md:order-none md:col-span-1 md:max-w-[640px] md:justify-self-center">
+        <form action={localePath(locale, "/poshuk")} method="get" role="search" className="order-3 col-span-full flex h-[46px] w-full min-w-0 items-center gap-2.5 rounded-xl border-[1.5px] border-transparent bg-[var(--surface)] px-3.5 focus-within:border-[var(--ink)] focus-within:bg-[var(--card)] md:order-none md:col-span-1 md:max-w-[640px] md:justify-self-center">
           <span aria-hidden>🔍</span>
           <input
             type="search"
@@ -70,14 +79,14 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
             minLength={2}
             maxLength={100}
             className="h-full w-full min-w-0 bg-transparent outline-none"
-            placeholder={`Знайти трафарет: ${SEARCH_HINTS[hint]}`}
-            aria-label="Пошук по каталогу"
+            placeholder={`${t.searchPrefix}: ${t.searchHints[hint % t.searchHints.length]}`}
+            aria-label={t.searchLabel}
           />
-          <button type="submit" className="sr-only">Знайти</button>
+          <button type="submit" className="sr-only">{t.searchSubmit}</button>
         </form>
         <div className="flex items-center gap-1.5 whitespace-nowrap text-sm sm:gap-3.5">
           <ManagerCallButton variant="header" />
-          <Link href="/kabinet" aria-label="Мій кабінет" className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
+          <Link href="/kabinet" aria-label={t.cabinet} className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6" /></svg>
           </Link>
           <CartButton />
@@ -89,14 +98,15 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
 }
 
 export function DirectionTabs() {
+  const { locale, t } = useChrome();
   return (
-    <nav aria-label="Напрямки" className="border-b border-[var(--line)]">
+    <nav aria-label={t.directionsNav} className="border-b border-[var(--line)]">
       <div className="mx-auto flex min-h-[50px] max-w-[1320px] items-center gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] lg:px-8">
-        <Link href="/" className="whitespace-nowrap rounded-full bg-[var(--ink)] px-3.5 py-2 font-bold text-[var(--bg)]">Трафарети</Link>
-        <Link href="/blanks" className="whitespace-nowrap rounded-full px-3.5 py-2 font-bold hover:bg-[var(--surface)]">Акрил і ПЕТ</Link>
+        <Link href="/" className="whitespace-nowrap rounded-full bg-[var(--ink)] px-3.5 py-2 font-bold text-[var(--bg)]">{t.stencils}</Link>
+        <Link href="/blanks" className="whitespace-nowrap rounded-full px-3.5 py-2 font-bold hover:bg-[var(--surface)]">{t.blanks}</Link>
         <span aria-hidden className="mx-1.5 h-[22px] w-px flex-none bg-[var(--line)]" />
         {DIRECTIONS.map((d) => (
-          <Link key={d.href} href={d.href} className="whitespace-nowrap rounded-full px-3.5 py-2 text-[15px] font-medium hover:bg-[var(--surface)]">{d.title}</Link>
+          <Link key={d.href} href={d.href} className="whitespace-nowrap rounded-full px-3.5 py-2 text-[15px] font-medium hover:bg-[var(--surface)]">{tr(d.title, locale)}</Link>
         ))}
       </div>
     </nav>
@@ -104,8 +114,9 @@ export function DirectionTabs() {
 }
 
 export function SiteFooter() {
+  const { t } = useChrome();
   const col = (title: string, links: [string, string][]) => (
-    <div>
+    <div key={title}>
       <h4 className="mb-2.5 text-[15px] font-bold">{title}</h4>
       {links.map(([t, h]) => <Link key={h} href={h} className="block py-1 opacity-80 hover:opacity-100">{t}</Link>)}
     </div>
@@ -118,12 +129,11 @@ export function SiteFooter() {
             <span aria-hidden className="grid h-[30px] w-[30px] place-items-center rounded-lg border-2 border-dashed border-[var(--bg)] text-sm">✂</span>
             Trafaret Line
           </div>
-          <p className="mt-3 max-w-[34ch] opacity-80">Трафарети і заготовки від виробника. Бориспіль · Запоріжжя.</p>
+          <p className="mt-3 max-w-[34ch] opacity-80">{t.footerAbout}</p>
           <p className="mt-2 text-[13px] opacity-70">{SITE.legal}, {SITE.tax}</p>
+          <p className="mt-2 text-[13px] opacity-70"><CookieSettingsButton /></p>
         </div>
-        {col("Каталог", [["Трафарети", "/catalog"], ["Заготовки з акрилу і PET", "/blanks"], ["Заготовки у свій розмір", "/zahotovky"], ["Свій напис", "/konstruktor"], ["Вільне полотно", "/konstruktor/polotno"]])}
-        {col("Покупцям", [["Доставка і оплата", "/dostavka-i-oplata"], ["Обмін і повернення", "/povernennia"], ["За вашим макетом", "/na-zamovlennia"], ["Вивіски", "/vyvisky"], ["Таблички-вказівники", "/vyvisky/vkazivnyky"], ["Офісні таблички", "/vyvisky/ofisni-tablychky"], ["Написи на планці", "/vyvisky/napysy-na-plantsi"], ["Таблички поверхів", "/vyvisky/tablychky-poverkh"], ["Таблички на двері", "/vyvisky/tablychky-na-dveri"], ["Номерки", "/vyvisky/nomerky"], ["Ініціали на торт", "/konstruktor/inicialy-na-tort"], ["Самоклейні літери", "/konstruktor/samoklejni-litery"], ["Акрилові цифри і літери", "/konstruktor/akrylovi-tsyfry-i-litery"], ["Літери для вивісок", "/konstruktor/samoklejni-litery-dlia-vyvisok"]])}
-        {col("Компанія", [["Про нас", "/pro-nas"], ["Для бізнесу", "/business"], ["Відгуки", "/vidguky"], ["Контакти", "/kontakty"], ["Публічна оферта", "/oferta"], ["Політика конфіденційності", "/polityka-konfidentsiinosti"]])}
+        {t.footerColumns.map((c) => col(c.title, c.links))}
       </div>
     </footer>
   );
@@ -134,18 +144,12 @@ const Icon = ({ d }: { d: string }) => (
 );
 
 export function BottomNav() {
-  const items: [string, string, string][] = [
-    ["Головна", "/", "M3 11l9-7 9 7v9H5v-9"],
-    ["Каталог", "/catalog", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
-    ["Свій напис", "/konstruktor", "M4 20l4-1 11-11-3-3L5 16z"],
-    ["Кошик", "/checkout", "M4 5h2l2 11h11l2-8H7"],
-    ["Контакти", "/kontakty", "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6"],
-  ];
+  const { t } = useChrome();
   return (
-    <nav aria-label="Мобільне меню" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--line)] bg-[var(--bg)] px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] lg:hidden">
-      {items.map(([t, h, d], i) => (
+    <nav aria-label={t.mobileNav} className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--line)] bg-[var(--bg)] px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] lg:hidden">
+      {t.bottom.map(([title, h, d], i) => (
         <Link key={h} href={h} className={`grid justify-items-center gap-0.5 text-[11px] ${i === 0 ? "font-bold text-[var(--ink)]" : "text-[var(--muted)]"}`}>
-          <Icon d={d} />{t}
+          <Icon d={d} />{title}
         </Link>
       ))}
     </nav>

@@ -3,7 +3,7 @@
 // dispatch date in working days, plus a manual load setting from the admin.
 
 import type { Locale } from "../types/customizer";
-import { INTL_TAG, MESSAGES } from "./i18n";
+import { INTL_TAG, MESSAGES } from "./i18n/messages";
 
 export interface ProductionConfig {
   productionDays: number;       // 3 (ТЗ)

@@ -1,15 +1,26 @@
 // /sitemap.xml: static pages, every catalogue category and every published product from
 // Medusa. Rebuilt hourly; when the shop is offline the static part is still served.
+// Pages already translated (home, catalogue, categories, products) are listed in every site
+// language, each with its hreflang alternates; the rest only in Ukrainian for now.
 
 import type { MetadataRoute } from "next";
 import { listCategories, listProductHandles } from "@/services/medusa-store";
 import { absoluteUrl } from "@/lib/seo/site-url";
+import { languageAlternates } from "@/lib/seo/page-meta";
+import { SITE_LOCALES } from "@/lib/i18n/locales";
+import { localePath } from "@/lib/i18n/locale-path";
 
 export const revalidate = 3600;
 
-const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
+type Entry = MetadataRoute.Sitemap[number];
+
+/** Translated pages: one entry per language, each listing all language versions. */
+const TRANSLATED_PAGES: { path: string; priority: number; changeFrequency: Entry["changeFrequency"] }[] = [
   { path: "/", priority: 1, changeFrequency: "daily" },
   { path: "/catalog", priority: 0.9, changeFrequency: "daily" },
+];
+
+const STATIC_PAGES: { path: string; priority: number; changeFrequency: Entry["changeFrequency"] }[] = [
   { path: "/konstruktor", priority: 0.9, changeFrequency: "monthly" },
   { path: "/konstruktor/polotno", priority: 0.7, changeFrequency: "monthly" },
   { path: "/na-zamovlennia", priority: 0.7, changeFrequency: "monthly" },
@@ -34,22 +45,28 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/polityka-konfidentsiinosti", priority: 0.2, changeFrequency: "yearly" },
 ];
 
+/** Entries of a translated page in every site language. */
+function inEveryLanguage(path: string, entry: Omit<Entry, "url" | "alternates">): Entry[] {
+  const languages = Object.fromEntries(Object.entries(languageAlternates(path)).map(([tag, href]) => [tag, absoluteUrl(href)]));
+  return SITE_LOCALES.map((locale) => ({ ...entry, url: absoluteUrl(localePath(locale, path)), alternates: { languages } }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const entries: MetadataRoute.Sitemap = STATIC_PAGES.map((page) => ({
-    url: absoluteUrl(page.path), changeFrequency: page.changeFrequency, priority: page.priority,
-  }));
+  const entries: MetadataRoute.Sitemap = [
+    ...TRANSLATED_PAGES.flatMap((page) => inEveryLanguage(page.path, { changeFrequency: page.changeFrequency, priority: page.priority })),
+    ...STATIC_PAGES.map((page) => ({ url: absoluteUrl(page.path), changeFrequency: page.changeFrequency, priority: page.priority })),
+  ];
   try {
     const [{ all }, products] = await Promise.all([listCategories(), listProductHandles()]);
     for (const category of all) {
-      entries.push({ url: absoluteUrl(category.path), changeFrequency: "weekly", priority: category.parentHandle ? 0.7 : 0.8 });
+      entries.push(...inEveryLanguage(category.path, { changeFrequency: "weekly", priority: category.parentHandle ? 0.7 : 0.8 }));
     }
     for (const product of products) {
-      entries.push({
-        url: absoluteUrl(`/p/${product.handle}`),
+      entries.push(...inEveryLanguage(`/p/${product.handle}`, {
         lastModified: product.updatedAt ? new Date(product.updatedAt) : undefined,
         changeFrequency: "weekly",
         priority: 0.6,
-      });
+      }));
     }
   } catch (error) {
     console.error("[sitemap] catalogue is not available", error);

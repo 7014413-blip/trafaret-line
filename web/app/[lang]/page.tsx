@@ -1,0 +1,151 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import { pageMeta } from "@/lib/seo/page-meta";
+import Link from "@/components/i18n/LocaleLink";
+import { IDEAS, RAIL_TABS, SCENARIOS } from "@/data/home";
+import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
+import { BlanksCalculator, CatalogRail, ProductRail, type RailTab } from "@/components/home/HomeSections";
+import { listCategories, listFirstProducts } from "@/services/medusa-store";
+import { MATERIALS } from "@/lib/materials";
+import { unitPrice } from "@/lib/calculators/pricing";
+import { formatUAH } from "@/lib/format";
+import { toCardLite, toCategoryLink } from "@/lib/catalog/card-lite";
+import type { CategoryLink } from "@/types/catalog";
+import { StencilSprayHero } from "@/components/home/StencilSprayHero";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/organization-json-ld";
+import { jsonLdText } from "@/lib/seo/json-ld";
+import { siteUrl } from "@/lib/seo/site-url";
+import { HOME } from "@/lib/i18n/dictionaries/home";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
+import type { Locale } from "@/types/customizer";
+import type { LangParams } from "@/types/i18n";
+
+const container = "mx-auto max-w-[1320px] px-4 lg:px-8";
+
+function SectionHead({ title, link }: { title: string; link?: [string, string] }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <h2 className="m-0 text-[clamp(22px,2.4vw,32px)] font-bold tracking-tight">{title}</h2>
+      {link && <Link href={link[1]} className="border-b-[1.5px] border-[var(--ink)] text-[15px] font-bold">{link[0]}</Link>}
+    </div>
+  );
+}
+
+export const revalidate = 300;
+
+export async function generateMetadata({ params }: { params: Promise<LangParams> }): Promise<Metadata> {
+  const locale = localeOf((await params).lang);
+  const t = tr(HOME, locale);
+  return pageMeta({ title: t.metaTitle, absoluteTitle: true, description: t.metaDescription, path: "/", locale });
+}
+
+/** Categories and product tabs; the page still renders (without them) when the shop is offline. */
+async function catalogBlocks(locale: Locale): Promise<{ roots: CategoryLink[]; tabs: RailTab[] }> {
+  try {
+    const { roots } = await listCategories(locale);
+    const tabs = await Promise.all(RAIL_TABS.map(async (tab) => {
+      const category = roots.find((c) => c.handle === tab.handle);
+      const title = tr(tab.title, locale);
+      if (!category) return { title, href: `/${tab.handle}`, products: [] };
+      const products = await listFirstProducts([category.id, ...category.children.map((c) => c.id)], 36, locale);
+      const ordered = [...products].sort((a, b) => Number(b.hit) - Number(a.hit)).slice(0, 12).map(toCardLite);
+      return { title, href: category.path, products: ordered };
+    }));
+    // Only names and links go to the page, not the category texts (QA M10: home was 580 KB).
+    return { roots: roots.map(toCategoryLink), tabs };
+  } catch (error) {
+    console.error("[home] catalogue is not available", error);
+    return { roots: [], tabs: [] };
+  }
+}
+
+export default async function Home({ params }: { params: Promise<LangParams> }) {
+  const locale = localeOf((await params).lang);
+  const t = tr(HOME, locale);
+  const { roots, tabs } = await catalogBlocks(locale);
+  const heroPrice = unitPrice(60, 60, MATERIALS.pet_thin);
+  const base = siteUrl();
+  return (
+    <div className="pb-[76px] lg:pb-0">
+      <TrustBar />
+      <SiteHeader />
+      <DirectionTabs />
+
+      <div className={container}>
+        <section className="grid items-center gap-5 py-4 md:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] md:gap-10 md:pt-9 md:pb-7">
+          <div>
+            <h1 className="m-0 font-[family-name:var(--font-display)] text-[clamp(30px,4.6vw,60px)] font-bold leading-[1.06] tracking-[-0.02em] [text-wrap:balance]">
+              {t.heroTitle}{" "}
+              <em className="not-italic underline decoration-[var(--muted)] decoration-dashed decoration-[3px] underline-offset-8">{t.heroTitleAccent}</em>
+            </h1>
+            <p className="mt-4 mb-6 max-w-[44ch] text-[clamp(16px,1.4vw,19px)] text-[var(--muted)]">
+              {t.heroLead}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/catalog" prefetch={false} className="inline-flex h-[52px] w-full items-center justify-center rounded-full bg-[var(--buy)] px-6 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.97] sm:w-auto">{t.heroCatalog}</Link>
+              <Link href="/konstruktor" className="inline-flex h-[52px] w-full items-center justify-center rounded-full px-6 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)] active:scale-[.97] sm:w-auto">{t.heroOwn}</Link>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
+              {t.heroFacts.map(([bold, rest]) => <span key={bold}><b className="text-[var(--ink)]">{bold}</b> {rest}</span>)}
+              <span>{t.heroCities}</span>
+            </div>
+          </div>
+          <div className="relative order-first aspect-[4/3] max-w-full overflow-hidden rounded-[20px] bg-[var(--surface)] md:order-none md:aspect-[16/11]">
+            <StencilSprayHero className="block h-full w-full" label={t.heroAnimation} />
+            <span className="absolute left-3.5 top-3.5 rounded-full bg-white/90 px-3 py-1.5 text-[13px] font-bold text-[#0f172a]">{t.heroSample}</span>
+            <span className="absolute bottom-3.5 right-3.5 rounded-xl bg-[#0f172a] px-3 py-2 text-[13px] leading-tight text-white">{t.from} <b className="block text-base">{heroPrice ? formatUAH(heroPrice) : ""}</b></span>
+          </div>
+        </section>
+
+        <nav aria-label={t.scenariosNav} className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {SCENARIOS.map((s) => (
+            <Link key={s.href} href={s.href} className="flex flex-none items-center gap-2.5 rounded-full bg-[var(--surface)] py-1.5 pl-1.5 pr-4 text-[15px] font-medium hover:bg-[var(--line)]">
+              <span className="relative h-10 w-10 overflow-hidden rounded-full"><Image src={s.img} alt="" fill sizes="40px" className="object-cover" /></span>
+              {tr(s.title, locale)}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      <div className={`${container} grid gap-8 py-7 lg:grid-cols-[260px_minmax(0,1fr)]`}>
+        <CatalogRail categories={roots} />
+        <main className="min-w-0">
+          <ProductRail tabs={tabs} />
+
+          <section className="mb-11 grid gap-4">
+            <SectionHead title={t.ideasTitle} />
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+              {IDEAS.map((i) => (
+                <Link key={i.href} href={i.href} className={`relative flex aspect-[4/3] max-w-full items-end overflow-hidden rounded-2xl bg-[var(--surface)] ${i.big ? "md:row-span-2 md:aspect-auto" : ""}`}>
+                  <Image src={i.img} alt="" fill sizes="(max-width:768px) 50vw, 33vw" className="object-cover" />
+                  <span className="relative m-3 rounded-full bg-[var(--card)] px-3.5 py-2 text-[15px] font-bold">{tr(i.title, locale)}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <BlanksCalculator />
+
+          <section className="mb-11 grid gap-4">
+            <SectionHead title={t.howTitle} />
+            <ol className="m-0 grid list-none gap-4 p-0 md:grid-cols-3">
+              {t.howSteps.map(([step, d], i) => (
+                <li key={step} className="grid gap-1.5 rounded-2xl bg-[var(--surface)] p-5">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--buy)] font-extrabold text-[var(--buy-fg)]">{i + 1}</span>
+                  <b className="text-lg">{step}</b>
+                  <span className="text-[var(--muted)]">{d}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+        </main>
+      </div>
+
+      <SiteFooter />
+      <BottomNav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText([organizationJsonLd(base), websiteJsonLd(base)]) }} />
+    </div>
+  );
+}

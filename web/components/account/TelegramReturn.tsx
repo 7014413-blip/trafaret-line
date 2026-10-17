@@ -4,11 +4,11 @@
 // to /api/kabinet/telegram, which checks it with Medusa and sets the session cookie.
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/components/i18n/use-locale-router";
 import { readTelegramResult } from "@/lib/account/read-telegram-result";
 
 export function TelegramReturn() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {

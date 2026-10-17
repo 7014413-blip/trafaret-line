@@ -4,6 +4,9 @@
 // buildStencilCut the laser file uses, in the geometry worker) for the chosen size,
 // design and initials. Two views: the stencil sheet and the print on an iced cookie.
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MonogramFontRole, MonogramInput, MonogramStyle } from "@/types/monogram";
 import type { StencilCutResult } from "@/types/geometry";
@@ -39,6 +42,7 @@ export function MonogramPreview({ style, input, sheetMm, view }: {
   sheetMm: [number, number];
   view: MonogramView;
 }) {
+  const t = tr(CATALOG, useLocale());
   const [fonts, setFonts] = useState<Partial<Record<MonogramFontRole, LoadedFont>> | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +55,11 @@ export function MonogramPreview({ style, input, sheetMm, view }: {
     let alive = true;
     loadMonogramFonts(roles)
       .then((loaded) => alive && setFonts((current) => ({ ...current, ...loaded })))
-      .catch(() => alive && setError("Не вдалося завантажити шрифти. Оновіть сторінку."));
+      .catch(() => alive && setError(t.monogramFontsFailed));
     return () => {
       alive = false;
     };
-  }, [roles]);
+  }, [roles, t.monogramFontsFailed]);
 
   useEffect(() => {
     if (!fonts || !roles.every((role) => fonts[role])) return;
@@ -73,16 +77,16 @@ export function MonogramPreview({ style, input, sheetMm, view }: {
           setPreview({ key, cut, dateCapMm: design.dateCapMm, missing: design.missing });
           setError(null);
         })
-        .catch(() => ticket === latest.current && setError("Превʼю не побудувалося. Спробуйте інші літери."));
+        .catch(() => ticket === latest.current && setError(t.monogramPreviewFailed));
     }, 250);
     return () => clearTimeout(timer);
-  }, [fonts, roles, style, input, width, height, key]);
+  }, [fonts, roles, style, input, width, height, key, t.monogramPreviewFailed]);
 
   const pad = Math.max(width, height) * 0.08;
   const d = preview ? polygonsToPathData(preview.cut.cutPaths) : "";
   const busy = !preview || preview.key !== key;
   const smallDate = preview?.dateCapMm != null && preview.dateCapMm < MONOGRAM_CONFIG.smallDateCapMm;
-  const label = `Превʼю трафарету ${Math.round(width / 10)} × ${Math.round(height / 10)} см: ${[input.first, input.second].filter(Boolean).join(" & ")}${input.date ? `, ${input.date}` : ""}`;
+  const label = t.monogramPreviewLabel(Math.round(width / 10), Math.round(height / 10), `${[input.first, input.second].filter(Boolean).join(" & ")}${input.date ? `, ${input.date}` : ""}`);
 
   return (
     <div className="grid gap-2">
@@ -101,15 +105,15 @@ export function MonogramPreview({ style, input, sheetMm, view }: {
             </>
           )}
         </svg>
-        {busy && <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs text-[#0f172a]">Будуємо превʼю…</span>}
+        {busy && <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs text-[#0f172a]">{t.monogramBuilding}</span>}
         <span className="absolute right-3 bottom-3 rounded-full bg-white/90 px-2.5 py-1 text-xs text-[#0f172a] tabular-nums">{Math.round(width / 10)} × {Math.round(height / 10)} см</span>
       </div>
       {error && <p role="alert" className="m-0 text-sm text-[var(--danger,#b91c1c)]">{error}</p>}
       {preview && preview.missing.length > 0 && (
-        <p role="status" className="m-0 text-sm">Цих знаків немає в шрифті: {preview.missing.join(" ")}. Введіть українську, російську або латинську літеру.</p>
+        <p role="status" className="m-0 text-sm">{t.monogramMissing(preview.missing.join(" "))}</p>
       )}
       {smallDate && (
-        <p role="status" className="m-0 text-sm text-[var(--muted)]">На цьому розмірі дата дуже дрібна. Для чіткої дати оберіть від 8 × 8 см або коротку дату, наприклад 27.09.26.</p>
+        <p role="status" className="m-0 text-sm text-[var(--muted)]">{t.monogramSmallDate}</p>
       )}
     </div>
   );

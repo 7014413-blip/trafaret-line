@@ -6,7 +6,7 @@
 // Preview and price at once; the customer sees sizes in cm and UAH, never m².
 // Layout: lib/business-sign/layout.ts; price: lib/calculators/signage.ts (repeated on the server).
 
-import Link from "next/link";
+import Link from "@/components/i18n/LocaleLink";
 import { useEffect, useMemo, useState } from "react";
 import { DraftLinkButton } from "@/components/constructor/DraftLinkButton";
 import { FontOptions } from "@/components/constructor/FontOptions";
