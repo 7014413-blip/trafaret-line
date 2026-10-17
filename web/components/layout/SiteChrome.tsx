@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { DIRECTIONS } from "@/data/home";
 import { SITE } from "@/data/site";
 import { CartButton, CartHost } from "@/components/cart/CartHost";
+import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
 
 const SEARCH_HINTS = ["мандала", "цифри 10 см", "напис на торт", "піксель ЗСУ", "акрил 3 мм коло", "номер підʼїзду"];
 const INFO_LINKS = [
@@ -75,10 +76,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
           <button type="submit" className="sr-only">Знайти</button>
         </form>
         <div className="flex items-center gap-3.5 whitespace-nowrap text-sm">
-          <div className="hidden leading-tight xl:grid">
-            <b className="text-[15px]">{SITE.phone}</b>
-            <small className="text-[var(--muted)]">Viber · Telegram</small>
-          </div>
+          <ManagerCallButton variant="header" />
           <CartButton />
         </div>
       </div>
