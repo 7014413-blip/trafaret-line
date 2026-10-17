@@ -1,0 +1,133 @@
+// Texts of the review form a buyer opens by the manager's link (/vidguk/<order id>). The form
+// checks, the photo reducer and the shop write their messages in Ukrainian; `messages` gives
+// them in this language.
+
+import type { Dictionary } from "../../../types/i18n";
+
+export interface ReviewFormTexts {
+  title: string;
+  lead: string;
+  badLinkStart: string;
+  contacts: string;
+  badLinkEnd: string;
+  order: (number: string) => string;
+  subject: string;
+  wholeOrder: (title: string) => string;
+  reviewed: string;
+  rating: string;
+  ratingWords: [string, string, string, string, string];
+  ratingOf: (n: number, word: string) => string;
+  yourReview: string;
+  placeholder: string;
+  name: string;
+  city: string;
+  optional: string;
+  photos: string;
+  photosUpTo: (max: number) => string;
+  photosMax: (max: number) => string;
+  processing: string;
+  addMore: string;
+  addPhotos: string;
+  yourPhoto: (n: number) => string;
+  removePhoto: (n: number) => string;
+  wait: string;
+  send: string;
+  thanksPending: string;
+  thanks: string;
+  allSent: string;
+  afterCheck: string;
+  /** Ukrainian messages of the form checks, the photo reducer and the shop → this language. */
+  messages: Record<string, string>;
+}
+
+export const REVIEW_FORM: Dictionary<ReviewFormTexts> = {
+  uk: {
+    title: "Відгук про замовлення",
+    lead: "Розкажіть, як вам наша робота. Найкраще — з фото результату: воно допоможе іншим покупцям обрати.",
+    badLinkStart: "Посилання недійсне або застаріло. Напишіть нам на сторінці ",
+    contacts: "Контакти",
+    badLinkEnd: ", і ми надішлемо нове.",
+    order: (number) => `Замовлення ${number}`,
+    subject: "Про що відгук",
+    wholeOrder: (title) => `Замовлення в цілому: ${title}`,
+    reviewed: "Відгук надіслано",
+    rating: "Оцінка",
+    ratingWords: ["Погано", "Так собі", "Нормально", "Добре", "Чудово"],
+    ratingOf: (n, word) => `${n} з 5 — ${word}`,
+    yourReview: "Ваш відгук",
+    placeholder: "Як вам трафарет: якість, розмір, як вийшов результат?",
+    name: "Імʼя",
+    city: "Місто",
+    optional: "(необовʼязково)",
+    photos: "Фото результату",
+    photosUpTo: (max) => `(до ${max}, необовʼязково)`,
+    photosMax: (max) => `Можна додати до ${max} фото`,
+    processing: "Обробляємо фото…",
+    addMore: "Додати ще фото",
+    addPhotos: "Додати фото",
+    yourPhoto: (n) => `Ваше фото ${n}`,
+    removePhoto: (n) => `Прибрати фото ${n}`,
+    wait: "Зачекайте…",
+    send: "Надіслати відгук",
+    thanksPending: "Дякуємо! Відгук зʼявиться на сайті після перевірки.",
+    thanks: "Дякуємо за відгук!",
+    allSent: "Відгуки на це замовлення вже надіслані",
+    afterCheck: "Він зʼявиться на сайті після перевірки. Нам дуже важливо знати, як вам наша робота.",
+    messages: {},
+  },
+  ru: {
+    title: "Отзыв о заказе",
+    lead: "Расскажите, как вам наша работа. Лучше всего — с фото результата: оно поможет другим покупателям выбрать.",
+    badLinkStart: "Ссылка недействительна или устарела. Напишите нам на странице ",
+    contacts: "Контакты",
+    badLinkEnd: ", и мы пришлём новую.",
+    order: (number) => `Заказ ${number}`,
+    subject: "О чём отзыв",
+    wholeOrder: (title) => `Заказ в целом: ${title}`,
+    reviewed: "Отзыв отправлен",
+    rating: "Оценка",
+    ratingWords: ["Плохо", "Так себе", "Нормально", "Хорошо", "Отлично"],
+    ratingOf: (n, word) => `${n} из 5 — ${word}`,
+    yourReview: "Ваш отзыв",
+    placeholder: "Как вам трафарет: качество, размер, как получился результат?",
+    name: "Имя",
+    city: "Город",
+    optional: "(необязательно)",
+    photos: "Фото результата",
+    photosUpTo: (max) => `(до ${max}, необязательно)`,
+    photosMax: (max) => `Можно добавить до ${max} фото`,
+    processing: "Обрабатываем фото…",
+    addMore: "Добавить ещё фото",
+    addPhotos: "Добавить фото",
+    yourPhoto: (n) => `Ваше фото ${n}`,
+    removePhoto: (n) => `Убрать фото ${n}`,
+    wait: "Подождите…",
+    send: "Отправить отзыв",
+    thanksPending: "Спасибо! Отзыв появится на сайте после проверки.",
+    thanks: "Спасибо за отзыв!",
+    allSent: "Отзывы на этот заказ уже отправлены",
+    afterCheck: "Он появится на сайте после проверки. Нам очень важно знать, как вам наша работа.",
+    messages: {
+      "Оберіть товар для відгуку": "Выберите товар для отзыва",
+      "Вкажіть імʼя (від 2 до 60 символів)": "Укажите имя (от 2 до 60 символов)",
+      "Назва міста до 60 символів": "Название города до 60 символов",
+      "Поставте оцінку від 1 до 5 зірок": "Поставьте оценку от 1 до 5 звёзд",
+      "Напишіть хоча б кілька слів (від 10 символів)": "Напишите хотя бы несколько слов (от 10 символов)",
+      "Відгук до 2000 символів": "Отзыв до 2000 символов",
+      "До 5 фото": "До 5 фото",
+      "Фото пошкоджене або завелике, додайте інше": "Фото повреждено или слишком большое, добавьте другое",
+      "Оберіть фото у форматі JPG або PNG": "Выберите фото в формате JPG или PNG",
+      "Не вдалося відкрити фото. Оберіть JPG або PNG": "Не удалось открыть фото. Выберите JPG или PNG",
+      "Браузер не зміг обробити фото": "Браузер не смог обработать фото",
+      "Фото завелике, оберіть інше": "Фото слишком большое, выберите другое",
+      "Немає звʼязку з сервером. Перевірте інтернет і спробуйте ще раз.": "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.",
+      "Забагато спроб. Спробуйте трохи пізніше.": "Слишком много попыток. Попробуйте чуть позже.",
+      "Не вдалося надіслати відгук. Спробуйте ще раз.": "Не удалось отправить отзыв. Попробуйте ещё раз.",
+      "Посилання недійсне. Напишіть нам, і ми надішлемо нове.": "Ссылка недействительна. Напишите нам, и мы пришлём новую.",
+      "Перевірте відгук": "Проверьте отзыв",
+      "Цього товару немає в замовленні": "Этого товара нет в заказе",
+      "Оберіть товар із замовлення": "Выберите товар из заказа",
+      "Відгук на цей товар уже надіслано. Дякуємо!": "Отзыв на этот товар уже отправлен. Спасибо!",
+    },
+  },
+};
