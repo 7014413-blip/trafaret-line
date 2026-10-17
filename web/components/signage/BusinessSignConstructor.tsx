@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { DraftLinkButton } from "@/components/constructor/DraftLinkButton";
 import { FontOptions } from "@/components/constructor/FontOptions";
 import { BusinessSignPreview, type BusinessSignView } from "@/components/signage/BusinessSignPreview";
 import { BuyPanel } from "@/components/signage/BuyPanel";
@@ -29,12 +30,15 @@ import { ensureLogoUploaded } from "@/lib/client/ensure-logo-uploaded";
 import { SIGN_LOGO_ACCEPT, readSignLogoFile } from "@/lib/client/read-sign-logo-file";
 import { useBuyState } from "@/lib/client/use-buy-state";
 import { useDispatchLabel } from "@/lib/client/use-dispatch-label";
+import { useUrlDraft } from "@/lib/client/use-url-draft";
+import { parseBusinessSignDraft } from "@/lib/draft/business-sign-draft";
 import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { businessSignThumbnailSvg } from "@/lib/export/business-sign-thumbnail";
 import { cmText, formatUAH } from "@/lib/format";
 import { loadFont } from "@/lib/text/font-loader";
 import { useCart } from "@/store/cart-store";
 import type { BusinessSignDesign, BusinessSignLine, BusinessSignLogo, BusinessSignLogoPlace } from "@/types/business-sign";
+import type { BusinessSignDraft } from "@/types/draft";
 import type { SignShape } from "@/types/signage";
 import type { LoadedFont } from "@/types/text";
 
@@ -86,7 +90,11 @@ export function BusinessSignConstructor() {
   useEffect(() => () => { if (logoUrl) URL.revokeObjectURL(logoUrl); }, [logoUrl]);
 
   // The edge text has its own font: shop fonts load from the manifest, the customer's are loaded already.
-  const { allFonts, customFonts, fontFor } = fonts;
+  const { allFonts, customFonts, fontFor, fontsListed } = fonts;
+  // A font that is not on this device (the customer's own font in a link opened elsewhere).
+  useEffect(() => {
+    if (fontsListed && allFonts.length && !allFonts.some((f) => f.id === arcFontId)) setArcFontId("pt-serif");
+  }, [fontsListed, allFonts, arcFontId]);
   useEffect(() => {
     const ready = fontFor(arcFontId) ?? customFonts.find((f) => f.id === arcFontId);
     if (ready) { setArcFont(ready); return; }
@@ -107,6 +115,33 @@ export function BusinessSignConstructor() {
     frameMaterialId: frameId, holes, selfAdhesive: adhesive, positioningStencil: template,
     logoDevelopment: !logo && logoDevelopment, logoBrief, quantity: qty,
   };
+
+  // The layout in the address (?draft=…) without the logo file: a link opens the same sign elsewhere.
+  const draftNow: BusinessSignDraft = {
+    shape: design.shape, widthMm: design.widthMm, heightMm: design.heightMm, direction: design.direction,
+    baseMaterialId: design.baseMaterialId, baseThicknessMm: design.baseThicknessMm, lines: design.lines,
+    arc: design.arc, frameMaterialId: design.frameMaterialId, holes: design.holes, selfAdhesive: design.selfAdhesive,
+    positioningStencil: design.positioningStencil, logoDevelopment: design.logoDevelopment, logoBrief: design.logoBrief, quantity: design.quantity,
+  };
+  const applyDraft = (d: BusinessSignDraft) => {
+    setShape(d.shape);
+    setSize(d.widthMm, d.heightMm);
+    setDirection(d.direction);
+    setBaseId(d.baseMaterialId);
+    setThickness(d.baseThicknessMm);
+    fonts.replaceLines(d.lines.map(({ text, fontId, size }) => ({ text, fontId, size })));
+    setLineSheets(d.lines.map((l) => l.materialId));
+    setArcOn(!!d.arc);
+    if (d.arc) { setArcTop(d.arc.top); setArcBottom(d.arc.bottom); setArcFontId(d.arc.fontId); setArcSheet(d.arc.materialId); }
+    setFrameId(d.frameMaterialId);
+    setHoles(d.holes);
+    setAdhesive(d.selfAdhesive);
+    setTemplate(d.positioningStencil);
+    setLogoDevelopment(d.logoDevelopment);
+    setLogoBrief(d.logoBrief);
+    setQty(d.quantity);
+  };
+  const draft = useUrlDraft(parseBusinessSignDraft, applyDraft, draftNow);
 
   const arcMeasures = useMemo(() => ({
     top: round && arcOn && arcFont ? measureArcText(arcFont, arcTop) : null,
@@ -342,6 +377,8 @@ export function BusinessSignConstructor() {
 
         <BuyPanel lines={price.lines} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? "менеджер підтвердить строк" : dispatch}
           state={buyState.state} message={buyState.message} canBuy={canBuy} onBuy={buy} />
+        <DraftLinkButton link={draft.link}
+          note={logo ? "Логотип у посилання не потрапляє: на іншому пристрої додайте файл ще раз." : "Відкриє цю саму вивіску на телефоні чи іншому компʼютері."} />
       </form>
     </div>
   );
