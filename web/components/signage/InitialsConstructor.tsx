@@ -31,14 +31,16 @@ import { priceInitials } from "@/lib/initials/price";
 import { findJoinedWordsMaterial } from "@/lib/joined-words/find-material";
 import { JOINED_WORDS_MATERIALS } from "@/lib/joined-words/materials";
 import { useCart } from "@/store/cart-store";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
+import { SIGNAGE_LETTERS } from "@/lib/i18n/dictionaries/signage-letters";
+import { tr } from "@/lib/i18n/translate";
 import type { InitialsDesign, InitialsMode, InitialsSeparator } from "@/types/initials";
 
 const CFG = DEFAULT_INITIALS_CONFIG;
 const SEPARATORS: [InitialsSeparator, string][] = [["bar", "S | D"], ["amp", "S & D"], ["plus", "S + D"], ["dot", "S · D"], ["none", "SD"]];
-const MODES: [InitialsMode, string, string][] = [
-  ["pieces", "Окремими деталями", "Літери і риска лягають на торт, як на фото"],
-  ["topper", "Топпером зі шпажкою", "Усе на тонкій планці, стоїть у торті"],
-];
+// Ways to set the initials on the cake; their names are in the dictionary.
+const MODES: InitialsMode[] = ["pieces", "topper"];
 const HEIGHTS_CM = [5, 7, 10, 12, 15];
 // Mirror sheets first: they are what wedding initials are made of.
 const SHEETS = [...JOINED_WORDS_MATERIALS.filter((m) => m.mirror), ...JOINED_WORDS_MATERIALS.filter((m) => !m.mirror)];
@@ -46,6 +48,9 @@ const SHEETS = [...JOINED_WORDS_MATERIALS.filter((m) => m.mirror), ...JOINED_WOR
 const EMPTY: MeasuredInitials = { first: null, second: null, sep: null };
 
 export function InitialsConstructor() {
+  const locale = useLocale();
+  const t = tr(SIGNAGE_LETTERS, locale).initials;
+  const ts = tr(SIGNAGE, locale);
   const [first, setFirst] = useState("S");
   const [second, setSecond] = useState("D");
   const [separator, setSeparator] = useState<InitialsSeparator>("bar");
@@ -54,7 +59,7 @@ export function InitialsConstructor() {
   const [materialId, setMaterialId] = useState("mirror-gold");
   const [qty, setQty] = useState(1);
   const buyState = useBuyState();
-  const dispatch = useDispatchLabel();
+  const dispatch = useDispatchLabel(locale);
   const fonts = usePlaqueLines([{ text: "SD", fontId: "pt-serif", size: 1 }], 1);
   const cart = useCart();
   const fontId = fonts.lines[0].fontId;
@@ -79,7 +84,7 @@ export function InitialsConstructor() {
   const sheet = findJoinedWordsMaterial(materialId);
   const checks = font ? checkInitials(design, measured, CFG) : [];
   const errors = checks.filter((c) => c.level === "error");
-  const price = priceInitials(design, layout, CFG);
+  const price = priceInitials(design, layout, CFG, undefined, locale);
   const canBuy = !!font && errors.length === 0;
 
   const buy = () => {
@@ -88,7 +93,7 @@ export function InitialsConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `initials|${JSON.stringify({ ...design, quantity: 0 })}`,
-      title: `Ініціали на торт «${sep}», літери ${cmText(letterMm)} см, ${sheet.name.uk.toLowerCase()}${mode === "topper" ? ", топпер" : ""}`,
+      title: t.cartTitle(sep, cmText(letterMm), sheet.name[locale].toLowerCase(), mode === "topper"),
       materialId: "acrylic",
       widthCm: Math.round(layout.widthMm) / 10,
       heightCm: Math.round(layout.heightMm) / 10,
@@ -103,24 +108,23 @@ export function InitialsConstructor() {
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Превʼю ініціалів" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
-        <InitialsPreview layout={layout} paths={paths} sheet={sheet} label={`Превʼю ініціалів ${cmText(layout.widthMm)}×${cmText(layout.heightMm)} см`} />
+      <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] lg:sticky lg:top-24">
+        <InitialsPreview layout={layout} paths={paths} sheet={sheet} label={t.previewLabel(cmText(layout.widthMm), cmText(layout.heightMm))} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cmText(layout.widthMm)} × {cmText(layout.heightMm)} см · літери {cmText(letterMm)} см</span>
-          <span>{sheet.name.uk}, {sheet.thicknessMm} мм</span>
+          <span>{t.summary(cmText(layout.widthMm), cmText(layout.heightMm), cmText(letterMm))}</span>
+          <span>{ts.sheetThickness(sheet.name[locale], sheet.thicknessMm)}</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <ConstructorHeader kicker="Весільний декор" title="Ініціали на весільний торт"
-          lead="Перші літери імен з дзеркального акрилу: золото, срібло чи будь-який колір. Свій розмір і шрифт, ціна одразу." />
+        <ConstructorHeader kicker={t.kicker} title={t.title} lead={t.lead} />
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Літери</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.letters}</legend>
           <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
-            <label className="grid gap-1 text-sm text-[var(--muted)]">Перша
+            <label className="grid gap-1 text-sm text-[var(--muted)]">{t.first}
               <input id="in-first" value={first} maxLength={CFG.maxChars} onChange={(e) => setFirst(e.target.value)} className={`${INPUT_CLASS} h-14 w-full min-w-0 text-center text-2xl`} />
             </label>
-            <label className="grid gap-1 text-sm text-[var(--muted)]">Друга
+            <label className="grid gap-1 text-sm text-[var(--muted)]">{t.second}
               <input id="in-second" value={second} maxLength={CFG.maxChars} onChange={(e) => setSecond(e.target.value)} className={`${INPUT_CLASS} h-14 w-full min-w-0 text-center text-2xl`} />
             </label>
           </div>
@@ -129,29 +133,29 @@ export function InitialsConstructor() {
           </div>
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Шрифт</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{ts.font}</legend>
           <select id="in-font" value={fontId} onChange={(e) => setLine(0, { fontId: e.target.value })} className={`${INPUT_CLASS} w-full min-w-0`}><FontOptions fonts={fonts.allFonts} current={fontId} /></select>
-          <span className="text-[13px] text-[var(--muted)]">PT Serif схожий на класичний Times, як на прикладі. Можна взяти будь-який інший або свій.</span>
+          <span className="text-[13px] text-[var(--muted)]">{t.fontNote}</span>
           <CustomFontPanel fonts={fonts.customFonts} text={`${first}${second}`}
             onAdded={(f) => { fonts.onFontAdded(f); setLine(0, { fontId: f.id }); }} onRemoved={fonts.onFontRemoved} />
         </fieldset>
 
         <LetterHeightField idPrefix="in" heightsCm={HEIGHTS_CM} valueMm={letterMm} minMm={CFG.minLetterMm} maxMm={CFG.maxLetterMm} onChange={setLetterMm} />
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Як ставити на торт</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{t.modeLegend}</legend>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
-            {MODES.map(([v, name, note]) => (
+            {MODES.map((v) => (
               <button key={v} id={`in-mode-${v}`} type="button" aria-pressed={mode === v} onClick={() => setMode(v)}
                 className={`grid gap-0.5 rounded-xl border-[1.5px] px-3 py-2 text-left ${mode === v ? "border-[2px] border-[var(--ink)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
-                <b className="text-[15px]">{name}</b><span className="text-[13px] text-[var(--muted)]">{note}</span>
+                <b className="text-[15px]">{t.modes[v].name}</b><span className="text-[13px] text-[var(--muted)]">{t.modes[v].note}</span>
               </button>
             ))}
           </div>
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Колір</legend>
-          <SheetSwatches sheets={SHEETS} value={materialId} onChange={setMaterialId} idPrefix="in-c" label="Колір акрилу" />
-          <span className="text-[13px] text-[var(--muted)]">{sheet.name.uk}, {sheet.thicknessMm} мм{sheet.inStock ? "" : " · під замовлення"}.</span>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{ts.colour}</legend>
+          <SheetSwatches sheets={SHEETS} value={materialId} onChange={setMaterialId} idPrefix="in-c" label={ts.acrylicColour} />
+          <span className="text-[13px] text-[var(--muted)]">{ts.sheetThickness(sheet.name[locale], sheet.thicknessMm)}{sheet.inStock ? "" : ts.toOrder}.</span>
         </fieldset>
 
         <QuantityField idPrefix="in" value={qty} onChange={setQty} />

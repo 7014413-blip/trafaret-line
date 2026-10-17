@@ -7,6 +7,7 @@
 // Layout: lib/pointer-sign/layout.ts, price: lib/pointer-sign/price.ts (repeated on the server).
 
 import Link from "@/components/i18n/LocaleLink";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useEffect, useState } from "react";
 import { BuyPanel } from "@/components/signage/BuyPanel";
 import { ConstructorHeader } from "@/components/signage/ConstructorHeader";
@@ -28,6 +29,9 @@ import { usePlaqueLines } from "@/lib/client/use-plaque-lines";
 import { usePresetSize } from "@/lib/client/use-preset-size";
 import { pointerThumbnailSvg } from "@/lib/export/pointer-thumbnail";
 import { cmText } from "@/lib/format";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
+import { SIGNAGE_PLAQUES } from "@/lib/i18n/dictionaries/signage-plaques";
+import { tr } from "@/lib/i18n/translate";
 import { checkPointerSign } from "@/lib/pointer-sign/check";
 import { clampPointerSizeMm } from "@/lib/pointer-sign/clamp-size";
 import { DEFAULT_POINTER_SIGN_CONFIG } from "@/lib/pointer-sign/config";
@@ -40,24 +44,29 @@ import type {
 } from "@/types/pointer-sign";
 
 const CFG = DEFAULT_POINTER_SIGN_CONFIG;
-const FIRST_LINES: PointerTextLine[] = [
-  { text: "КАВʼЯРНЯ", fontId: "roboto-slab", size: 1.3 },
-  { text: "ВХІД З ДВОРУ", fontId: "rubik", size: 0.8 },
+// Fonts and sizes of the example lines; their texts come in the page language.
+const FIRST_LINES: Omit<PointerTextLine, "text">[] = [
+  { fontId: "roboto-slab", size: 1.3 },
+  { fontId: "rubik", size: 0.8 },
 ];
-const ARROWS: [PointerArrowPlacement, string][] = [["start", "Перед текстом"], ["end", "Після тексту"], ["none", "Без стрілки"]];
+const ARROWS: PointerArrowPlacement[] = ["start", "end", "none"];
 
 type LogoState = Omit<PointerLogo, "uploadKey"> & { file: File; previewUrl: string; uploadKey: string | null };
 
 const clampSize = (widthMm: number, heightMm: number) => clampPointerSizeMm(widthMm, heightMm, CFG);
 
 export function PointerSignConstructor() {
+  const locale = useLocale();
+  const s = tr(SIGNAGE, locale);
+  const t = tr(SIGNAGE_PLAQUES, locale);
+  const p = t.pointer;
   const sizeState = usePresetSize(CFG.presets, { w: 40, h: 15 }, clampSize);
   const { sizeCode, size } = sizeState;
   const [direction, setDirection] = useState<PointerDirection>(-1);
   const [shape, setShape] = useState<PointerShape>("pointer");
   const [baseId, setBaseId] = useState("black");
   const [overlayId, setOverlayId] = useState("white");
-  const text = usePlaqueLines(FIRST_LINES, CFG.maxLines);
+  const text = usePlaqueLines(FIRST_LINES.map((l, i) => ({ ...l, text: p.startLines[i] })), CFG.maxLines);
   const lines = text.lines;
   const [arrowPlacement, setArrowPlacement] = useState<PointerArrowPlacement>("start");
   const [arrowLine, setArrowLine] = useState(1);
@@ -65,7 +74,7 @@ export function PointerSignConstructor() {
   const [logoError, setLogoError] = useState("");
   const [qty, setQty] = useState(1);
   const buyState = useBuyState();
-  const dispatch = useDispatchLabel();
+  const dispatch = useDispatchLabel(locale);
   const cart = useCart();
 
   useEffect(() => {
@@ -94,7 +103,7 @@ export function PointerSignConstructor() {
   const fontsReady = text.fontsReady;
   const checks = fontsReady ? checkPointerSign(design, layout, measured.map((m) => m?.missing ?? [])) : [];
   const errors = checks.filter((c) => c.level === "error");
-  const price = pricePointerSign(design);
+  const price = pricePointerSign(design, undefined, undefined, locale);
   const base = findPointerMaterial(baseId);
   const overlay = findPointerMaterial(overlayId);
   const canBuy = errors.length === 0 && fontsReady;
@@ -119,7 +128,7 @@ export function PointerSignConstructor() {
     cart.add({
       // Same design = same cart line (quantities add up), whatever the quantity chosen here.
       key: `pointer|${JSON.stringify({ ...final, quantity: 0 })}`,
-      title: `Табличка-вказівник${texts ? ` «${texts}»` : ""}, ${cmText(final.widthMm)}×${cmText(final.heightMm)} см`,
+      title: p.cartTitle(texts, `${cmText(final.widthMm)}×${cmText(final.heightMm)}`),
       materialId: "acrylic_5",
       widthCm: final.widthMm / 10,
       heightCm: final.heightMm / 10,
@@ -134,71 +143,70 @@ export function PointerSignConstructor() {
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-4 pt-4 pb-28 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-10">
-      <section aria-label="Превʼю таблички" className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
+      <section aria-label={t.previewRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[#f3f1ec] lg:sticky lg:top-24">
         <PointerSignPreview layout={layout} linePaths={linePaths} base={base} overlay={overlay}
-          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={`Превʼю таблички-вказівника ${cmText(size.widthMm)}×${cmText(size.heightMm)} см`} />
+          logo={logo ? { url: logo.previewUrl, invert: logo.invert } : null} label={p.previewLabel(`${cmText(size.widthMm)}×${cmText(size.heightMm)}`)} />
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см · вістря {direction === -1 ? "вліво" : "вправо"}</span>
-          <span>{base.name.uk} {base.baseThicknessMm} мм + {overlay.name.uk.toLowerCase()} {overlay.overlayThicknessMm} мм</span>
+          <span>{cmText(size.widthMm)} × {cmText(size.heightMm)} см · {p.tip(direction === -1)}</span>
+          <span>{base.name[locale]} {base.baseThicknessMm} мм + {overlay.name[locale].toLowerCase()} {overlay.overlayThicknessMm} мм</span>
         </div>
       </section>
 
       <form className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5" onSubmit={(e) => e.preventDefault()}>
-        <ConstructorHeader kicker="Конструктор вказівників" title="Табличка-стрілка обʼємна, у два шари"
-          lead="Напишіть свій текст, оберіть шрифт, кольори й напрямок. Усі матеріали й кольори вже в ціні." />
+        <ConstructorHeader kicker={p.kicker} title={p.title} lead={p.lead} />
 
         <SizePresetPicker idPrefix="ps" presets={CFG.presets} priceOf={(p) => p.price} state={sizeState} limits={CFG}
-          note={<>Від {cmText(CFG.minWidthMm)} до {cmText(CFG.maxWidthMm)} см завширшки, висота не більше {Math.round(CFG.maxHeightToWidth * 100)}% ширини. Більша вивіска: <Link href="/vyvisky" className="underline">конструктор вивісок</Link>.</>} />
+          note={<>{p.sizeNoteStart(cmText(CFG.minWidthMm), cmText(CFG.maxWidthMm), Math.round(CFG.maxHeightToWidth * 100))}<Link href="/vyvisky" className="underline">{p.signConstructor}</Link>.</>} />
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Форма</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{p.shape}</legend>
           <div className="flex flex-wrap gap-2">
-            <PlaqueChip id="ps-shape-pointer" on={shape === "pointer"} onClick={() => setShape("pointer")}>Табличка з вістрям</PlaqueChip>
-            <PlaqueChip id="ps-shape-arrow" on={shape === "arrow"} onClick={() => { setShape("arrow"); setArrowPlacement("none"); }}>Стрілка</PlaqueChip>
+            <PlaqueChip id="ps-shape-pointer" on={shape === "pointer"} onClick={() => setShape("pointer")}>{p.shapePointer}</PlaqueChip>
+            <PlaqueChip id="ps-shape-arrow" on={shape === "arrow"} onClick={() => { setShape("arrow"); setArrowPlacement("none"); }}>{p.shapeArrow}</PlaqueChip>
           </div>
-          <span className="text-[13px] text-[var(--muted)]">{shape === "arrow" ? "Класична стрілка: напис на корпусі, логотип у голові стрілки." : "Прямокутна табличка з гострим краєм, як на наших фото."} Ціна однакова.</span>
+          <span className="text-[13px] text-[var(--muted)]">{shape === "arrow" ? p.shapeArrowNote : p.shapePointerNote}{p.samePrice}</span>
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Куди показує стрілка</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{p.direction}</legend>
           <div className="flex flex-wrap gap-2">
-            <PlaqueChip id="ps-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>← Вліво</PlaqueChip>
-            <PlaqueChip id="ps-dir-right" on={direction === 1} onClick={() => setDirection(1)}>Вправо →</PlaqueChip>
+            <PlaqueChip id="ps-dir-left" on={direction === -1} onClick={() => setDirection(-1)}>{p.left}</PlaqueChip>
+            <PlaqueChip id="ps-dir-right" on={direction === 1} onClick={() => setDirection(1)}>{p.right}</PlaqueChip>
           </div>
-          <span className="text-[13px] text-[var(--muted)]">Вістря таблички і маленька стрілка в тексті показують в один бік.</span>
+          <span className="text-[13px] text-[var(--muted)]">{p.directionNote}</span>
         </fieldset>
 
-        <PlaqueLinesEditor state={text} legend="Напис" idPrefix="ps" maxChars={CFG.maxLineChars} onRemove={onLineRemoved}
+        <PlaqueLinesEditor state={text} legend={s.text} idPrefix="ps" maxChars={CFG.maxLineChars} onRemove={onLineRemoved}
           capByLine={new Map(layout.lines.map((l) => [l.index, l.capMm]))} />
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Маленька стрілка в тексті</legend>
-          <div className="flex flex-wrap gap-2">{ARROWS.map(([v, name]) => <PlaqueChip key={v} id={`ps-arrow-${v}`} on={arrowPlacement === v} onClick={() => setArrowPlacement(v)}>{name}</PlaqueChip>)}</div>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{p.smallArrow}</legend>
+          <div className="flex flex-wrap gap-2">{ARROWS.map((v) => <PlaqueChip key={v} id={`ps-arrow-${v}`} on={arrowPlacement === v} onClick={() => setArrowPlacement(v)}>{p.arrows[v]}</PlaqueChip>)}</div>
           {arrowPlacement !== "none" && lines.length > 1 && (
             <div className="flex flex-wrap gap-2">
-              {lines.map((_, i) => <PlaqueChip key={i} id={`ps-arrow-line-${i}`} on={design.arrow.lineIndex === i} onClick={() => setArrowLine(i)}>У рядку {i + 1}</PlaqueChip>)}
+              {lines.map((_, i) => <PlaqueChip key={i} id={`ps-arrow-line-${i}`} on={design.arrow.lineIndex === i} onClick={() => setArrowLine(i)}>{p.inLine(i + 1)}</PlaqueChip>)}
             </div>
           )}
         </fieldset>
 
-        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>Логотип</legend>
+        <fieldset className={FIELDSET_CLASS}><legend className={LEGEND_CLASS}>{s.logo}</legend>
           <LogoFileField inputId="ps-logo" accept={LOGO_ACCEPT} fileName={logo?.fileName ?? null} onPick={pickLogo} onRemove={() => setLogo(null)}
-            emptyHint="SVG, PNG або JPG до 10 МБ, без доплати" error={logoError}>
+            emptyHint={p.logoHint} error={logoError}>
             {logo && (
               <>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-ring" checked={logo.ring} onChange={(e) => setLogo({ ...logo, ring: e.target.checked })} className="accent-[var(--ink)]" />Коло навколо логотипа</label>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />Світлий логотип на темному фоні</label>
-                <span className="text-[13px] text-[var(--muted)]">Логотип виріжемо з того ж матеріалу, що й напис. Перед порізкою надішлемо макет на погодження.</span>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-ring" checked={logo.ring} onChange={(e) => setLogo({ ...logo, ring: e.target.checked })} className="accent-[var(--ink)]" />{p.logoRing}</label>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="ps-logo-invert" checked={logo.invert} onChange={(e) => setLogo({ ...logo, invert: e.target.checked })} className="accent-[var(--ink)]" />{s.logoInvert}</label>
+                <span className="text-[13px] text-[var(--muted)]">{p.logoNote}</span>
               </>
             )}
           </LogoFileField>
         </fieldset>
 
-        <PointerMaterialPicker legend="Основа" value={baseId} onChange={setBaseId} idPrefix="ps-base" />
-        <PointerMaterialPicker legend="Колір напису і логотипа" value={overlayId} onChange={setOverlayId} idPrefix="ps-over" />
+        <PointerMaterialPicker legend={s.base} value={baseId} onChange={setBaseId} idPrefix="ps-base" />
+        <PointerMaterialPicker legend={p.overlay} value={overlayId} onChange={setOverlayId} idPrefix="ps-over" />
 
         <QuantityField idPrefix="ps" value={qty} onChange={setQty} />
 
         <DesignChecks checks={checks} />
 
-        <BuyPanel lines={price.lines.map(({ label }) => ({ label }))} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? "менеджер підтвердить строк" : dispatch}
+        <BuyPanel lines={price.lines.map(({ label }) => ({ label }))} total={price.total} unitPrice={price.unitPrice} qty={qty} note={price.needsManager ? s.managerConfirms : dispatch}
           state={buyState.state} message={buyState.message} canBuy={canBuy} onBuy={buy} />
       </form>
     </div>

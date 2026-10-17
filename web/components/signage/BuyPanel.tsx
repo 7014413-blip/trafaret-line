@@ -7,6 +7,7 @@
 import { formatUAH } from "@/lib/format";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CONSTRUCTOR } from "@/lib/i18n/dictionaries/constructor";
+import { SIGNAGE } from "@/lib/i18n/dictionaries/signage";
 import { tr } from "@/lib/i18n/translate";
 import type { BuyState, PriceBreakdownLine } from "@/types/constructor-ui";
 
@@ -27,7 +28,9 @@ export function BuyPanel({ lines, total, unitPrice, qty, unitLabel, note, state,
   /** Extra content above the breakdown (a table of piece prices). */
   children?: React.ReactNode;
 }) {
-  const t = tr(CONSTRUCTOR, useLocale());
+  const locale = useLocale();
+  const t = tr(CONSTRUCTOR, locale);
+  const shown = message ? tr(SIGNAGE, locale).logoErrors[message] ?? message : "";
   const labels: Record<BuyState, { full: string; short: string }> = {
     idle: { full: t.toCart, short: t.toCart },
     error: { full: t.toCart, short: t.toCart },
@@ -53,7 +56,7 @@ export function BuyPanel({ lines, total, unitPrice, qty, unitLabel, note, state,
           </div>
           <button type="button" onClick={onBuy} disabled={disabled} className="h-[52px] rounded-full bg-[var(--buy)] px-7 font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] disabled:opacity-40">{labels[state].full}</button>
         </div>
-        {message && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{message}</p>}
+        {shown && <p role="alert" className="m-0 text-sm text-[var(--danger)]">{shown}</p>}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] lg:hidden">

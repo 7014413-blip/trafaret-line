@@ -115,3 +115,37 @@ test("the own-text constructor speaks Russian", async ({ page }) => {
   await buy.click();
   await expect(page.getByRole("dialog", { name: "Корзина" })).toContainText("Своя надпись «КОФЕ»");
 });
+
+test("the pointer sign constructor speaks Russian and puts a Russian line in the cart", async ({ page }) => {
+  await page.goto("/ru/vyvisky/vkazivnyky");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Табличка-стрелка");
+  const size = page.getByRole("button", { name: /30×12 см/ });
+  await size.click();
+  await expect(size).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Размер 30 × 12 см")).toBeVisible();
+  await page.getByRole("button", { name: "В корзину" }).click();
+  const cart = page.getByRole("dialog", { name: "Корзина" });
+  await expect(cart).toContainText("Табличка-указатель «КОФЕЙНЯ");
+  await expect(cart).toContainText("600 ₴");
+});
+
+test("the business sign constructor speaks Russian", async ({ page }) => {
+  await page.goto("/ru/vyvisky");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("3D акриловая бизнес-вывеска");
+  await page.locator("#bs-size-500x500").click();
+  await page.locator("#bs-tpl").check();
+  await expect(page.getByText("Монтажный трафарет", { exact: true })).toBeVisible();
+  await expect(page.getByText("4 350 ₴").first()).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("м²");
+});
+
+test("the letter constructors speak Russian", async ({ page }) => {
+  await page.goto("/ru/vyvisky/napysy-na-plantsi");
+  await expect(page.getByRole("button", { name: "В корзину" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Надписи на планке");
+  await expect(page.getByRole("textbox", { name: "Строка 3" })).toHaveValue("СИННАБОН");
+  await page.goto("/ru/konstruktor/inicialy-na-tort");
+  await expect(page.getByRole("button", { name: "В корзину" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Инициалы");
+  await expect(page.locator("body")).not.toContainText("Додати");
+});

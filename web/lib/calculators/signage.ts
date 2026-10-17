@@ -9,13 +9,14 @@
 // Values marked [default] were chosen by Claude and approved in bulk by Денис 2026-10-08 23:45;
 // all of them are admin settings.
 
-import type { BuyerContext, LocalizedText } from "../../types/customizer";
+import type { BuyerContext, Locale, LocalizedText } from "../../types/customizer";
 import type {
   AcrylicSheet, SignBase, SignCheck, SignDesign, SignLayer, SignPrice, SignPriceLine, SignPricingConfig,
 } from "../../types/signage";
 import type { Hole } from "../../types/vector";
 import { DEFAULT_PRICING, applyDiscount, bestLineDiscount } from "./pricing";
 import { cmText } from "../format";
+import { discountLine, priceLines } from "../i18n/dictionaries/price-lines";
 
 /* ------------------------------------------------------------------ */
 /* Defaults                                                            */
@@ -198,8 +199,9 @@ const sizeLabel = (b: SignBase) => {
  */
 export function priceSign(
   d: SignDesign, palette: AcrylicSheet[] = ACRYLIC_PALETTE, cfg: SignPricingConfig = DEFAULT_SIGN_PRICING,
-  buyer?: BuyerContext, looseLetters = false,
+  buyer?: BuyerContext, looseLetters = false, locale: Locale = "uk",
 ): SignPrice {
+  const text = priceLines(locale);
   const lines: SignPriceLine[] = [];
   let unit = 0, areaM2 = 0, rate = 0, minApplied = false, needsManager = false;
 
@@ -212,16 +214,16 @@ export function priceSign(
     // backing included [default, Claude 2026-10-10]; other sizes and shapes go by the rate.
     const preset = d.base.shape === "circle" ? cfg.circlePresetPrices[Math.round(w)] : undefined;
     unit = preset ?? areaM2 * cfg.signRatePerM2;
-    lines.push({ label: `${sizeLabel(d.base)}, ${baseSheet.name.uk.toLowerCase()} ${d.base.thicknessMm} мм`, amount: 0 });
-    lines.push({ label: `Шарів: ${d.layers.length}, усі кольори й матеріали вже в ціні`, amount: 0 });
+    lines.push({ label: text.signBase(sizeLabel(d.base), baseSheet.name[locale].toLowerCase(), d.base.thicknessMm), amount: 0 });
+    lines.push({ label: text.signLayers(d.layers.length), amount: 0 });
     const extra = areaM2 * (rate - cfg.signRatePerM2);
-    if (extra > 0) { unit += extra; lines.push({ label: `Основа ${d.base.thicknessMm} мм замість ${cfg.includedBaseThicknessMm} мм`, amount: roundUp(extra, cfg.roundTo) }); }
-    if (d.options.holes) lines.push({ label: `Отвори під кріплення: ${d.options.holes}`, amount: 0 });
-    if (d.options.logoDevelopment) lines.push({ label: "Розробка вашого логотипа, у ціні", amount: 0 });
-    if (d.options.positioningStencil) { const a = areaM2 * cfg.positioningStencilPerM2; unit += a; lines.push({ label: "Монтажний трафарет", amount: roundUp(a, cfg.roundTo) }); }
-    if (d.options.selfAdhesive && preset != null) lines.push({ label: "Самоклейка на звороті, у ціні", amount: 0 });
-    else if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: "Самоклейка на звороті", amount: roundUp(a, cfg.roundTo) }); }
-    if (unit < cfg.minSignPrice) { unit = cfg.minSignPrice; minApplied = true; lines.push({ label: `Мінімальна вартість вивіски ${cfg.minSignPrice} грн`, amount: 0 }); }
+    if (extra > 0) { unit += extra; lines.push({ label: text.signThicker(d.base.thicknessMm, cfg.includedBaseThicknessMm), amount: roundUp(extra, cfg.roundTo) }); }
+    if (d.options.holes) lines.push({ label: text.signHoles(d.options.holes), amount: 0 });
+    if (d.options.logoDevelopment) lines.push({ label: text.signLogoDevelopment, amount: 0 });
+    if (d.options.positioningStencil) { const a = areaM2 * cfg.positioningStencilPerM2; unit += a; lines.push({ label: text.signStencil, amount: roundUp(a, cfg.roundTo) }); }
+    if (d.options.selfAdhesive && preset != null) lines.push({ label: text.signAdhesiveIncluded, amount: 0 });
+    else if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: text.signAdhesive, amount: roundUp(a, cfg.roundTo) }); }
+    if (unit < cfg.minSignPrice) { unit = cfg.minSignPrice; minApplied = true; lines.push({ label: text.signMinimum(cfg.minSignPrice), amount: 0 }); }
     const big = Math.max(w, h) > Math.max(cfg.maxSheetMm.width, cfg.maxSheetMm.height) || Math.min(w, h) > Math.min(cfg.maxSheetMm.width, cfg.maxSheetMm.height);
     needsManager = big || !baseSheet.inStock || d.layers.some((l) => !byId(palette, l.materialId).inStock || l.traced);
   } else {
@@ -233,24 +235,24 @@ export function priceSign(
       const sheetRate = table[l.thicknessMm] ?? table[3] ?? 0;
       const a = (l.bbox.width * l.bbox.height) / 1e6, part = a * sheetRate * factor;
       areaM2 += a; unit += part;
-      lines.push({ label: `${(l.text ?? "Логотип").replace(/\n/g, " ")}: ${mm(l.bbox.width)} × ${mm(l.bbox.height)} мм, ${s.name.uk.toLowerCase()}`, amount: roundUp(part, cfg.roundTo) });
+      lines.push({ label: text.signLayer((l.text ?? text.signLogo).replace(/\n/g, " "), mm(l.bbox.width), mm(l.bbox.height), s.name[locale].toLowerCase()), amount: roundUp(part, cfg.roundTo) });
       if (!s.inStock || l.traced) needsManager = true;
     }
     rate = areaM2 ? unit / areaM2 : 0;
     const box = layersBox(d.layers);
     const tplArea = box ? ((box.w + 40) * (box.h + 40)) / 1e6 : 0;
-    if (d.options.positioningStencil && tplArea) { const a = tplArea * cfg.positioningStencilPerM2; unit += a; lines.push({ label: "Монтажний трафарет", amount: roundUp(a, cfg.roundTo) }); }
-    if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: "Самоклейка на звороті", amount: roundUp(a, cfg.roundTo) }); }
-    if (unit < cfg.minLettersPrice) { unit = cfg.minLettersPrice; minApplied = true; lines.push({ label: `Мінімальна вартість замовлення ${cfg.minLettersPrice} грн`, amount: 0 }); }
+    if (d.options.positioningStencil && tplArea) { const a = tplArea * cfg.positioningStencilPerM2; unit += a; lines.push({ label: text.signStencil, amount: roundUp(a, cfg.roundTo) }); }
+    if (d.options.selfAdhesive) { const a = areaM2 * cfg.selfAdhesivePerM2; unit += a; lines.push({ label: text.signAdhesive, amount: roundUp(a, cfg.roundTo) }); }
+    if (unit < cfg.minLettersPrice) { unit = cfg.minLettersPrice; minApplied = true; lines.push({ label: text.lettersMinimum(cfg.minLettersPrice), amount: 0 }); }
   }
-  if (d.options.whiteLabel && cfg.whiteLabelPrice) { unit += cfg.whiteLabelPrice; lines.push({ label: "Без нашого бренду (white-label)", amount: cfg.whiteLabelPrice }); }
+  if (d.options.whiteLabel && cfg.whiteLabelPrice) { unit += cfg.whiteLabelPrice; lines.push({ label: text.whiteLabel, amount: cfg.whiteLabelPrice }); }
 
   unit = roundUp(unit, cfg.roundTo);
   const disc = bestLineDiscount(d.quantity, areaM2, DEFAULT_PRICING.stencilTiers, DEFAULT_PRICING, buyer);
   if (disc.value) {
     // Same rule as stencils: the discount applies to the final price and is rounded down.
     unit = applyDiscount(unit, disc.value);
-    lines.push({ label: `${disc.label}: −${Math.round(disc.value * 100)}%`, amount: 0 });
+    lines.push({ label: discountLine(disc.label, disc.value, locale), amount: 0 });
   }
   return {
     unitPrice: unit, total: unit * d.quantity, quantity: d.quantity, lines, needsManager,
