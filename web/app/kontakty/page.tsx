@@ -3,6 +3,9 @@ import { pageMeta } from "@/lib/seo/page-meta";
 import { Card, InfoPage } from "@/components/layout/InfoPage";
 import { SITE } from "@/data/site";
 import { ManagerCallButton } from "@/components/layout/ManagerCallButton";
+import { organizationJsonLd } from "@/lib/seo/organization-json-ld";
+import { jsonLdText } from "@/lib/seo/json-ld";
+import { siteUrl } from "@/lib/seo/site-url";
 
 export const metadata: Metadata = pageMeta({
   title: "Контакти",
@@ -11,11 +14,7 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default function Contacts() {
-  const ld = {
-    "@context": "https://schema.org", "@type": "Organization", name: SITE.name, url: `https://${SITE.domain}/`, telephone: SITE.phoneHref, email: SITE.email,
-    sameAs: Object.values(SITE.social),
-    location: SITE.branches.filter((b) => !b.address.includes("уточн")).map((b) => ({ "@type": "LocalBusiness", name: `${SITE.name} — ${b.city}`, address: { "@type": "PostalAddress", addressLocality: b.city, streetAddress: b.address, addressCountry: "UA" }, telephone: SITE.phoneHref })),
-  };
+  const ld = organizationJsonLd(siteUrl());
   return (
     <InfoPage title="Контакти" lead="Відповідаємо у робочий час протягом 15 хвилин.">
       <Card>
@@ -36,7 +35,7 @@ export default function Contacts() {
         <h2>Ми в соцмережах</h2>
         <ul>{Object.entries(SITE.social).map(([k, v]) => <li key={k}><a href={v} target="_blank" rel="noopener" className="underline">{k[0].toUpperCase() + k.slice(1)}</a></li>)}</ul>
       </Card>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(ld) }} />
     </InfoPage>
   );
 }

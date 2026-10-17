@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
   const base = siteUrl();
   if (!isProductionSite(base)) return { rules: [{ userAgent: "*", disallow: "/" }] };
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/checkout", "/rakhunok/", "/thank-you", "/pay-return"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/checkout", "/rakhunok/", "/thank-you", "/pay-return", "/kabinet", "/vidguk/"] }],
     sitemap: `${base}/sitemap.xml`,
     host: base,
   };

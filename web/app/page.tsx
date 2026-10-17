@@ -12,6 +12,9 @@ import { formatUAH } from "@/lib/format";
 import { toCardLite, toCategoryLink } from "@/lib/catalog/card-lite";
 import type { CategoryLink } from "@/types/catalog";
 import { StencilSprayHero } from "@/components/home/StencilSprayHero";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/organization-json-ld";
+import { jsonLdText } from "@/lib/seo/json-ld";
+import { siteUrl } from "@/lib/seo/site-url";
 
 const container = "mx-auto max-w-[1320px] px-4 lg:px-8";
 
@@ -55,6 +58,7 @@ async function catalogBlocks(): Promise<{ roots: CategoryLink[]; tabs: RailTab[]
 export default async function Home() {
   const { roots, tabs } = await catalogBlocks();
   const heroPrice = unitPrice(60, 60, MATERIALS.pet_thin);
+  const base = siteUrl();
   return (
     <div className="pb-[76px] lg:pb-0">
       <TrustBar />
@@ -140,6 +144,7 @@ export default async function Home() {
 
       <SiteFooter />
       <BottomNav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText([organizationJsonLd(base), websiteJsonLd(base)]) }} />
     </div>
   );
 }
