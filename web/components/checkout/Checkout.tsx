@@ -16,6 +16,7 @@ import { estimateDispatchDate, formatDispatch } from "@/lib/production";
 import { describeParcel, parcelFor } from "@/lib/calculators/packaging";
 import { postJson } from "@/lib/client/api-client";
 import { startWayForPay } from "@/lib/client/wayforpay";
+import { checkoutAccountToken } from "@/lib/client/checkout-account-token";
 import { firstErrorField, validateCheckout } from "@/lib/validation/checkout-form";
 import { previewSvgOf } from "@/lib/validation/preview-svg";
 import { needsLayoutApproval } from "@/lib/validation/layout-approval";
@@ -110,6 +111,7 @@ export function Checkout() {
     }
     setSending(true);
     try {
+      const accountToken = await checkoutAccountToken();
       const r = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_URL}/store/tl-checkout`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PK ?? "" },
@@ -126,6 +128,7 @@ export function Checkout() {
           comment: form.comment, noCall: form.noCall,
           layoutApproved: toApprove.length ? approved : undefined,
           website: honeypot,
+          accountToken: accountToken ?? undefined,
         }),
       });
       const data = await r.json();

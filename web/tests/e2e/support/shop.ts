@@ -13,6 +13,7 @@ export interface ReceivedOrder {
     delivery: { method: string; city: string; cityRef?: string; warehouse?: string; warehouseRef?: string };
     payment: string;
     layoutApproved?: boolean;
+    accountToken?: string;
   };
 }
 

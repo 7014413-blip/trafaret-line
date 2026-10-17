@@ -48,7 +48,7 @@ export function CartButton() {
   const { count, total } = ready ? cartTotals(items) : { count: 0, total: 0 };
   return (
     <button type="button" onClick={() => setOpen(true)} aria-label={`Кошик, товарів: ${count}`}
-      className="flex h-11 items-center gap-2 rounded-full bg-[var(--surface)] px-3.5 font-bold">
+      className="flex h-11 items-center gap-1 rounded-full bg-[var(--surface)] px-2.5 font-bold sm:gap-2 sm:px-3.5">
       🛒 <span className="hidden tabular-nums sm:inline">{total.toLocaleString("uk-UA")} ₴</span>
       <em className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--buy)] px-1 text-xs not-italic text-[var(--buy-fg)]">{count}</em>
     </button>

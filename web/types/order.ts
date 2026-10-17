@@ -92,6 +92,8 @@ export interface OrderDraft {
   /** «Макет перевірив»: required when a line is made to the customer's layout (lib/validation/layout-approval.ts). */
   layoutApproved?: boolean;
   utm?: Record<string, string>;
+  /** Signed cabinet token (lib/account/account-token.ts): the order goes to the signed-in customer. */
+  accountToken?: string;
   /** Honeypot: a field hidden from people; bots fill it and the order is refused. */
   website?: string;
 }

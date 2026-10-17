@@ -23,6 +23,10 @@ const SITE_ENV = {
   NP_API_KEY: "e2e",
   NP_API_URL: `http://127.0.0.1:${MOCK_PORT}/novaposhta/`,
   NP_SENDER_CITY_REF: "e2e-sender-boryspil",
+  // Cabinet: both sign-in buttons, and the secret the mock signs its sessions with (account.mjs).
+  GOOGLE_CLIENT_ID: "e2e-client.apps.googleusercontent.com",
+  TELEGRAM_BOT_ID: "123456789",
+  INTERNAL_API_TOKEN: "e2e-internal-token",
 };
 
 export default defineConfig({
