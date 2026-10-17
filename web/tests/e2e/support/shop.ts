@@ -22,6 +22,11 @@ export async function clearOrders(request: APIRequestContext): Promise<void> {
   await request.delete(`${MOCK_MEDUSA}/__e2e/orders`);
 }
 
+/** Forgets the reviews the mock shop received, so the review form offers every product again. */
+export async function clearReviews(request: APIRequestContext): Promise<void> {
+  await request.delete(`${MOCK_MEDUSA}/__e2e/reviews`);
+}
+
 export async function receivedOrders(request: APIRequestContext): Promise<ReceivedOrder[]> {
   const response = await request.get(`${MOCK_MEDUSA}/__e2e/orders`);
   return ((await response.json()) as { orders: ReceivedOrder[] }).orders;

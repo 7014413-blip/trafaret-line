@@ -2,7 +2,7 @@
 // catalogue, language links between the versions and hreflang for search engines.
 
 import { expect, test } from "@playwright/test";
-import { clearOrders, receivedOrders } from "./support/shop";
+import { clearOrders, clearReviews, receivedOrders } from "./support/shop";
 import { fillContactsAndDelivery } from "./support/checkout-form";
 
 test("home page in Russian links its Ukrainian version", async ({ page }) => {
@@ -148,4 +148,19 @@ test("the letter constructors speak Russian", async ({ page }) => {
   await expect(page.getByRole("button", { name: "В корзину" }).first()).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Инициалы");
   await expect(page.locator("body")).not.toContainText("Додати");
+});
+
+test("the review form speaks Russian, its checks included", async ({ page, request }) => {
+  await clearReviews(request);
+  await page.goto("/ru/vidguk/order_review?t=e2e-review");
+  await expect(page.getByRole("heading", { level: 1, name: "Отзыв о заказе" })).toBeVisible();
+  await expect(page.getByText("Заказ TL-2001")).toBeVisible();
+  await page.getByRole("button", { name: "Отправить отзыв" }).click();
+  await expect(page.getByText("Поставьте оценку от 1 до 5 звёзд")).toBeVisible();
+  await expect(page.getByText("Напишите хотя бы несколько слов (от 10 символов)")).toBeVisible();
+  await page.getByRole("radio", { name: "5 из 5 — Отлично" }).check({ force: true });
+  await expect(page.getByText("Отлично", { exact: true })).toBeVisible();
+
+  await page.goto("/ru/vidguk/order_review?t=wrong");
+  await expect(page.getByText("Ссылка недействительна или устарела")).toBeVisible();
 });
