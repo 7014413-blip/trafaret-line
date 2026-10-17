@@ -44,6 +44,8 @@ GitHub → репозиторий `trafaret-line` → Settings → Secrets and v
 | `STAGING_DB_PASSWORD` | пароль 2 |
 | `STAGING_PASSWORD` | новый пароль 3: для входа на тестовый сайт и в админку |
 
+Если базу делает админ сервера, он может вместо трёх секретов `STAGING_DB_*` положить файл `~/trafaret-staging/shared/db.env` (владелец `trafaret`, права 600) со строками `DB_NAME=`, `DB_USER=`, `DB_PASSWORD=` и при необходимости `DB_HOST=`, `DB_PORT=`. Тогда пароль базы не проходит через GitHub и чат.
+
 Если SSH на сервере не на порту 22, на той же странице во вкладке Variables добавь `STAGING_SSH_PORT`. Там же можно поменять домены (`STAGING_SITE_DOMAIN`, `STAGING_API_DOMAIN`) и порты (`STAGING_WEB_PORT`, `STAGING_API_PORT`), если 3110 или 9110 заняты.
 
 **5. Первый запуск**

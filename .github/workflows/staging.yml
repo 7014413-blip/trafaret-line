@@ -6,7 +6,8 @@
 # Secrets (Settings -> Secrets and variables -> Actions -> Secrets):
 #   STAGING_SSH_HOST, STAGING_SSH_USER                         the site's own server user
 #   STAGING_SSH_KEY (private key, preferred) or STAGING_SSH_PASSWORD
-#   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD     its PostgreSQL database
+#   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD     its PostgreSQL database (optional when
+#                                                             the admin wrote ~/trafaret-staging/shared/db.env)
 #   STAGING_PASSWORD                                          site login "trafaret" and shop admin
 # Variables (same page -> Variables), all optional:
 #   STAGING_SITE_DOMAIN (test.trafaret-line.com.ua), STAGING_API_DOMAIN (api-test.trafaret-line.com.ua),
@@ -55,7 +56,7 @@ jobs:
           STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
         run: |
           missing=""
-          for name in HOST USER_NAME DB_NAME DB_USER DB_PASSWORD STAGING_PASSWORD; do
+          for name in HOST USER_NAME STAGING_PASSWORD; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
           [ -n "$SSH_KEY" ] || [ -n "$SSHPASS" ] || missing="$missing SSH_KEY(or SSH_PASSWORD)"

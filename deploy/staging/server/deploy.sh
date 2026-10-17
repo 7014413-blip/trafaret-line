@@ -10,7 +10,8 @@
 #      put back and the deploy fails.
 #
 # Settings come from shared/deploy.env (written by the workflow from GitHub secrets) and
-# shared/secrets.env (made on the server by ensure-secrets.sh).
+# shared/secrets.env (made on the server by ensure-secrets.sh). An optional shared/db.env written
+# by the server admin (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT) wins over the GitHub values.
 
 set -euo pipefail
 
@@ -34,6 +35,10 @@ load_settings() {
   set -a
   . "$SHARED/deploy.env"
   . "$SHARED/secrets.env"
+  # The server admin may keep the database login on the server itself instead of in GitHub.
+  if [ -f "$SHARED/db.env" ]; then
+    . "$SHARED/db.env"
+  fi
   set +a
   : "${STAGING_PASSWORD:?STAGING_PASSWORD is empty}"
   : "${DB_NAME:?DB_NAME is empty}"
