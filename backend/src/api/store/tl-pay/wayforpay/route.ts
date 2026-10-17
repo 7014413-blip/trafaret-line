@@ -1,16 +1,25 @@
 // POST /store/tl-pay/wayforpay { order_id } → fields for the WayForPay payment form.
 // The storefront posts these fields to https://secure.wayforpay.com/pay.
 // Amount and items are taken from the order in the database, not from the browser.
+// `lang` (the storefront page language) picks the language of the payment page and of the
+// page the buyer returns to; anything unknown is Ukrainian.
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import { purchaseFields } from "../../../../lib/payments/wayforpay";
 
-export async function POST(req: MedusaRequest<{ order_id: string }>, res: MedusaResponse) {
+const LANGUAGES = { uk: "UA", ru: "RU", en: "EN" } as const;
+
+type Lang = keyof typeof LANGUAGES;
+
+const isLang = (value: unknown): value is Lang => value === "uk" || value === "ru" || value === "en";
+
+export async function POST(req: MedusaRequest<{ order_id: string; lang?: string }>, res: MedusaResponse) {
   const { WFP_MERCHANT, WFP_SECRET, WFP_DOMAIN, STOREFRONT_URL, BACKEND_PUBLIC_URL } = process.env;
   if (!WFP_MERCHANT || !WFP_SECRET || !WFP_DOMAIN) return res.status(503).json({ message: "WayForPay is not configured" });
   const id = req.body?.order_id;
   if (!id) return res.status(400).json({ message: "order_id required" });
+  const lang: Lang = isLang(req.body?.lang) ? req.body.lang : "uk";
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const { data: [order] } = await query.graph({
@@ -25,7 +34,8 @@ export async function POST(req: MedusaRequest<{ order_id: string }>, res: Medusa
     orderReference: `TL-${order.display_id}-${Date.now().toString(36)}`, // unique per attempt
     amount: items.reduce((s, i) => s + i.count * i.price, 0),
     items,
-    returnUrl: `${STOREFRONT_URL ?? "http://localhost:3100"}/pay-return?order=TL-${order.display_id}`,
+    returnUrl: `${STOREFRONT_URL ?? "http://localhost:3100"}/pay-return?order=TL-${order.display_id}${lang === "uk" ? "" : `&lang=${lang}`}`,
+    language: LANGUAGES[lang],
     serviceUrl: `${BACKEND_PUBLIC_URL ?? "http://localhost:9000"}/hooks/wayforpay`,
     clientPhone: order.shipping_address?.phone ?? undefined,
   });

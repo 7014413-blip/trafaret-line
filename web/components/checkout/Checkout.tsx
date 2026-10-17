@@ -31,26 +31,23 @@ import type { NpPriceResult } from "@/types/integrations";
 import { CityField } from "./CityField";
 import { CompanyFields, EMPTY_COMPANY } from "./CompanyFields";
 import { WarehouseField } from "./WarehouseField";
+import { CHECKOUT } from "@/lib/i18n/dictionaries/checkout";
+import { tr } from "@/lib/i18n/translate";
+import { INTL_TAG } from "@/lib/i18n/messages";
+import type { Locale } from "@/types/customizer";
 
-const DELIVERY = [
-  ["np_branch", "Нова пошта: відділення або поштомат"],
-  ["np_courier", "Нова пошта: курʼєр"],
-  ["ukrposhta", "Укрпошта"],
-] as const;
-const PAYMENT = [
-  // LiqPay / Privat24 is offered again once its keys and payment route exist (QA 2026-10-10).
-  ["card", "Карткою онлайн, Apple Pay, Google Pay", "WayForPay"],
-  ["cod", "Накладений платіж при отриманні", ""],
-  ["invoice", "За рахунком для ФОП і ТОВ", "без ПДВ"],
-] as const;
+const DELIVERY = ["np_branch", "np_courier", "ukrposhta"] as const;
+// LiqPay / Privat24 is offered again once its keys and payment route exist (QA 2026-10-10).
+const PAYMENT = ["card", "cod", "invoice"] as const;
 
 type PlacedOrder = { number: string; date: string; id: string; total: number; invoiceToken?: string | null };
 
 
-const formatDate = (iso: string) => new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "long" }).format(new Date(`${iso}T12:00:00`));
+const formatDate = (iso: string, locale: Locale) => new Intl.DateTimeFormat(INTL_TAG[locale], { day: "numeric", month: "long" }).format(new Date(`${iso}T12:00:00`));
 
 export function Checkout() {
   const locale = useLocale();
+  const t = tr(CHECKOUT, locale);
   const { items, clear } = useCart();
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
@@ -110,10 +107,10 @@ export function Checkout() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const found = validateCheckout(form, company);
+    const found = validateCheckout(form, company, locale);
     const er: Record<string, string> = { ...found };
     if (found.code) { er.company = found.code; delete er.code; }
-    if (approvalMissing) er.approve = "Перевірте макет і поставте галочку «Макет перевірив»";
+    if (approvalMissing) er.approve = t.approvalMissing;
     setErrors(er);
     const first = firstErrorField(found) ?? (approvalMissing ? "approve" : null);
     if (first) {
@@ -154,16 +151,16 @@ export function Checkout() {
       if (!r.ok) {
         const codes: string[] = Array.isArray(data?.errors) ? data.errors : [];
         setErrors({ server: codes.includes("size_mismatch")
-          ? "Розмір виробу в кошику не збігається з макетом. Відкрийте конструктор, додайте напис у кошик ще раз і оформіть замовлення."
+          ? t.serverSizeMismatch
           : codes.includes("layout_approval")
-            ? "Перевірте макет і поставте галочку «Макет перевірив»."
+            ? t.serverApproval
           : codes.includes("rate_limited") || r.status === 429
-            ? "Забагато спроб оформлення. Зачекайте кілька хвилин або напишіть нам у Viber."
-            : "Не вдалося оформити замовлення. Перевірте дані або напишіть нам у Viber." });
+            ? t.serverRateLimited
+            : t.serverFailed });
         return;
       }
       const placed: PlacedOrder = {
-        number: data.order.number, date: formatDispatch(estimateDispatchDate(new Date())), id: data.order.id,
+        number: data.order.number, date: formatDispatch(estimateDispatchDate(new Date()), locale), id: data.order.id,
         // The amount the server computed, not the cart's own sum.
         total: Number(data.order.total) || 0,
         invoiceToken: typeof data.order.invoiceToken === "string" ? data.order.invoiceToken : null,
@@ -174,55 +171,55 @@ export function Checkout() {
         // The purchase is reported when the buyer returns with the payment approved (PurchaseOnReturn).
         savePendingPurchase({ orderId: placed.id, orderNumber: placed.number, value: placed.total, paymentType: form.payment, items: ordered });
         // «Дякуємо» only after WayForPay confirms; if the payment cannot start, say so and offer a retry.
-        if (!(await startWayForPay(placed.id))) setPayFailed(placed);
+        if (!(await startWayForPay(placed.id, locale))) setPayFailed(placed);
         return;
       }
       trackEvent("purchase", { transaction_id: placed.number, value: placed.total, payment_type: form.payment, items: ordered });
       setDone(placed);
     } catch {
-      setErrors({ server: "Немає звʼязку з магазином. Спробуйте ще раз за хвилину." });
+      setErrors({ server: t.serverOffline });
     } finally {
       setSending(false);
     }
   };
 
-  if (!ready) return <div className="mx-auto max-w-[1040px] px-4 py-10 text-[var(--muted)]">Завантаження кошика…</div>;
+  if (!ready) return <div className="mx-auto max-w-[1040px] px-4 py-10 text-[var(--muted)]">{t.loading}</div>;
 
   if (payFailed) return (
     <div className="mx-auto grid max-w-[640px] justify-items-start gap-3 px-4 py-14">
-      <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">Оплата не запустилася</h1>
-      <p className="m-0 text-lg">Замовлення {payFailed.number} збережено, але платіжна сторінка не відкрилася. Гроші не списано.</p>
-      <p role="status" className="m-0 text-[var(--muted)]">Спробуйте ще раз або напишіть нам у Viber, і ми надішлемо посилання на оплату чи переведемо замовлення на оплату при отриманні.</p>
+      <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">{t.payFailedTitle}</h1>
+      <p className="m-0 text-lg">{t.payFailedText(payFailed.number)}</p>
+      <p role="status" className="m-0 text-[var(--muted)]">{t.payFailedHint}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button type="button" disabled={retrying} className="rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)] disabled:opacity-60"
-          onClick={async () => { setRetrying(true); if (!(await startWayForPay(payFailed.id))) setRetrying(false); }}>
-          {retrying ? "Відкриваємо оплату…" : "Спробувати оплатити ще раз"}
+          onClick={async () => { setRetrying(true); if (!(await startWayForPay(payFailed.id, locale))) setRetrying(false); }}>
+          {retrying ? t.payOpening : t.payRetry}
         </button>
-        <a href={SITE.viber} className="rounded-full px-6 py-3 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">Написати у Viber</a>
+        <a href={SITE.viber} className="rounded-full px-6 py-3 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">{t.writeViber}</a>
       </div>
     </div>
   );
 
   if (done) return (
     <div className="mx-auto grid max-w-[640px] justify-items-start gap-3 px-4 py-14">
-      <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">Дякуємо! Замовлення {done.number}</h1>
-      {done.total > 0 && <p className="m-0 text-lg">Сума замовлення: <b className="tabular-nums">{formatUAH(done.total)}</b>{form.payment === "cod" ? ", оплата при отриманні" : ""}.</p>}
-      <p className="m-0 text-lg"><b>{done.date}</b>. Номер ТТН надішлемо у Viber або Telegram.</p>
+      <h1 className="m-0 font-[family-name:var(--font-display)] text-3xl font-bold">{t.thanksOrder(done.number)}</h1>
+      {done.total > 0 && <p className="m-0 text-lg">{t.orderSum} <b className="tabular-nums">{formatUAH(done.total)}</b>{form.payment === "cod" ? t.codNote : ""}.</p>}
+      <p className="m-0 text-lg"><b>{done.date}</b>. {t.ttnNote}</p>
       <p className="m-0 text-[var(--muted)]">
-        Для індивідуальних виробів спершу надішлемо превʼю макета на погодження.
+        {t.customNote}
       </p>
       {form.payment === "invoice" && (
-        <a href={localePath(locale, `/rakhunok/${done.id}?t=${encodeURIComponent(done.invoiceToken ?? "")}`)} className="font-semibold underline">Відкрити рахунок на оплату (можна зберегти в PDF)</a>
+        <a href={localePath(locale, `/rakhunok/${done.id}?t=${encodeURIComponent(done.invoiceToken ?? "")}`)} className="font-semibold underline">{t.openInvoice}</a>
       )}
-      <Link href="/" className="mt-2 rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)]">На головну</Link>
+      <Link href="/" className="mt-2 rounded-full bg-[var(--buy)] px-6 py-3 font-bold text-[var(--buy-fg)]">{t.toHome}</Link>
     </div>
   );
 
   if (!lines.length) return (
     <div className="mx-auto grid max-w-[640px] justify-items-start gap-3 px-4 py-14">
-      <h1 className="m-0 text-2xl font-bold">У кошику порожньо</h1>
-      <p className="m-0 text-[var(--muted)]">Оберіть трафарет у каталозі або зробіть свій напис.</p>
-      <div className="flex gap-2"><Link href="/catalog" className="rounded-full bg-[var(--buy)] px-5 py-2.5 font-bold text-[var(--buy-fg)]">До каталогу</Link><Link href="/konstruktor" className="rounded-full px-5 py-2.5 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">Свій напис</Link></div>
+      <h1 className="m-0 text-2xl font-bold">{t.emptyTitle}</h1>
+      <p className="m-0 text-[var(--muted)]">{t.emptyText}</p>
+      <div className="flex gap-2"><Link href="/catalog" className="rounded-full bg-[var(--buy)] px-5 py-2.5 font-bold text-[var(--buy-fg)]">{t.toCatalog}</Link><Link href="/konstruktor" className="rounded-full px-5 py-2.5 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">{t.ownText}</Link></div>
     </div>
   );
 
@@ -235,70 +232,73 @@ export function Checkout() {
   );
 
   const deliveryLine = quote
-    ? `${formatUAH(Math.round(quote.deliveryCost + quote.codFee))}${quote.deliveryDate ? `, прибуде ${formatDate(quote.deliveryDate)}` : ""}`
-    : "за тарифом перевізника";
+    ? `${formatUAH(Math.round(quote.deliveryCost + quote.codFee))}${quote.deliveryDate ? `, ${t.arrives(formatDate(quote.deliveryDate, locale))}` : ""}`
+    : t.byCarrierTariff;
 
   return (
     <div className="mx-auto max-w-[1080px] px-4 py-6 lg:px-8">
-      <h1 className="m-0 mb-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,32px)] font-bold">Оформлення замовлення</h1>
-      <p className="mt-0 mb-5 text-[var(--muted)]">Чотири поля, без реєстрації.</p>
+      <h1 className="m-0 mb-1 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,32px)] font-bold">{t.title}</h1>
+      <p className="mt-0 mb-5 text-[var(--muted)]">{t.lead}</p>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={submit} noValidate className="grid gap-4">
           <fieldset className="m-0 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-            <legend className="px-1.5 font-bold">Контакти</legend>
-            {field("phone", "Телефон", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "+38 0__ ___ __ __" })}
-            {field("name", "Імʼя та прізвище", { autoComplete: "name", placeholder: "Як у паспорті для Нової пошти" })}
+            <legend className="px-1.5 font-bold">{t.contacts}</legend>
+            {field("phone", t.phone, { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "+38 0__ ___ __ __" })}
+            {field("name", t.name, { autoComplete: "name", placeholder: t.namePlaceholder })}
           </fieldset>
           <fieldset className="m-0 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-            <legend className="px-1.5 font-bold">Доставка</legend>
-            {DELIVERY.map(([v, t]) => (
+            <legend className="px-1.5 font-bold">{t.delivery}</legend>
+            {DELIVERY.map((v) => (
               <label key={v} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-[1.5px] px-3.5 py-3 ${form.delivery === v ? "border-[var(--ink)]" : "border-[var(--line)]"}`}>
                 <input type="radio" name="delivery" id={`d-${v}`} checked={form.delivery === v} onChange={() => set("delivery", v)} className="accent-[var(--ink)]" />
-                {v === "np_branch" && parcel && !parcel.fitsPostomat ? "Нова пошта: відділення" : t}
-                <small className="ml-auto text-[var(--muted)]">{form.delivery === v && quote ? formatUAH(Math.round(quote.deliveryCost)) : "за тарифом"}</small>
+                {v === "np_branch" && parcel && !parcel.fitsPostomat ? t.npBranchOnly : t.deliveryOptions[v]}
+                <small className="ml-auto text-[var(--muted)]">{form.delivery === v && quote ? formatUAH(Math.round(quote.deliveryCost)) : t.byTariff}</small>
               </label>
             ))}
             <CityField value={form.city} cityRef={form.cityRef} error={errors.city}
               onChange={(city, cityRef) => { setForm((f) => ({ ...f, city, cityRef, wh: cityRef === f.cityRef ? f.wh : "", whRef: cityRef === f.cityRef ? f.whRef : "" })); clearError("city", "server"); }} />
             {form.delivery === "np_courier"
-              ? field("wh", "Адреса: вулиця, будинок, квартира", { autoComplete: "street-address" })
+              ? field("wh", t.courierAddress, { autoComplete: "street-address" })
               : form.delivery === "np_branch"
                 ? <WarehouseField cityRef={form.cityRef} value={form.wh} warehouseRef={form.whRef} parcel={parcel} error={errors.wh}
                     onChange={(wh, whRef) => { setForm((f) => ({ ...f, wh, whRef })); clearError("wh", "server"); }} />
-                : field("wh", "Відділення Укрпошти або індекс", { placeholder: "Номер відділення або індекс" })}
+                : field("wh", t.ukrposhtaBranch, { placeholder: t.ukrposhtaPlaceholder })}
           </fieldset>
           <fieldset className="m-0 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-            <legend className="px-1.5 font-bold">Оплата</legend>
-            {PAYMENT.map(([v, t, note]) => (
+            <legend className="px-1.5 font-bold">{t.payment}</legend>
+            {PAYMENT.map((v) => {
+              const [title, note] = t.paymentOptions[v];
+              return (
               <label key={v} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-[1.5px] px-3.5 py-3 ${form.payment === v ? "border-[var(--ink)]" : "border-[var(--line)]"}`}>
-                <input type="radio" name="payment" id={`p-${v}`} checked={form.payment === v} onChange={() => set("payment", v)} className="accent-[var(--ink)]" />{t}
+                <input type="radio" name="payment" id={`p-${v}`} checked={form.payment === v} onChange={() => set("payment", v)} className="accent-[var(--ink)]" />{title}
                 {note && <small className="ml-auto text-[var(--muted)]">{note}</small>}
               </label>
-            ))}
+              );
+            })}
           </fieldset>
           {form.payment === "invoice" && <CompanyFields value={company} error={errors.company} onChange={(c) => { setCompany(c); clearError("company", "server"); }} />}
           <details className="rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-            <summary className="cursor-pointer font-semibold">Коментар або інший отримувач</summary>
-            <label htmlFor="c-comment" className="sr-only">Коментар до замовлення або дані іншого отримувача</label>
+            <summary className="cursor-pointer font-semibold">{t.comment}</summary>
+            <label htmlFor="c-comment" className="sr-only">{t.commentLabel}</label>
             <textarea id="c-comment" rows={3} value={form.comment} onChange={(e) => set("comment", e.target.value)} className="mt-3 w-full rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--card)] p-3" />
           </details>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="c-nocall" checked={form.noCall} onChange={(e) => set("noCall", e.target.checked)} className="accent-[var(--ink)]" />Не передзвонюйте, все вірно</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" id="c-nocall" checked={form.noCall} onChange={(e) => set("noCall", e.target.checked)} className="accent-[var(--ink)]" />{t.noCall}</label>
           {toApprove.length > 0 && (
             <fieldset className="m-0 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-              <legend className="px-1.5 font-bold">Погодження макета</legend>
-              <p className="m-0 text-sm text-[var(--muted)]">Ріжемо саме так, як на картинці. Перевірте текст, шрифт, розмір і матеріал.</p>
+              <legend className="px-1.5 font-bold">{t.approvalTitle}</legend>
+              <p className="m-0 text-sm text-[var(--muted)]">{t.approvalLead}</p>
               {toApprove.map((item) => (
                 <div key={item.id} className="grid grid-cols-[96px_1fr] items-center gap-3 text-sm">
                   <span className="h-24 w-24 overflow-hidden rounded-lg bg-[var(--surface)]">{item.vectorSvg
-                    ? <span role="img" aria-label={`Макет: ${item.title}`} className="block h-full w-full p-1.5 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: item.vectorSvg }} />
-                    : <span className="grid h-full place-items-center p-1.5 text-center text-[11px] text-[var(--muted)]">{item.uploadKey ? "Ваш файл" : "Без картинки"}</span>}</span>
-                  <span>{item.title}<br /><span className="text-[var(--muted)]">{item.widthCm} × {item.heightCm} см · {item.quantity} шт.{item.uploadKey ? " · менеджер перевірить файл і надішле превʼю" : ""}</span></span>
+                    ? <span role="img" aria-label={t.layoutOf(item.title)} className="block h-full w-full p-1.5 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: item.vectorSvg }} />
+                    : <span className="grid h-full place-items-center p-1.5 text-center text-[11px] text-[var(--muted)]">{item.uploadKey ? t.yourFile : t.noPicture}</span>}</span>
+                  <span>{item.title}<br /><span className="text-[var(--muted)]">{item.widthCm} × {item.heightCm} см · {item.quantity} {t.pieces}{item.uploadKey ? ` · ${t.managerChecksFile}` : ""}</span></span>
                 </div>
               ))}
               <label className="flex items-start gap-2 text-sm font-semibold">
                 <input type="checkbox" id="c-approve" checked={approved} aria-invalid={!!errors.approve} aria-describedby={errors.approve ? "e-approve" : undefined}
                   onChange={(e) => { setApproved(e.target.checked); clearError("approve", "server"); }} className="mt-0.5 accent-[var(--ink)]" />
-                Макет перевірив: текст, шрифт, розмір і матеріал правильні
+                {t.approvalCheck}
               </label>
               {errors.approve && <span id="e-approve" className="text-[13px] text-[var(--danger)]">{errors.approve}</span>}
             </fieldset>
@@ -307,26 +307,26 @@ export function Checkout() {
             <label>Website<input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} /></label>
           </div>
           {errors.server && <p role="alert" className="m-0 rounded-xl bg-[var(--surface)] p-3 text-sm text-[var(--danger)]">{errors.server}</p>}
-          <button type="submit" disabled={sending || approvalMissing} aria-describedby={approvalMissing ? "c-approve-hint" : undefined} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? "Оформлюємо…" : `Підтвердити замовлення · ${formatUAH(total)}`}</button>
-          {approvalMissing && <p id="c-approve-hint" className="m-0 text-[13px] text-[var(--muted)]">Кнопка стане активною, коли ви перевірите макет і поставите галочку «Макет перевірив».</p>}
-          <p className="m-0 text-[13px] text-[var(--muted)]">Натискаючи кнопку, ви погоджуєтесь з <Link href="/oferta" className="underline">публічною офертою</Link> і <Link href="/polityka-konfidentsiinosti" className="underline">політикою конфіденційності</Link>. Чек надійде від Вчасно.Каси.</p>
+          <button type="submit" disabled={sending || approvalMissing} aria-describedby={approvalMissing ? "c-approve-hint" : undefined} className="disabled:opacity-60 h-14 rounded-full bg-[var(--buy)] text-lg font-bold text-[var(--buy-fg)] hover:bg-[var(--buy-hover)] active:scale-[.98]">{sending ? t.sending : t.confirm(formatUAH(total))}</button>
+          {approvalMissing && <p id="c-approve-hint" className="m-0 text-[13px] text-[var(--muted)]">{t.approvalHint}</p>}
+          <p className="m-0 text-[13px] text-[var(--muted)]">{t.agreeBefore} <Link href="/oferta" className="underline">{t.offer}</Link> {t.agreeAnd} <Link href="/polityka-konfidentsiinosti" className="underline">{t.privacy}</Link>. {t.agreeAfter}</p>
         </form>
 
-        <aside aria-label="Ваше замовлення" className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4 lg:sticky lg:top-24">
-          <b>Ваше замовлення</b>
+        <aside aria-label={t.yourOrder} className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4 lg:sticky lg:top-24">
+          <b>{t.yourOrder}</b>
           {lines.map((l) => (
             <div key={l.id} className="grid grid-cols-[56px_1fr_auto] items-center gap-2.5 text-sm">
               <span className="relative h-14 w-14 overflow-hidden rounded-lg bg-[var(--surface)]">{l.vectorSvg
                 ? <span role="img" aria-label={l.title} className="block h-full w-full p-1 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: l.vectorSvg }} />
                 : l.thumbnail && <Image src={l.thumbnail} alt="" fill sizes="56px" className="object-cover" />}</span>
-              <span>{l.title}<br /><span className="text-[var(--muted)]">{l.quantity} шт. × {formatUAH(l.unitPrice)}</span></span>
+              <span>{l.title}<br /><span className="text-[var(--muted)]">{l.quantity} {t.pieces} × {formatUAH(l.unitPrice)}</span></span>
               <b className="tabular-nums">{formatUAH(l.unitPrice * l.quantity)}</b>
             </div>
           ))}
-          {parcel && <div className="flex justify-between gap-3 text-[13px] text-[var(--muted)]"><span>Посилка</span><span className="text-right">{describeParcel(parcel)}</span></div>}
-          <div className="flex justify-between gap-3 text-[15px]"><span>Доставка</span><span className="text-right">{deliveryLine}</span></div>
-          <div className="flex justify-between border-t border-[var(--line)] pt-2.5 text-xl font-bold"><span>До сплати</span><span className="tabular-nums">{formatUAH(total)}</span></div>
-          {quote && <p className="m-0 text-[12px] text-[var(--muted)]">Доставку оплачуєте перевізнику при отриманні.</p>}
+          {parcel && <div className="flex justify-between gap-3 text-[13px] text-[var(--muted)]"><span>{t.parcel}</span><span className="text-right">{describeParcel(parcel, locale)}</span></div>}
+          <div className="flex justify-between gap-3 text-[15px]"><span>{t.delivery}</span><span className="text-right">{deliveryLine}</span></div>
+          <div className="flex justify-between border-t border-[var(--line)] pt-2.5 text-xl font-bold"><span>{t.toPay}</span><span className="tabular-nums">{formatUAH(total)}</span></div>
+          {quote && <p className="m-0 text-[12px] text-[var(--muted)]">{t.deliveryPaidOnReceipt}</p>}
         </aside>
       </div>
     </div>

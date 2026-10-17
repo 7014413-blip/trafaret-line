@@ -3,6 +3,9 @@
 // City input with Nova Poshta suggestions. Without the Nova Poshta key the field stays a
 // plain text input (the manager checks the address), so the checkout never breaks.
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CHECKOUT } from "@/lib/i18n/dictionaries/checkout";
+import { tr } from "@/lib/i18n/translate";
 import { useEffect, useId, useRef, useState } from "react";
 import { getJson, notConfigured } from "@/lib/client/api-client";
 import type { NpCity } from "@/types/integrations";
@@ -13,6 +16,7 @@ export function CityField({ value, cityRef, error, onChange }: {
   error?: string;
   onChange: (city: string, cityRef: string) => void;
 }) {
+  const t = tr(CHECKOUT, useLocale());
   const listId = useId();
   const [options, setOptions] = useState<NpCity[]>([]);
   const [open, setOpen] = useState(false);
@@ -44,8 +48,8 @@ export function CityField({ value, cityRef, error, onChange }: {
   }, [value, cityRef, available]);
 
   return (
-    <label className="relative grid gap-1 text-sm text-[var(--muted)]">Місто
-      <input id="c-city" value={value} autoComplete="address-level2" placeholder="Почніть вводити: Київ"
+    <label className="relative grid gap-1 text-sm text-[var(--muted)]">{t.city}
+      <input id="c-city" value={value} autoComplete="address-level2" placeholder={t.cityPlaceholder}
         role="combobox" aria-expanded={open && options.length > 0} aria-controls={listId} aria-autocomplete="list"
         aria-invalid={!!error} aria-describedby={error ? "e-city" : undefined}
         onChange={(e) => onChange(e.target.value, "")}
