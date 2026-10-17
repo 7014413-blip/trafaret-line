@@ -1,35 +1,44 @@
-// Medusa Store API answers → catalogue shapes of the storefront (types/catalog.ts).
+// Medusa Store API answers → catalogue shapes of the storefront (types/catalog.ts), in the page
+// language. Medusa keeps the Ukrainian texts in its own fields and the Russian ones in metadata
+// (seo.ru, content.ru, i18n.ru …); a missing translation falls back to Ukrainian. Size and
+// material labels are translated the same way everywhere, so variants still match by label.
 // Pure functions, so pages and tests use the same mapping.
 
 import type {
   CatalogCategory, CatalogImage, CatalogProduct, CatalogProductCard, CatalogVariant, RawCategory, RawProduct, RawVariant,
 } from "../../types/catalog";
+import type { Locale } from "../../types/customizer";
 import { fixCountAgreement } from "../text/count-agreement";
 import { readHoleRules } from "./hole-rules";
 
 const SIZE_OPTION = "Розмір";
 const MATERIAL_OPTION = "Матеріал";
 
-export function mapCategory(raw: RawCategory, all: RawCategory[] = []): CatalogCategory {
+/** The Ukrainian text, or its translation for another language when there is one. */
+const pick = <T>(uk: T, translated: T | undefined | null, locale: Locale): T => (locale !== "uk" && translated ? translated : uk);
+
+export function mapCategory(raw: RawCategory, all: RawCategory[] = [], locale: Locale = "uk"): CatalogCategory {
   const parent = raw.parent_category ?? all.find((c) => c.id === raw.parent_category_id) ?? null;
-  const seo = raw.metadata?.seo?.uk;
-  const content = raw.metadata?.content?.uk;
+  const ru = locale === "ru";
+  const seo = (ru && raw.metadata?.seo?.ru) || raw.metadata?.seo?.uk;
+  const content = (ru && raw.metadata?.content?.ru) || raw.metadata?.content?.uk;
+  const name = ru ? raw.metadata?.i18n?.ru?.name || raw.name : raw.name;
   const children = (raw.category_children ?? all.filter((c) => c.parent_category_id === raw.id))
-    .map((child) => mapCategory({ ...child, parent_category: { id: raw.id, handle: raw.handle, name: raw.name } }, []))
+    .map((child) => mapCategory({ ...child, parent_category: { id: raw.id, handle: raw.handle, name: raw.name } }, [], locale))
     .sort((a, b) => a.rank - b.rank);
   return {
     id: raw.id,
     handle: raw.handle,
-    name: raw.name,
+    name,
     // Site URLs have no trailing slash (Next.js redirects "/food/" to "/food").
     path: (raw.metadata?.path ?? (parent ? `/${parent.handle}/${raw.handle.replace(`${parent.handle}-`, "")}` : `/${raw.handle}`)).replace(/\/+$/, "") || "/",
     parentHandle: parent?.handle ?? null,
     rank: raw.rank ?? 0,
     image: raw.metadata?.image ?? null,
     seo: {
-      title: fixCountAgreement(seo?.title ?? raw.name),
+      title: fixCountAgreement(seo?.title ?? name),
       description: fixCountAgreement(seo?.description ?? raw.description ?? ""),
-      h1: fixCountAgreement(seo?.h1 ?? raw.name),
+      h1: fixCountAgreement(seo?.h1 ?? name),
     },
     intro: fixCountAgreement(content?.intro ?? raw.description ?? ""),
     bodyHtml: content?.body_html ?? "",
@@ -42,13 +51,23 @@ function optionValue(variant: RawVariant, title: string): string {
   return variant.options?.find((o) => o.option?.title === title)?.value ?? "";
 }
 
-export function mapVariant(raw: RawVariant): CatalogVariant {
+/** Option title → Ukrainian value → value in the page language (identity for Ukrainian). */
+type OptionLabels = (option: string, value: string) => string;
+
+function optionLabels(raw: RawProduct | null, locale: Locale): OptionLabels {
+  const maps = locale === "ru" ? raw?.metadata?.i18n?.ru?.options ?? {} : {};
+  return (option, value) => maps[option]?.[value] || value;
+}
+
+export function mapVariant(raw: RawVariant, label: OptionLabels = (_, value) => value, locale: Locale = "uk"): CatalogVariant {
+  const size = optionValue(raw, SIZE_OPTION) || raw.title.split(" · ")[0];
+  const material = optionValue(raw, MATERIAL_OPTION) || raw.title.split(" · ")[1] || "";
   return {
     id: raw.id,
     sku: raw.sku ?? null,
-    title: raw.title,
-    sizeLabel: optionValue(raw, SIZE_OPTION) || raw.title.split(" · ")[0],
-    materialLabel: optionValue(raw, MATERIAL_OPTION) || raw.title.split(" · ")[1] || "",
+    title: pick(raw.title, raw.metadata?.title_ru, locale),
+    sizeLabel: label(SIZE_OPTION, size),
+    materialLabel: label(MATERIAL_OPTION, material),
     sizeCode: raw.metadata?.size_code ?? null,
     materialCode: raw.metadata?.material_code ?? null,
     sheetMm: raw.metadata?.sheet_mm ?? null,
@@ -56,25 +75,33 @@ export function mapVariant(raw: RawVariant): CatalogVariant {
   };
 }
 
-function images(raw: RawProduct): CatalogImage[] {
+function images(raw: RawProduct, title: string, locale: Locale): CatalogImage[] {
   const alts = raw.metadata?.image_alts ?? [];
   const list = raw.images?.length ? raw.images.map((i) => i.url) : raw.thumbnail ? [raw.thumbnail] : [];
   return list.map((url) => {
     const alt = alts.find((a) => a.url === url);
-    return { url, alt: alt?.uk ?? raw.title, kind: alt?.kind ?? "photo" };
+    return { url, alt: (alt ? pick(alt.uk, alt.ru, locale) : "") || title, kind: alt?.kind ?? "photo" };
   });
 }
 
-export function mapProductCard(raw: RawProduct): CatalogProductCard {
-  const variants = (raw.variants ?? []).map(mapVariant).filter((v) => v.price > 0);
+function variantsOf(raw: RawProduct, locale: Locale): CatalogVariant[] {
+  const label = optionLabels(raw, locale);
+  return (raw.variants ?? []).map((v) => mapVariant(v, label, locale)).filter((v) => v.price > 0);
+}
+
+export function mapProductCard(raw: RawProduct, locale: Locale = "uk"): CatalogProductCard {
+  const translation = locale === "ru" ? raw.metadata?.i18n?.ru : undefined;
+  const label = optionLabels(raw, locale);
+  const title = translation?.title || raw.title;
+  const variants = variantsOf(raw, locale);
   const sizes = raw.options?.find((o) => o.title === SIZE_OPTION)?.values?.length ?? new Set(variants.map((v) => v.sizeLabel)).size;
-  const materials = raw.options?.find((o) => o.title === MATERIAL_OPTION)?.values?.map((v) => v.value) ?? [...new Set(variants.map((v) => v.materialLabel))];
+  const materials = raw.options?.find((o) => o.title === MATERIAL_OPTION)?.values?.map((v) => label(MATERIAL_OPTION, v.value)) ?? [...new Set(variants.map((v) => v.materialLabel))];
   return {
     id: raw.id,
     handle: raw.handle,
-    title: raw.title,
-    subtitle: raw.subtitle ?? "",
-    images: images(raw),
+    title,
+    subtitle: translation?.subtitle || (raw.subtitle ?? ""),
+    images: images(raw, title, locale),
     minPrice: variants.length ? Math.min(...variants.map((v) => v.price)) : raw.metadata?.min_price_uah ?? 0,
     sizeCount: sizes,
     hit: !!raw.metadata?.hit,
@@ -90,25 +117,31 @@ function sitePath(value: string | null | undefined): string | null {
   return value && /^\/[a-z0-9/-]+$/.test(value) ? value : null;
 }
 
-export function mapProduct(raw: RawProduct): CatalogProduct {
-  const card = mapProductCard(raw);
-  const variants = (raw.variants ?? []).map(mapVariant).filter((v) => v.price > 0);
-  const sizeOrder = raw.options?.find((o) => o.title === SIZE_OPTION)?.values?.map((v) => v.value) ?? [...new Set(variants.map((v) => v.sizeLabel))];
-  const details = raw.metadata?.size_details ?? {};
-  const blocks = raw.metadata?.blocks?.uk ?? {};
+export function mapProduct(raw: RawProduct, locale: Locale = "uk"): CatalogProduct {
+  const card = mapProductCard(raw, locale);
+  const meta = raw.metadata;
+  const ru = locale === "ru";
+  const label = optionLabels(raw, locale);
+  const variants = variantsOf(raw, locale);
+  const ukSizes = raw.options?.find((o) => o.title === SIZE_OPTION)?.values?.map((v) => v.value);
+  const details = meta?.size_details ?? {};
+  const blocks = (ru && meta?.blocks?.ru) || meta?.blocks?.uk || {};
+  const seo = (ru && meta?.seo?.ru) || meta?.seo?.uk;
   return {
     ...card,
-    descriptionHtml: raw.description ?? "",
-    features: raw.metadata?.features?.uk ?? [],
-    faq: raw.metadata?.faq?.uk ?? [],
+    descriptionHtml: (ru && meta?.i18n?.ru?.description) || (raw.description ?? ""),
+    features: (ru && meta?.features?.ru) || meta?.features?.uk || [],
+    faq: (ru && meta?.faq?.ru) || meta?.faq?.uk || [],
     // Empty SEO fields from «Простий кабінет» fall back to the title and short text.
-    seo: { title: raw.metadata?.seo?.uk?.title || raw.title, description: raw.metadata?.seo?.uk?.description || card.subtitle },
-    sizes: sizeOrder.map((label) => ({ label, detail: details[label]?.uk ?? "" })),
+    seo: { title: seo?.title || card.title, description: seo?.description || card.subtitle },
+    sizes: ukSizes
+      ? ukSizes.map((uk) => ({ label: label(SIZE_OPTION, uk), detail: (ru ? details[uk]?.ru : details[uk]?.uk) || details[uk]?.uk || "" }))
+      : [...new Set(variants.map((v) => v.sizeLabel))].map((size) => ({ label: size, detail: "" })),
     materials: card.materialLabels,
     variants,
     blocks: Object.entries(blocks).map(([slot, b]) => ({ slot, title: b.title, html: b.html })),
     relatedHandles: raw.metadata?.related_handles ?? [],
-    fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: f.uk, placeholder: f.def })),
+    fields: (raw.metadata?.fields ?? []).map((f) => ({ key: f.key, label: pick(f.uk, f.ru, locale), placeholder: f.def })),
     availability: raw.metadata?.availability === "on_order" || raw.metadata?.availability === "out_of_stock" ? raw.metadata.availability : "in_stock",
     hole: readHoleRules(raw.metadata?.hole),
     monogram: raw.metadata?.monogram?.styles?.length ? { styles: raw.metadata.monogram.styles } : null,

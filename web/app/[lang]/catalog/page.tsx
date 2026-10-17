@@ -4,28 +4,36 @@ import Image from "next/image";
 import Link from "@/components/i18n/LocaleLink";
 import { BottomNav, DirectionTabs, SiteFooter, SiteHeader, TrustBar } from "@/components/layout/SiteChrome";
 import { listCategories } from "@/services/medusa-store";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
+import type { LangParams } from "@/types/i18n";
 
 // Rendered on request (data cached 5 min in services/medusa-store.ts), so the build does not need the shop running.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMeta({
-  title: "Каталог трафаретів: стіни, штукатурка, торти, свята, заготовки",
-  description: "Усі розділи Trafaret Line: трафарети для стін і штукатурки, для тортів і кави, свята, літери, камуфляж, бізнес і заготовки з акрилу та PET.",
-  path: "/catalog",
-});
+type Props = { params: Promise<LangParams> };
 
-export default async function CatalogPage() {
-  const { roots } = await listCategories();
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = localeOf((await params).lang);
+  const t = tr(CATALOG, locale);
+  return pageMeta({ title: t.catalogMetaTitle, description: t.catalogMetaDescription, path: "/catalog", locale });
+}
+
+export default async function CatalogPage({ params }: Props) {
+  const locale = localeOf((await params).lang);
+  const t = tr(CATALOG, locale);
+  const { roots } = await listCategories(locale);
   return (
     <div className="pb-[76px] lg:pb-0">
       <TrustBar />
       <SiteHeader />
       <DirectionTabs />
       <main className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8">
-        <nav aria-label="Хлібні крихти" className="mb-3 flex gap-1.5 text-[13px] text-[var(--muted)]">
-          <Link href="/" className="hover:text-[var(--ink)]">Головна</Link>›<span>Каталог</span>
+        <nav aria-label={t.breadcrumbs} className="mb-3 flex gap-1.5 text-[13px] text-[var(--muted)]">
+          <Link href="/" className="hover:text-[var(--ink)]">{t.home}</Link>›<span>{t.catalogTitle}</span>
         </nav>
-        <h1 className="m-0 mb-6 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,36px)] font-bold leading-tight">Каталог</h1>
+        <h1 className="m-0 mb-6 font-[family-name:var(--font-display)] text-[clamp(24px,3vw,36px)] font-bold leading-tight">{t.catalogTitle}</h1>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {roots.map((c) => (
             <section key={c.handle} className="grid content-start gap-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-3">

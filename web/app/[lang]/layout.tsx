@@ -9,6 +9,8 @@ import { siteUrl } from "@/lib/seo/site-url";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { LOCALE_TAGS, SITE_LOCALES, localeOf } from "@/lib/i18n/locales";
 import type { LangParams } from "@/types/i18n";
+import { HOME } from "@/lib/i18n/dictionaries/home";
+import { tr } from "@/lib/i18n/translate";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,17 +36,17 @@ const jetbrains = JetBrains_Mono({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  openGraph: { type: "website", locale: "uk_UA", siteName: "Trafaret Line" },
-  twitter: { card: "summary_large_image" },
-  title: {
-    default: "Trafaret Line — трафарети від виробника",
-    template: "%s · Trafaret Line",
-  },
-  description:
-    "Трафарети для стін, штукатурки, тортів і бізнесу від виробника. Свій напис з превʼю, заготовки з акрилу та ПЕТ. Виготовлення 3 робочі дні.",
-};
+export async function generateMetadata({ params }: { params: Promise<LangParams> }): Promise<Metadata> {
+  const locale = localeOf((await params).lang);
+  const t = tr(HOME, locale);
+  return {
+    metadataBase: new URL(siteUrl()),
+    openGraph: { type: "website", locale: LOCALE_TAGS[locale].og, siteName: "Trafaret Line" },
+    twitter: { card: "summary_large_image" },
+    title: { default: t.metaTitle, template: "%s · Trafaret Line" },
+    description: t.metaDescription,
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

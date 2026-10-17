@@ -16,27 +16,36 @@ import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { formatUAH } from "@/lib/format";
 import { pageMeta } from "@/lib/seo/page-meta";
 import { siteUrl } from "@/lib/seo/site-url";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
+import { localeOf } from "@/lib/i18n/locales";
+import { localePath } from "@/lib/i18n/locale-path";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ lang: string; slug: string }> };
 
 export const revalidate = 300;
 
 const BASE = siteUrl();
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await productByHandle((await params).slug);
+  const { lang, slug } = await params;
+  const locale = localeOf(lang);
+  const p = await productByHandle(slug, locale);
   if (!p) return {};
   // SEO titles from the catalogue already end with "| Trafaret Line": no site suffix.
-  return pageMeta({ title: p.seo.title, absoluteTitle: true, description: p.seo.description, path: `/p/${p.handle}`, image: p.images[0]?.url ?? null });
+  return pageMeta({ title: p.seo.title, absoluteTitle: true, description: p.seo.description, path: `/p/${p.handle}`, image: p.images[0]?.url ?? null, locale });
 }
 
 export default async function ProductPage({ params }: Props) {
-  const p = await productByHandle((await params).slug);
+  const { lang, slug } = await params;
+  const locale = localeOf(lang);
+  const t = tr(CATALOG, locale);
+  const p = await productByHandle(slug, locale);
   if (!p) notFound();
-  const { all } = await listCategories();
+  const { all } = await listCategories(locale);
   const category = all.find((c) => c.handle === p.categoryHandles[0]) ?? null;
   const parent = category?.parentHandle ? all.find((c) => c.handle === category.parentHandle) ?? null : null;
-  const [related, reviews] = await Promise.all([productsByHandles(p.relatedHandles.slice(0, 8)), listReviews({ product: p.handle, limit: 10 })]);
+  const [related, reviews] = await Promise.all([productsByHandles(p.relatedHandles.slice(0, 8), locale), listReviews({ product: p.handle, limit: 10 })]);
 
   // ProductGroup with size × material variants (ТЗ §18). Ratings only from published reviews.
   const ld = {
@@ -44,7 +53,7 @@ export default async function ProductPage({ params }: Props) {
     brand: { "@type": "Brand", name: "Trafaret Line" }, image: p.images.map((i) => i.url), variesBy: ["https://schema.org/size", "https://schema.org/material"],
     hasVariant: p.variants.map((v) => ({
       "@type": "Product", name: `${p.title}, ${v.sizeLabel}, ${v.materialLabel}`, sku: v.sku ?? v.id, size: v.sizeLabel, material: v.materialLabel,
-      offers: { "@type": "Offer", price: v.price, priceCurrency: "UAH", availability: schemaAvailability(p.availability), itemCondition: "https://schema.org/NewCondition", url: `${BASE}/p/${p.handle}` },
+      offers: { "@type": "Offer", price: v.price, priceCurrency: "UAH", availability: schemaAvailability(p.availability), itemCondition: "https://schema.org/NewCondition", url: `${BASE}${localePath(locale, `/p/${p.handle}`)}` },
     })),
     ...reviewJsonLd(reviews),
   };
@@ -54,8 +63,8 @@ export default async function ProductPage({ params }: Props) {
   const viewed = cheapest ? variantItem(p, cheapest) : null;
 
   const sections: { title: string; html: string }[] = [
-    { title: "Опис", html: p.descriptionHtml },
-    ...(p.features.length ? [{ title: "Коротко", html: `<ul>${p.features.map((f) => `<li>${f}</li>`).join("")}</ul>` }] : []),
+    { title: t.description, html: p.descriptionHtml },
+    ...(p.features.length ? [{ title: t.short, html: `<ul>${p.features.map((f) => `<li>${f}</li>`).join("")}</ul>` }] : []),
     ...p.blocks.map((b) => ({ title: b.title, html: b.html })),
   ];
 
@@ -65,8 +74,8 @@ export default async function ProductPage({ params }: Props) {
       <SiteHeader />
       <DirectionTabs />
       <main className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8">
-        <nav aria-label="Хлібні крихти" className="mb-4 flex flex-wrap gap-1.5 text-[13px] text-[var(--muted)]">
-          <Link href="/" className="hover:text-[var(--ink)]">Головна</Link>›
+        <nav aria-label={t.breadcrumbs} className="mb-4 flex flex-wrap gap-1.5 text-[13px] text-[var(--muted)]">
+          <Link href="/" className="hover:text-[var(--ink)]">{t.home}</Link>›
           {parent && <><Link href={parent.path} className="hover:text-[var(--ink)]">{parent.name}</Link>›</>}
           {category && <><Link href={category.path} className="hover:text-[var(--ink)]">{category.name}</Link>›</>}
           <span>{p.title}</span>
@@ -90,7 +99,7 @@ export default async function ProductPage({ params }: Props) {
           ))}
           {p.faq.length > 0 && (
             <div className="border-t border-[var(--line)] py-3">
-              <h2 className="m-0 mb-2 text-lg font-semibold">Питання і відповіді</h2>
+              <h2 className="m-0 mb-2 text-lg font-semibold">{t.faq}</h2>
               {p.faq.map(({ q, a }) => (
                 <details key={q} className="py-1.5">
                   <summary className="cursor-pointer font-medium">{q}</summary>
@@ -101,16 +110,16 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
         </section>
-        <ProductReviews list={reviews} />
+        <ProductReviews list={reviews} locale={locale} />
         {related.length > 0 && (
           <section className="mt-10">
-            <h2 className="m-0 mb-4 text-xl font-bold">Пасує разом</h2>
+            <h2 className="m-0 mb-4 text-xl font-bold">{t.related}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {related.map((r) => (
                 <Link key={r.handle} href={`/p/${r.handle}`} className="grid content-start gap-1.5">
                   <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--card)]">{r.images[0] && <Image src={r.images[0].url} alt={r.images[0].alt} fill sizes="25vw" className="object-cover" />}</div>
                   <span className="text-sm">{r.title}</span>
-                  <b className="tabular-nums">від {formatUAH(r.minPrice)}</b>
+                  <b className="tabular-nums">{t.from} {formatUAH(r.minPrice)}</b>
                 </Link>
               ))}
             </div>

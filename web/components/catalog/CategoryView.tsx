@@ -12,12 +12,9 @@ import type { CatalogCardLite, CategoryLink } from "@/types/catalog";
 import { formatUAH } from "@/lib/format";
 import { pluralUk } from "@/lib/text/plural-uk";
 import { CardBadges } from "@/components/catalog/CardBadges";
-
-const KIND_LABEL: Record<CatalogCardLite["kind"], string> = {
-  ready: "Готовий малюнок",
-  named: "З вашим текстом",
-  custom: "За вашим макетом",
-};
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
 
 const PAGE = 24;
 
@@ -25,6 +22,7 @@ type Filters = { mat: string[]; kind: string[] };
 const EMPTY: Filters = { mat: [], kind: [] };
 
 export function CategoryView({ products, subcategories }: { products: CatalogCardLite[]; subcategories: CategoryLink["children"] }) {
+  const t = tr(CATALOG, useLocale());
   const [f, setF] = useState<Filters>(EMPTY);
   const [sort, setSort] = useState("popular");
   const [sheet, setSheet] = useState(false);
@@ -51,7 +49,7 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
 
   const toggle = (k: keyof Filters, v: string) => setF((x) => ({ ...x, [k]: x[k].includes(v) ? x[k].filter((y) => y !== v) : [...x[k], v] }));
   const active = (Object.keys(f) as (keyof Filters)[]).flatMap((k) => f[k].map((v) => [k, v] as const));
-  const label = (k: keyof Filters, v: string) => (k === "kind" ? KIND_LABEL[v as CatalogCardLite["kind"]] : v);
+  const label = (k: keyof Filters, v: string) => (k === "kind" ? t.kinds[v as CatalogCardLite["kind"]] : v);
   const visible = list.slice(0, shown);
   const rest = list.length - visible.length;
 
@@ -66,14 +64,14 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
       ))}
     </fieldset>
   );
-  const filters = <>{group("mat", "Матеріал")}{group("kind", "Тип")}</>;
+  const filters = <>{group("mat", t.material)}{group("kind", t.type)}</>;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-      <aside aria-label="Фільтри" className="sticky top-24 hidden content-start gap-5 self-start lg:grid">
+      <aside aria-label={t.filters} className="sticky top-24 hidden content-start gap-5 self-start lg:grid">
         {subcategories.length > 0 && (
           <div className="grid gap-1">
-            <h2 className="m-0 mb-0.5 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]">Підкатегорії</h2>
+            <h2 className="m-0 mb-0.5 text-[13px] font-bold uppercase tracking-wider text-[var(--muted)]">{t.subcategories}</h2>
             {subcategories.map((s) => <Link key={s.handle} href={s.path} className="py-0.5 text-[15px] hover:underline">{s.name}</Link>)}
           </div>
         )}
@@ -83,30 +81,30 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
       <div className="min-w-0">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex flex-wrap gap-1.5">
-            <button type="button" onClick={() => setSheet(true)} className="min-h-11 rounded-full bg-[var(--ink)] px-4 text-sm font-bold text-[var(--bg)] lg:hidden">Фільтри{active.length ? ` · ${active.length}` : ""}</button>
+            <button type="button" onClick={() => setSheet(true)} className="min-h-11 rounded-full bg-[var(--ink)] px-4 text-sm font-bold text-[var(--bg)] lg:hidden">{t.filters}{active.length ? ` · ${active.length}` : ""}</button>
             {active.map(([k, v]) => (
-              <button key={k + v} type="button" onClick={() => toggle(k, v)} aria-label={`Прибрати фільтр ${label(k, v)}`} className="min-h-11 rounded-full bg-[var(--surface)] px-3.5 text-sm">{label(k, v)} ×</button>
+              <button key={k + v} type="button" onClick={() => toggle(k, v)} aria-label={`${t.removeFilter} ${label(k, v)}`} className="min-h-11 rounded-full bg-[var(--surface)] px-3.5 text-sm">{label(k, v)} ×</button>
             ))}
           </div>
-          <label className="text-sm text-[var(--muted)]">Сортування{" "}
+          <label className="text-sm text-[var(--muted)]">{t.sort}{" "}
             <select id="sort" value={sort} onChange={(e) => setSort(e.target.value)} className="min-h-11 rounded-lg border border-[var(--line)] bg-[var(--card)] px-2 text-[var(--ink)]">
-              <option value="popular">Популярні</option><option value="cheap">Ціна ↑</option><option value="expensive">Ціна ↓</option>
+              <option value="popular">{t.sortPopular}</option><option value="cheap">{t.sortCheap}</option><option value="expensive">{t.sortExpensive}</option>
             </select>
           </label>
         </div>
 
         {list.length === 0 ? (
           <div className="grid justify-items-start gap-3 rounded-2xl bg-[var(--surface)] p-6">
-            <b className="text-lg">{products.length ? "Нічого не знайшли з такими фільтрами" : "У цьому розділі товари ще готуються"}</b>
-            <span className="text-[var(--muted)]">{products.length ? "Приберіть частину фільтрів або зробіть свій трафарет з текстом." : "Зробіть свій трафарет у конструкторі або надішліть нам свій макет."}</span>
+            <b className="text-lg">{products.length ? t.nothingFiltered : t.nothingYet}</b>
+            <span className="text-[var(--muted)]">{products.length ? t.nothingFilteredHint : t.nothingYetHint}</span>
             <div className="flex gap-2">
-              {products.length > 0 && <button type="button" onClick={() => setF(EMPTY)} className="rounded-full px-4 py-2 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">Скинути фільтри</button>}
-              <Link href="/konstruktor" className="rounded-full bg-[var(--buy)] px-4 py-2 font-bold text-[var(--buy-fg)]">Свій напис</Link>
+              {products.length > 0 && <button type="button" onClick={() => setF(EMPTY)} className="rounded-full px-4 py-2 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">{t.resetFilters}</button>}
+              <Link href="/konstruktor" className="rounded-full bg-[var(--buy)] px-4 py-2 font-bold text-[var(--buy-fg)]">{t.ownText}</Link>
             </div>
           </div>
         ) : (
           <>
-            <p className="m-0 mb-3 text-sm text-[var(--muted)]" aria-live="polite">{list.length} {pluralUk(list.length, ["товар", "товари", "товарів"])}</p>
+            <p className="m-0 mb-3 text-sm text-[var(--muted)]" aria-live="polite">{list.length} {pluralUk(list.length, t.productForms)}</p>
             <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4 xl:gap-5">
               {visible.map((p, i) => (
                 <li key={p.handle}>
@@ -116,8 +114,8 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
                       <CardBadges hit={p.hit} isNew={p.isNew} />
                     </div>
                     <h3 className="m-0 text-[15px] font-medium leading-snug">{p.title}</h3>
-                    <div className="text-[13px] text-[var(--muted)]">{KIND_LABEL[p.kind]} · {p.sizeCount} {pluralUk(p.sizeCount, ["розмір", "розміри", "розмірів"])}</div>
-                    <b className="text-[19px] tabular-nums">від {formatUAH(p.minPrice)}</b>
+                    <div className="text-[13px] text-[var(--muted)]">{t.kinds[p.kind]} · {p.sizeCount} {pluralUk(p.sizeCount, t.sizeForms)}</div>
+                    <b className="text-[19px] tabular-nums">{t.from} {formatUAH(p.minPrice)}</b>
                   </Link>
                 </li>
               ))}
@@ -125,7 +123,7 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
             {rest > 0 && (
               <div className="mt-6 flex justify-center">
                 <button type="button" onClick={() => setShown((n) => n + PAGE)} className="min-h-12 rounded-full px-6 font-bold shadow-[inset_0_0_0_1.5px_var(--ink)]">
-                  Показати ще {Math.min(PAGE, rest)} з {rest}
+                  {t.showMore(Math.min(PAGE, rest), rest)}
                 </button>
               </div>
             )}
@@ -135,13 +133,13 @@ export function CategoryView({ products, subcategories }: { products: CatalogCar
 
       {sheet && (
         <div className="fixed inset-0 z-50 bg-black/40 lg:hidden" onClick={() => setSheet(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Фільтри" onClick={(e) => e.stopPropagation()}
+          <div role="dialog" aria-modal="true" aria-label={t.filters} onClick={(e) => e.stopPropagation()}
             className="absolute inset-x-0 bottom-0 grid max-h-[80vh] gap-5 overflow-auto rounded-t-[20px] bg-[var(--bg)] p-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))]">
             {subcategories.length > 0 && (
               <div className="flex flex-wrap gap-2">{subcategories.map((s) => <Link key={s.handle} href={s.path} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-sm">{s.name}</Link>)}</div>
             )}
             {filters}
-            <button type="button" onClick={() => setSheet(false)} className="h-12 rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)]">Показати {list.length} {pluralUk(list.length, ["товар", "товари", "товарів"])}</button>
+            <button type="button" onClick={() => setSheet(false)} className="h-12 rounded-full bg-[var(--buy)] font-bold text-[var(--buy-fg)]">{t.show} {list.length} {pluralUk(list.length, t.productForms)}</button>
           </div>
         </div>
       )}

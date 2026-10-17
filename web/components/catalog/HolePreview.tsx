@@ -2,6 +2,9 @@
 // is on the chosen circle and where it sits before ordering.
 
 import type { HoleSpec } from "@/types/hole";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { CATALOG } from "@/lib/i18n/dictionaries/catalog";
+import { tr } from "@/lib/i18n/translate";
 
 const VIEW = 200;
 const PAD = 14;
@@ -9,7 +12,7 @@ const PAD = 14;
 /** Mirror tints by material name (gold, rose gold, silver); anything else is drawn silver. */
 function tint(materialLabel: string): [string, string, string] {
   const name = materialLabel.toLowerCase();
-  if (name.includes("рожев")) return ["#ffe6dc", "#d79a86", "#8c5446"];
+  if (name.includes("рожев") || name.includes("розов")) return ["#ffe6dc", "#d79a86", "#8c5446"];
   if (name.includes("золот")) return ["#fff3c4", "#e2b54a", "#8a6414"];
   return ["#ffffff", "#c9ced6", "#7c8591"];
 }
@@ -21,9 +24,8 @@ export function HolePreview({ pieceMm, hole, materialLabel }: { pieceMm: number;
   const holeX = hole ? c + hole.centreMm[0] * scale : c;
   const holeY = hole ? c + hole.centreMm[1] * scale : c;
   const holeR = hole ? Math.max(0.8, (hole.diameterMm / 2) * scale) : 0;
-  const label = hole
-    ? `Коло Ø${pieceMm / 10} см з отвором Ø${String(hole.diameterMm).replace(".", ",")} мм`
-    : `Коло Ø${pieceMm / 10} см`;
+  const t = tr(CATALOG, useLocale());
+  const label = hole ? t.holeCircleWithHole(pieceMm / 10, String(hole.diameterMm).replace(".", ",")) : t.holeCircle(pieceMm / 10);
   return (
     <figure className="m-0 grid gap-2">
       <svg viewBox={`0 0 ${VIEW} ${VIEW}`} role="img" aria-label={label} className="aspect-square w-full rounded-[20px] border border-[var(--line)] bg-[var(--card)]">
