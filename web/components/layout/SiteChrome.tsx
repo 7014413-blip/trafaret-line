@@ -53,7 +53,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
       className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)] bg-[var(--bg)] transition-transform duration-200"
       style={{ transform: hidden ? "translateY(-60px)" : undefined }}
     >
-      <div className="mx-auto grid max-w-[1320px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-2 md:grid-cols-[auto_auto_minmax(0,1fr)_auto] md:min-h-[68px] lg:px-8">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-4 px-4 py-2 md:grid-cols-[auto_auto_minmax(0,1fr)_auto] md:min-h-[68px] md:gap-x-4 lg:px-8">
         <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-[family-name:var(--font-display)] text-lg font-bold">
           <span aria-hidden className="grid h-[30px] w-[30px] place-items-center rounded-lg border-2 border-dashed border-[var(--ink)] text-sm">✂</span>
           Trafaret Line
@@ -75,7 +75,7 @@ export function SiteHeader({ initialQuery = "" }: { initialQuery?: string }) {
           />
           <button type="submit" className="sr-only">Знайти</button>
         </form>
-        <div className="flex items-center gap-3.5 whitespace-nowrap text-sm">
+        <div className="flex items-center gap-1.5 whitespace-nowrap text-sm sm:gap-3.5">
           <ManagerCallButton variant="header" />
           <Link href="/kabinet" aria-label="Мій кабінет" className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6" /></svg>

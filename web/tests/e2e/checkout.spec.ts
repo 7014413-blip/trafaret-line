@@ -4,7 +4,7 @@
 // (answered here by a test page, no money moves).
 
 import { expect, test } from "@playwright/test";
-import { BRANCH, DELIVERY, KYIV } from "./support/nova-poshta";
+import { BRANCH, DELIVERY, KYIV, LOCKER } from "./support/nova-poshta";
 import { addRoseStencil, clearOrders, receivedOrders } from "./support/shop";
 import { fillContactsAndDelivery } from "./support/checkout-form";
 
