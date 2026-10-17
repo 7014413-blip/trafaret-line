@@ -2,7 +2,9 @@
 // from, with the size lines the customer pays for: «Ø10 см», «10 см», «20 × 30 см».
 
 import { blankShapePath, drawnSize } from "@/lib/blanks/shape-path";
-import { cmText } from "@/lib/format";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { units } from "@/lib/i18n/dictionaries/units";
+import { localCm } from "@/lib/plaques/local-cm";
 import type { BlankColour, BlankShape } from "@/types/blank";
 
 const PAD = 0.2;
@@ -24,7 +26,9 @@ export function BlankScheme({ shape, widthMm, heightMm, colour, label }: {
   const oy = pad + (h - drawn.h) / 2;
   const d = blankShapePath(shape.id, drawn.w, drawn.h);
   const fill = colour.shine ? "url(#blank-shine)" : colour.hex;
-  const widthText = shape.sizeMode === "diameter" ? `Ø${cmText(widthMm)} см` : `${cmText(widthMm)} см`;
+  const locale = useLocale();
+  const cm = units(locale).cm;
+  const widthText = shape.sizeMode === "diameter" ? `Ø${localCm(widthMm, locale)} ${cm}` : `${localCm(widthMm, locale)} ${cm}`;
   const lineY = pad + h + 9;
   const lineX = pad + w + 9;
   // A tall one-number shape (arch, drop) is measured along its height, the larger side.
@@ -54,7 +58,7 @@ export function BlankScheme({ shape, widthMm, heightMm, colour, label }: {
       {(shape.sizeMode === "box" || tall) && (
         <>
           <line x1={lineX} y1={pad} x2={lineX} y2={pad + h} stroke="#64748b" strokeWidth={0.5} markerStart="url(#blank-arrow)" markerEnd="url(#blank-arrow)" />
-          <text x={lineX + 3} y={pad + h / 2} fontSize={6} fill="#0f172a" dominantBaseline="middle">{cmText(heightMm)} см</text>
+          <text x={lineX + 3} y={pad + h / 2} fontSize={6} fill="#0f172a" dominantBaseline="middle">{localCm(heightMm, locale)} {cm}</text>
         </>
       )}
     </svg>

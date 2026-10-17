@@ -83,10 +83,10 @@ export function BlanksConfigurator() {
       <section aria-label={t.schemeRegion} className="self-start overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)] lg:sticky lg:top-24">
         <div className="p-4">
           <BlankScheme shape={shape} widthMm={cut.widthMm} heightMm={cut.heightMm} colour={colour}
-            label={t.schemeLabel(shape.name[locale], blankSizeText(design))} />
+            label={t.schemeLabel(shape.name[locale], blankSizeText(design, locale))} />
         </div>
         <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-[13px] text-[var(--muted)] tabular-nums">
-          <span>{shape.name[locale]} · {blankSizeText(design)}</span>
+          <span>{shape.name[locale]} · {blankSizeText(design, locale)}</span>
           <span>{blankTitle(design, locale).split(", ").slice(1).join(", ")}</span>
         </div>
       </section>

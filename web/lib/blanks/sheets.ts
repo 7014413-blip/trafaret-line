@@ -8,6 +8,9 @@ import type {
 } from "../../types/blank";
 import type { Locale, LocalizedText, MaterialType } from "../../types/customizer";
 import { MATERIALS } from "../materials";
+import { BLANKS } from "../i18n/dictionaries/blanks";
+import { decimal, units } from "../i18n/dictionaries/units";
+import { tr } from "../i18n/translate";
 
 const t = (uk: string, ru: string, en: string): LocalizedText => ({ uk, ru, en });
 
@@ -91,10 +94,9 @@ export function blankSheetInGroup(group: BlankMaterialGroupId, current: BlankShe
 
 /** Chip label of a thickness: "3 мм" for acrylic, with the material where a group mixes materials. */
 export function blankThicknessLabel(group: BlankMaterialGroupId, thicknessMm: number, locale: Locale = "uk"): string {
-  const mm = locale === "en" ? `${thicknessMm} mm` : `${String(thicknessMm).replace(".", ",")} мм`;
+  const mm = `${decimal(thicknessMm, locale)} ${units(locale).mm}`;
   const material = blankSheetsAt(group, thicknessMm)[0]?.materialId ?? "";
-  const polystyrene = { uk: "полістирол", ru: "полистирол", en: "polystyrene" }[locale];
-  const acrylic = locale === "en" ? "acrylic" : "акрил";
+  const { acrylicWord: acrylic, polystyreneWord: polystyrene } = tr(BLANKS, locale);
   if (group === "mirror") return material.startsWith("polystyrene") ? `${mm}, ${polystyrene}` : `${mm}, ${acrylic}`;
   if (group === "board") return material === "pet_food_board" ? `PET ${mm}` : `${polystyrene.charAt(0).toUpperCase()}${polystyrene.slice(1)} ${mm}`;
   return mm;

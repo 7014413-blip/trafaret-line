@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { MATERIALS } from "../../lib/materials";
 import { nextTierHint } from "../../lib/calculators/pricing";
 import { cmText, formatUAH } from "../../lib/format";
+import { decimal } from "../../lib/i18n/dictionaries/units";
 import { isFlexible, parcelFor } from "../../lib/calculators/packaging";
 import type { PackKind } from "../../types/packaging";
 import type { CartLine, Locale, Upsell } from "../../types/customizer";
@@ -64,7 +65,7 @@ export function CartDrawer({
   const canRoll = lines.length > 0 && lines.every((l) => isFlexible(l.materialId));
   const parcel = parcelFor(lines.map((l) => ({ materialId: l.materialId, widthMm: l.widthCm * 10, heightMm: l.heightCm * 10, quantity: l.quantity })), pack);
   const cm = (mm: number) => Math.ceil(mm / 10);
-  const kg = (value: number) => (Math.ceil(value * 10) / 10).toFixed(1).replace(".", locale === "en" ? "." : ",");
+  const kg = (value: number) => decimal((Math.ceil(value * 10) / 10).toFixed(1), locale);
   // Closest quantity tier among the lines: "Додайте ще 3 шт. «…», щоб отримати −5 %".
   const tier = lines
     .map((l) => ({ l, h: nextTierHint(l.quantity) }))
@@ -75,7 +76,7 @@ export function CartDrawer({
 
   return (
     <>
-      <CartFab count={count} total={total} label={t.fab(count, formatUAH(total, locale))} onClick={() => onOpenChange(true)} />
+      <CartFab count={count} total={total} label={t.fab(count, formatUAH(total, locale))} locale={locale} onClick={() => onOpenChange(true)} />
 
       <AnimatePresence>
         {open && (
@@ -221,7 +222,7 @@ function Progress({ value, text, action }: { value: number; text: string; action
   );
 }
 
-function CartFab({ count, total, onClick, label }: { count: number; total: number; onClick: () => void; label: string }) {
+function CartFab({ count, total, onClick, label, locale }: { count: number; total: number; onClick: () => void; label: string; locale: Locale }) {
   const [pulse, setPulse] = useState(0);
   const prev = useRef(count);
   useEffect(() => { if (count > (prev.current ?? 0)) setPulse((p) => p + 1); prev.current = count; }, [count]);
